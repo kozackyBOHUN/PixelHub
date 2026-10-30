@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>PixelHub • mały magazyn, wielka logistyka</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="./"
+        >▣
+        <span>PixelHub<small>MAŁY MAGAZYN. WIELKA LOGISTYKA.</small></span></a
+      >
+      <div class="round">
+        <span id="round">Runda 1/2</span
+        ><small id="round-name">Rozładunek i magazynowanie</small>
+      </div>
+      <div class="money" id="cash">50 $</div>
+      <div class="speeds">
+        <button data-speed="1">×1</button><button data-speed="2">×2</button
+        ><button data-speed="4">×4</button>
+      </div>
+      <time id="clock">00:00</time>
+    </header>
+    <main>
+      <div class="toolbar">
+        <button id="cmr" title="Przyjmij dostawę" aria-label="Przyjmij CMR">
+          <span class="clip"></span><span class="crate red">1</span
+          ><span class="crate red">1</span><span class="crate blue">1</span
+          ><span class="crate blue">1</span>
+        </button>
+        <div class="instruction">
+          <span class="eyebrow">CENTRUM OPERACYJNE / MAGAZYN 01</span>
+          <p id="message" role="status"></p>
+        </div>
+        <button id="cancel" hidden>Anuluj</button
+        ><button id="debug">Siatka · G</button>
+      </div>
+      <section class="scene">
+        <div class="scene-label">
+          PIXELHUB LOGISTICS <span>20 × 6 / 120 PÓL</span>
+        </div>
+        <canvas
+          id="world"
+          width="1400"
+          height="650"
+          aria-label="Magazyn PixelHub 20 na 6 pól"
+        ></canvas
+        ><button id="dispatch" hidden>Wyślij busa →</button>
+        <div id="delivery" hidden></div>
+        <div class="legend">
+          <span>● Rozładunek</span><span>● Pracownik + paleciak</span
+          ><span>● Dystrybucja</span>
+        </div>
+      </section>
+      <footer>
+        <div>
+          <span class="eyebrow">TWOJE ZADANIE</span>
+          <h2 id="objective">Rozładuj. Odłóż. Zorganizuj.</h2>
+          <p id="progress"></p>
+        </div>
+        <div class="steps">
+          <span>01 <b>Pracownik</b></span
+          ><i>→</i><span>02 <b>Skrzynia</b></span
+          ><i>→</i><span>03 <b>Miejsce</b></span>
+        </div>
+        <div class="ledger">
+          <span class="eyebrow">OSTATNIA TRANSAKCJA</span>
+          <p id="transaction">Kapitał początkowy +50 $</p>
+        </div>
+      </footer>
+    </main>
+    <dialog id="end">
+      <span class="eyebrow">PIXELHUB / RAPORT OPERACYJNY</span>
+      <h1 id="end-title"></h1>
+      <p id="end-text"></p>
+      <div id="totals"></div>
+      <button id="continue">Runda 2 →</button
+      ><button id="restart">Zagraj ponownie</button>
+    </dialog>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

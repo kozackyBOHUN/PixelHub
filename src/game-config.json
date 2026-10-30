@@ -1,0 +1,208 @@
+{
+  "project": "PixelHub",
+  "mvpRounds": 2,
+  "map": {
+    "columns": 20,
+    "rows": 6,
+    "coordinateSystem": {
+      "x": "left_to_right_0_based",
+      "y": "top_to_bottom_0_based"
+    },
+    "rooms": [
+      {
+        "id": "office",
+        "label": "Biuro",
+        "x": 4,
+        "y": 2,
+        "width": 3,
+        "height": 4,
+        "walkable": false
+      },
+      {
+        "id": "locker",
+        "label": "Szatnia",
+        "x": 7,
+        "y": 3,
+        "width": 3,
+        "height": 3,
+        "walkable": false
+      },
+      {
+        "id": "canteen",
+        "label": "Stołówka",
+        "x": 10,
+        "y": 3,
+        "width": 3,
+        "height": 3,
+        "walkable": false,
+        "connectedTo": "locker"
+      },
+      {
+        "id": "toilet",
+        "label": "Toaleta",
+        "x": 13,
+        "y": 3,
+        "width": 2,
+        "height": 3,
+        "walkable": false
+      }
+    ],
+    "docks": [
+      {
+        "id": "inbound",
+        "side": "left",
+        "x": 0,
+        "y": 1,
+        "width": 1,
+        "height": 4,
+        "activeFromRound": 1
+      },
+      {
+        "id": "outbound",
+        "side": "right",
+        "x": 19,
+        "y": 1,
+        "width": 1,
+        "height": 4,
+        "activeFromRound": 2
+      }
+    ],
+    "vehicleOrientation": "perpendicular_to_short_end_wall_along_x_axis",
+    "storageAllowedOnDock": false,
+    "outsideMapVehicles": true
+  },
+  "worker": {
+    "count": 1,
+    "equipment": "manual_pallet_jack",
+    "tileFootprint": 2,
+    "startPose": {
+      "head": {
+        "x": 3,
+        "y": 1
+      },
+      "heading": "E"
+    },
+    "allowEightDirections": true,
+    "preventCornerCutting": true,
+    "articulatedTurning": true,
+    "emptySecondsPerCardinalTile": 0.8,
+    "loadedSecondsPerCardinalTile": 1.2,
+    "diagonalDistanceFactor": 1.41421356237,
+    "pickupSeconds": 1.5,
+    "dropSeconds": 1.5,
+    "maxActiveTasks": 1,
+    "canQueueTasks": false
+  },
+  "cargo": {
+    "crateWidthTiles": 1,
+    "crateHeightTiles": 1,
+    "destinationColors": ["red", "blue"],
+    "inactiveAlphaHint": 0.6,
+    "activeColorOnNextRound": true
+  },
+  "vehicles": {
+    "cargoLanes": 2,
+    "cargoDepth": 2,
+    "slotCoordinates": {
+      "depth0": "rear_door",
+      "depth1": "front_cabin"
+    },
+    "requiresAccessibleRearInSameLane": true,
+    "allowUnloadFromOwnVehicle": true,
+    "dispatchWhenNotEmpty": true,
+    "deliveryDurationGameSeconds": {
+      "oneColor": 30,
+      "twoColors": 45
+    },
+    "basePerColorGameSeconds": 30,
+    "additionalColorGameSeconds": 15,
+    "freeFirstOwnedVehicleAtRound": 2
+  },
+  "economy": {
+    "currency": "USD",
+    "initialCash": 50,
+    "unloadRewardPerCrate": 10,
+    "storageRewardPerCratePerCompletedRound": 5,
+    "deliveryRewardPerCrate": 20,
+    "workerWagePerFullGameMinute": 20,
+    "wageIntervalGameSeconds": 60,
+    "wageMode": "discrete",
+    "wageEmployeeCount": 1,
+    "gameOverWhenBalanceAtOrBelow": 0
+  },
+  "time": {
+    "speedMultipliers": [1, 2, 4],
+    "defaultSpeedMultiplier": 1,
+    "gameClockUnit": "seconds",
+    "clockStopsOnModalEndScreen": true
+  },
+  "rounds": [
+    {
+      "number": 1,
+      "name": "Rozładunek i magazynowanie",
+      "inboundCrates": [
+        {
+          "color": "red",
+          "count": 2,
+          "active": false,
+          "roundsUntilActive": 1
+        },
+        {
+          "color": "blue",
+          "count": 2,
+          "active": false,
+          "roundsUntilActive": 1
+        }
+      ],
+      "startWithOutgoingVehicle": false,
+      "completion": {
+        "inboundVehicleHasDeparted": true,
+        "allInboundCratesStored": true
+      },
+      "storageRewardAtEndForAllRetainedCrates": true
+    },
+    {
+      "number": 2,
+      "name": "Pierwsza dystrybucja",
+      "carryOverPriorCrates": true,
+      "activatePriorCrates": true,
+      "inboundCrates": [
+        {
+          "color": "red",
+          "count": 2,
+          "active": true
+        },
+        {
+          "color": "blue",
+          "count": 2,
+          "active": true
+        }
+      ],
+      "startWithOutgoingVehicle": true,
+      "completion": {
+        "inboundVehicleHasDeparted": true,
+        "allEightCratesDelivered": true,
+        "ownedVehicleHasReturnedEmpty": true
+      }
+    }
+  ],
+  "interface": {
+    "language": "pl-PL",
+    "outgoingCmrVisible": false,
+    "incomingCmrShowsCrateIconsOnly": true,
+    "routeColorEmpty": "#4299E1",
+    "routeColorLoaded": "#43C16F",
+    "routeColorBlocked": "#DF5454"
+  },
+  "futureFeaturesOutOfScope": [
+    "construction",
+    "employees_recruitment",
+    "task_queues",
+    "racks",
+    "forklifts",
+    "robots",
+    "external_warehouse",
+    "bonus_cmr",
+    "recurring_contracts"
+  ]
+}
