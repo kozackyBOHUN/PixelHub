@@ -1,4 +1,4 @@
-import cfg, { dirs, tail, same, inside } from "./config.ts";
+import cfg, { dirs, tail, same } from "./config.ts";
 import type { Point, Pose } from "./config.ts";
 import {
   MinHeap,
@@ -7,7 +7,6 @@ import {
   neighbors,
   transition,
   edgeCost,
-  findPath,
 } from "./pathfinding.ts";
 import type { RigPose } from "./pathfinding.ts";
 export type Phase =
@@ -70,7 +69,7 @@ const stationary = (
   duration: number,
 ): TransportStep => ({ a: p, b: p, loaded: true, phase, duration });
 // One Dijkstra search spans empty travel, all pickup sides and loaded travel.
-// Every goal includes final insertion, lowering, withdrawal and vehicle exit.
+// Every goal includes final insertion, lowering and one-tile fork withdrawal.
 // Thus the selected goal minimizes the entire job, including pickup choice.
 export function planTransport(
   start: Pose,
@@ -92,19 +91,13 @@ export function planTransport(
     // Pallet overlaps the deposited crate only during this axial withdrawal.
     if (!transition({ ...drop, mode: "pull" }, after, freeLoaded, false))
       continue;
-    const freeAfter = (p: Point) => freeLoaded(p) && !same(p, dest);
-    const exit = findPath(
-      after,
-      (p) => inside(p) && inside(tail(p)) && p.y <= 1 && tail(p).y <= 1,
-      freeAfter,
-    );
-    if (!exit) continue;
+    // A completed delivery ends after exactly one tile of empty fork withdrawal.
+    // Never force the worker to drive to a distant corridor after depositing.
     const list = [
       travel(pre, drop, true, "PUSH_TO_TARGET"),
       stationary(drop, "LOWER", cfg.worker.dropSeconds),
       travel(drop, { ...drop, mode: "pull" }, false),
       travel({ ...drop, mode: "pull" }, after, false, "WITHDRAW_FORKS"),
-      ...exit.slice(1).map((p, i) => travel(exit[i], p, false, "EXIT")),
     ];
     suffix.set(poseKey(pre), list);
   }
