@@ -500,3 +500,16 @@ test("35: a deep vehicle drop clears the truck before stopping and allowing depa
   assert.equal(g.task, null);
   assert.ok(g.dispatch());
 });
+
+test("36: the real warehouse uses a vertical drop when both horizontal approaches are blocked", () => {
+  const g = ready();
+  // East of (3,3) is a room; west approach is blocked by this temporary obstacle.
+  g.reservations.add("1,3");
+  g.selectWorker();
+  assert.ok(g.choose("1-0-0"), g.message);
+  assert.ok(g.order({ kind: "floor", x: 3, y: 3 }), g.message);
+  const drop = g.task!.steps.find((step) => step.phase === "LOWER")!;
+  assert.ok([2, 6].includes(drop.a.d), `Expected vertical deposit, got ${drop.a.d}`);
+  finish(g);
+  assert.deepEqual(g.crates[0].loc, { kind: "floor", x: 3, y: 3 });
+});
