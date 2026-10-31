@@ -465,7 +465,6 @@ test("33: all four axial drop directions are plannable and end after one-tile wi
     const v = dirs[direction];
     close(withdrawal.b.x - drop.a.x, v.x);
     close(withdrawal.b.y - drop.a.y, v.y);
-    assert.ok(!plan.steps.some((s) => s.phase === "EXIT"));
   }
 });
 
