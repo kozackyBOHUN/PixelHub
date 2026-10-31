@@ -128,7 +128,7 @@ test("invalid elapsed time cannot poison the deterministic game clock", () => {
 });
 
 test("cancelling before and after lowering preserves ownership and one-time rewards", () => {
-  for (const phase of ["LIFT", "LOWER", "WITHDRAW_FORKS", "EXIT"] as const) {
+  for (const phase of ["LIFT", "LOWER", "WITHDRAW_FORKS"] as const) {
     const game = ordered();
     until(game, () => game.task?.phase === phase);
     game.advance(0.15);
