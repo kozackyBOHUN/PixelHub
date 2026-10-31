@@ -19,8 +19,7 @@ export type Phase =
   | "MANEUVER"
   | "PUSH_TO_TARGET"
   | "LOWER"
-  | "WITHDRAW_FORKS"
-  | "EXIT";
+  | "WITHDRAW_FORKS";
 export type TransportStep = {
   a: RigPose;
   b: RigPose;
