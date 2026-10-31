@@ -20,7 +20,7 @@ Widoczny korpus pracownika i paleciaka mieści się w ich obrysach kolizyjnych. 
 
 ## Pełna operacja
 
-`transport.ts` wykonuje jedno wyszukiwanie Dijkstry ze stanem pusty/załadowany, orientacją i trybem. Rozważa wszystkie legalne strony pobrania. Koszt obejmuje dojazd, zmiany trybu, wsunięcie, podniesienie, transport, końcowe pchnięcie, opuszczenie, przełączenie, wycofanie oraz wyjazd pustego zestawu do górnego korytarza. Wyjazd jest częścią przyjętego zadania: nie wystarczy odstawić skrzynię i zostać w ślepym zaułku. Test porównuje także dłuższą trasę ciągnięciem z krótszą, wolniejszą trasą.
+`transport.ts` wykonuje jedno wyszukiwanie Dijkstry ze stanem pusty/załadowany, orientacją i trybem. Rozważa wszystkie legalne strony pobrania. Koszt obejmuje dojazd, zmiany trybu, wsunięcie, podniesienie, transport, końcowe pchnięcie, opuszczenie, przełączenie i wycofanie pustych wideł dokładnie o jedną kratkę. Po wycofaniu pracownik pozostaje w miejscu i czeka na kolejne zadanie; nie jedzie przymusowo do górnego korytarza. Stronę odłożenia wybiera spośród czterech stron zgodnie z fizyczną wykonalnością całego manewru. Test porównuje także dłuższą trasę ciągnięciem z krótszą, wolniejszą trasą.
 
 Wsunięcie jest prostym ruchem pustego paleciaka pod nieruchomą skrzynię; pracownik pozostaje przed nią. Podniesienie przenosi własność dopiero po wykonaniu operacji. Wysokość wideł jest osobnym stanem logicznym używanym do rysowania podnoszenia i opuszczania. Po końcowym pchnięciu skrzynia jest opuszczana dokładnie w środku celu. Od tej chwili pozostaje nieruchoma, a paleciak wycofuje puste widły. Zadanie i nagroda kończą się po wycofaniu i bezpiecznym wyjeździe.
 
@@ -30,7 +30,7 @@ Blokada zachowuje zadanie i dokładną pozycję pośrednią; zwolnienie drogi wz
 
 Obie ładownie są rzeczywistymi polami siatki: dostawcza `x=-2,-1`, własna `x=20,21`, pasy `y=2,3`. Dostęp jest od rampy, w osi podłużnej; tylna skrzynia blokuje przednią w tym samym pasie. Pracownik może wejść do pustej części ładowni. Nie istnieje przenoszenie skrzyni między slotem a rampą bez ruchu paleciaka. Dotyczy to również ponownego rozładunku własnego busa. Pojazd czeka na wyjście całego obrysu zestawu; dostawczy pozostaje dodatkowo do zakończenia bieżącego zadania, aby zaplanowana trasa nie traciła podłoża.
 
-Mapa, pomieszczenia, jeden pracownik, trzy kliknięcia, CMR, dwie rundy, kolory, budżet, płace, nagrody, bankructwo i powroty aut pozostają zgodne z istniejącymi regułami. Symulacja nadal używa kroku 0,05 s. Dłuższe manewry wymagają planowania zapasu gotówki: scenariusz testowy wysyła pary jednego koloru zamiast czekać na pełny bus. Miejsca składowania trzeba dobierać z uwzględnieniem późniejszego fizycznego dostępu do wideł.
+Mapa, pomieszczenia, jeden pracownik, trzy kliknięcia, CMR, dwie rundy, kolory, budżet, płace, nagrody, bankructwo i powroty aut pozostają zgodne z istniejącymi regułami. Symulacja nadal używa kroku 0,05 s. Wynagrodzenie pracownika wynosi 20 USD na koniec każdej ukończonej rundy, niezależnie od czasu operacji. Scenariusz testowy może wysyłać pary jednego koloru bez presji kosztów minutowych. Miejsca składowania trzeba dobierać z uwzględnieniem późniejszego fizycznego dostępu do wideł.
 
 ## Walidacja
 
