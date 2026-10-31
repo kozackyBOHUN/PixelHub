@@ -1,0 +1,441 @@
+{
+  "browser": "154.0.8037.57",
+  "renderer": {
+    "vendor": "Google Inc. (Google)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "blocked_source": {
+    "source": null,
+    "highlight": "1-0-0",
+    "message": "Ta skrzynia jest zablokowana przez inną lub auto jest w ruchu."
+  },
+  "escape_selection": {
+    "selected": false,
+    "source": null,
+    "task": false
+  },
+  "invalid_room": {
+    "source": "1-0-0",
+    "task": false,
+    "message": "To pole jest zajęte, zablokowane lub jest rampą."
+  },
+  "mobile": {
+    "viewport": 390,
+    "scroll": 390,
+    "canvas": {
+      "x": 11,
+      "y": 302.390625,
+      "width": 368,
+      "height": 170.84375,
+      "top": 302.390625,
+      "right": 379,
+      "bottom": 473.234375,
+      "left": 11
+    }
+  },
+  "mobile_hit_source": "1-0-0",
+  "insert_forks_layering": {
+    "before": {
+      "phase": "INSERT_FORKS",
+      "elapsed": 0.7607945320201144,
+      "duration": 0.8,
+      "heading": {
+        "x": 1,
+        "y": 0
+      },
+      "crate": {
+        "id": "1-0-0",
+        "angle": 0,
+        "height": 0,
+        "loc": {
+          "kind": "inbound",
+          "lane": 0,
+          "depth": 0
+        }
+      },
+      "drawOrder": [
+        "pallet",
+        "crate:1-0-0",
+        "crate:1-0-1",
+        "crate:1-1-0",
+        "crate:1-1-1"
+      ]
+    },
+    "after": {
+      "phase": "LIFT",
+      "crate": {
+        "id": "1-0-0",
+        "angle": 0,
+        "height": 0.04052968801340959,
+        "loc": {
+          "kind": "inbound",
+          "lane": 0,
+          "depth": 0
+        }
+      },
+      "drawOrder": [
+        "pallet",
+        "crate:1-0-0",
+        "crate:1-0-1",
+        "crate:1-1-0",
+        "crate:1-1-1"
+      ]
+    }
+  },
+  "initial_lift_orientation": {
+    "before": {
+      "phase": "LIFT",
+      "elapsed": 1.4607945320201152,
+      "duration": 1.5,
+      "heading": {
+        "x": 1,
+        "y": 0
+      },
+      "crate": {
+        "id": "1-0-0",
+        "angle": 0,
+        "height": 0.9738630213467435,
+        "loc": {
+          "kind": "inbound",
+          "lane": 0,
+          "depth": 0
+        }
+      },
+      "drawOrder": [
+        "pallet",
+        "crate:1-0-0",
+        "crate:1-0-1",
+        "crate:1-1-0",
+        "crate:1-1-1"
+      ]
+    },
+    "after": {
+      "phase": "SWITCH_DIRECTION",
+      "crate": {
+        "id": "1-0-0",
+        "angle": 0,
+        "height": 1,
+        "loc": {
+          "kind": "worker"
+        }
+      },
+      "drawOrder": [
+        "pallet",
+        "crate:1-0-1",
+        "crate:1-1-0",
+        "crate:1-1-1",
+        "crate:1-0-0"
+      ]
+    }
+  },
+  "lower_orientation": {
+    "before": {
+      "phase": "LOWER",
+      "elapsed": 1.4516301785729162,
+      "duration": 1.5,
+      "heading": {
+        "x": 0,
+        "y": -1
+      },
+      "crate": {
+        "id": "1-0-0",
+        "angle": -1.5707963267948966,
+        "height": 0.0322465476180559,
+        "loc": {
+          "kind": "worker"
+        }
+      },
+      "drawOrder": [
+        "pallet",
+        "crate:1-0-1",
+        "crate:1-1-0",
+        "crate:1-1-1",
+        "crate:1-0-0"
+      ]
+    },
+    "after": {
+      "phase": "SWITCH_DIRECTION",
+      "crate": {
+        "id": "1-0-0",
+        "angle": -1.5707963267948966,
+        "height": 0,
+        "loc": {
+          "kind": "floor",
+          "x": 3,
+          "y": 5
+        }
+      },
+      "drawOrder": [
+        "pallet",
+        "crate:1-0-0",
+        "crate:1-0-1",
+        "crate:1-1-0",
+        "crate:1-1-1"
+      ]
+    }
+  },
+  "cancel_loaded": {
+    "carried": "1-0-1",
+    "selected": true,
+    "task": false,
+    "message": "Ładunek pozostaje na paleciaku. Wskaż nowe miejsce.",
+    "crates": [
+      {
+        "id": "1-0-0",
+        "loc": {
+          "kind": "floor",
+          "x": 3,
+          "y": 5
+        }
+      },
+      {
+        "id": "1-0-1",
+        "loc": {
+          "kind": "worker"
+        }
+      },
+      {
+        "id": "1-1-0",
+        "loc": {
+          "kind": "inbound",
+          "lane": 1,
+          "depth": 0
+        }
+      },
+      {
+        "id": "1-1-1",
+        "loc": {
+          "kind": "inbound",
+          "lane": 1,
+          "depth": 1
+        }
+      }
+    ]
+  },
+  "cancel_reorder": {
+    "task": true,
+    "dest": {
+      "kind": "floor",
+      "x": 2,
+      "y": 5
+    }
+  },
+  "floor_lift_orientation": {
+    "before": {
+      "phase": "LIFT",
+      "elapsed": 1.4500000000000008,
+      "duration": 1.5,
+      "heading": {
+        "x": 0,
+        "y": -1
+      },
+      "crate": {
+        "id": "1-0-0",
+        "angle": -1.5707963267948966,
+        "height": 0.9666666666666672,
+        "loc": {
+          "kind": "floor",
+          "x": 3,
+          "y": 5
+        }
+      },
+      "drawOrder": [
+        "pallet",
+        "crate:1-0-0",
+        "crate:1-0-1",
+        "crate:1-1-0",
+        "crate:1-1-1"
+      ]
+    },
+    "after": {
+      "phase": "SWITCH_DIRECTION",
+      "crate": {
+        "id": "1-0-0",
+        "angle": -1.5707963267948966,
+        "height": 1,
+        "loc": {
+          "kind": "worker"
+        }
+      },
+      "drawOrder": [
+        "pallet",
+        "crate:1-0-1",
+        "crate:1-1-0",
+        "crate:1-1-1",
+        "crate:1-0-0"
+      ]
+    }
+  },
+  "repeated_recovery_cancel": {
+    "task": false,
+    "carried": null,
+    "selected": false,
+    "location": {
+      "kind": "inbound",
+      "lane": 0,
+      "depth": 0
+    },
+    "finite": true,
+    "unloadRewards": 0
+  },
+  "selected_source_dispatch": {
+    "source": null,
+    "task": false,
+    "carried": null,
+    "loc": {
+      "kind": "delivery"
+    },
+    "outbound": "delivering"
+  },
+  "selected_source_delivered": {
+    "loc": {
+      "kind": "delivered"
+    },
+    "deliveryRewards": 1
+  },
+  "planning": {
+    "chooseMouseWallMs": 200.26203599991277,
+    "orderMouseWallMs": 194.09539400021458,
+    "cpuMetricDelta": {
+      "TaskDuration": 0.41986599999999996,
+      "ScriptDuration": 0.086542
+    }
+  },
+  "x4_5second_sample": {
+    "frames": {
+      "count": 190,
+      "mean": 26.753157894736823,
+      "p50": 33.29999999999973,
+      "p95": 33.400000000000546,
+      "max": 50
+    },
+    "draw": {
+      "count": 190,
+      "mean": 0.36999999996960947,
+      "p50": 0.2999999998137355,
+      "p95": 0.7999999998137355,
+      "max": 3.7999999998137355
+    },
+    "advance": {
+      "count": 190,
+      "mean": 0.10526315790454024,
+      "p50": 0,
+      "p95": 0.20000000018626451,
+      "max": 3.2000000001862645
+    },
+    "long": [],
+    "task": "PUSH_TO_TARGET",
+    "wallSeconds": 5.006599484000162,
+    "gameSeconds": 20.15,
+    "ratio": 4.024687827415464,
+    "cpuTaskSeconds": 4.987184,
+    "cpuScriptSeconds": 0.538124,
+    "heapStart": 27631732,
+    "heapEnd": 21365936,
+    "domNodesStart": 1947,
+    "domNodesEnd": 2215
+  },
+  "post_gc_memory": {
+    "heapFirst": 4304512,
+    "heapAfter3MoreSeconds": 4140820,
+    "nodesFirst": 213,
+    "nodesAfter3MoreSeconds": 213
+  },
+  "console": [
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x2f8400e48000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "location": {
+        "url": "http://127.0.0.1:5176/?test=1",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x2f8400e48000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "location": {
+        "url": "http://127.0.0.1:5176/?test=1",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x2f8400e48000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "location": {
+        "url": "http://127.0.0.1:5176/?test=1",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x2f8400e48000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
+      "location": {
+        "url": "http://127.0.0.1:5176/?test=1",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    }
+  ],
+  "exceptions": [],
+  "failedRequests": [],
+  "httpErrors": [],
+  "context": {
+    "revision": "working tree after fixes",
+    "server": "isolated production build; npm run build and local vite preview",
+    "result": "PASS",
+    "performanceLimit": "One five-second sample in shared headless SwiftShader environment; not a comparative benchmark. CPU task duration is CDP renderer task time; forced-GC memory observations cover three seconds only."
+  },
+  "sourceSha256": {
+    "tsconfig.tests.json": "bc19ce159f73a9ef408aaea194c0b29387c7a182870d68a368806ba47e11020d",
+    "vite.config.ts": "f6c3034b0207f5f9d6fa2bd0a2a8ea7375b4d9ee1417b3914bfa794ec9682009",
+    "tsconfig.json": "6404832315e770573412ae2ec0e706d9151080ceb04763c0a0130e0fe46e95c2",
+    "style.css": "2cc875f48a590a3470ed3a992266fcbd9e663adf9e3c85237c78c185d93ea3aa",
+    "package.json": "1191bff596d3f770c7d8a40fb34cf1791ea80f82babe2ae95f69f385c5b37640",
+    "package-lock.json": "af84fd34d6218cbba246e0e58100fbe72208a5628f4f40330e50ac10b971b418",
+    "index.html": "93a468ff85f3d11ee9bd565db9a1bf672e920df7ae9499d7e1eea2e9b586f8ee",
+    "README.md": "f581d7d0d0dd7d0cca0338cdfea253cd732f3af09ffb7e52f4d08a4f6083abf2",
+    "IMPLEMENTATION_NOTES.md": "c6efef1a7f18b4adbc41975ef54bf2373fc3952e31e1cb0c5dfdff8e112e3e97",
+    ".gitignore": "e7e610305a9703505c63ae8420437b2aa0f887cfa562781e629116f77abaaea3",
+    "audit-evidence/planner-benchmark.json": "f7c5f916e908aefea4fcfb80649ea03b560847863b92d10a099b3508b79774d8",
+    "tests/helpers.ts": "7d6a90575a2e37d0551ea0b36dfd5fe563a981b7ccad6ffaf75ca5cfc1047906",
+    "tests/audit-state.test.ts": "a62cffe6d367d80a59f8d709783ff1b136239dbd0ee0a40542510d14f2aaccb3",
+    "tests/audit-planner.test.ts": "d90287f2d4b5cbbd142d0a4b8923d90bfc942130fbd090516e9548a01ef70591",
+    "tests/audit-geometry.test.ts": "439962bc0ed2d5f3114acdf9f4ce4a580f7b9e9e96fbef71a8e2dfdfe023944a",
+    "tests/transport.test.ts": "d95640a961f997288113c1588a5762cec5122b21e1e2164f54a8588636f4b2fc",
+    "tests/simulation.test.ts": "a9673b66311c2644c684de21b41fdaa8e88f6c2e41c1d3efa2637f70d0f81864",
+    "src/transport.ts": "d6532dc3f245193c4242e574b2fb98b46366942bef3ce6786404516173e3228e",
+    "src/simulation.ts": "77c10b410078380a0c386cba157dfa793f2f996fae7432f548cb2e7f37700508",
+    "src/renderer.ts": "3ddbc7820648cb25167c1bfef2a12d6090221d6e3da2af6e6c021ecfb490f2bd",
+    "src/pathfinding.ts": "f731262b5860ceec7ee344e51af4e76ec9507bec3b7be2057e30159a2b69ea96",
+    "src/main.ts": "86f8b14dc5d74085b47aa77cab58b7db88f5afb4b20292629e48e5f0df9f4115",
+    "src/game-config.json": "378c1c95b5c16e85643e41de78473a7e5d24f4b3cf7dfeab073375efcd2f08a4",
+    "src/config.ts": "142f098c557d3eb3dc10a5ae8de273e07af8cfcb5b3ab1ad50e6f852cf4e2258",
+    "scripts/audit_browser.py": "06f95e2b9444da1f44f2cf91a3d8b975853fa856006e692132c7338cad56f3c5",
+    "scripts/audit_benchmark.ts": "6c8820837e63f816efaf71066283a95039fa24f90a1931b306a13bd4532df71a",
+    "scripts/requirements-browser.txt": "cfa2186c0470feac813f1ac67c71e54a53021ec949026946255874958d245e82",
+    "scripts/browser_test.py": "a6924864741afacef70db5404c0e34f17250e2e31b5a18b6346159afb08f3303",
+    "PixelHub_Codex_Pack/validate_config.py": "f8dedfd0510ccc335423202878d9b6674c9ccc8f1d76bf79e81da30e9f55e046",
+    "PixelHub_Codex_Pack/game-config.json": "380103bcf8a476778f77955d6ad4202f9af45d6aa8aa63a54c4595100ecaa84d",
+    "PixelHub_Codex_Pack/exact_grid_20x6.png": "285f5f0efa0452bc4c9f8465a10797960ffa82754a8f3ea2640e7702e4bee762",
+    "PixelHub_Codex_Pack/START_HERE_CODEX.md": "8492d727c4d022b8b863e0977101944fc16fef06b8f22d6034b24f1b8c151bcd",
+    "PixelHub_Codex_Pack/REFERENCE_visual_only_not_to_scale.png": "72a61820d909caed392c9b51aab9d5d0bd6c20c8986ff9b5f85709e7f5f5401e",
+    "PixelHub_Codex_Pack/README.md": "19a123d2c44d20002288a5ab3048d5d0ea8a82fe2a8dcce6a81053183ec02bb4",
+    "PixelHub_Codex_Pack/PIXELHUB_MVP_SPEC.md": "a08675c645cad72417cac976adfd9d98296adf70dd52573e0ac927d1be91bdda",
+    "PixelHub_Codex_Pack/PIXELHUB_CODEX_ONE_FILE.md": "a199b7511b6d20430c5b8e227c2ee77d64ae4db44ded54b3dbc5baa39fc4dfe8",
+    "PixelHub_Codex_Pack/ASSET_AND_RENDER_GUIDE.md": "6e0b447050900696b538263da2989d4957170df3e3085f8d16dde13210f1876e",
+    "PixelHub_Codex_Pack/ACCEPTANCE_TESTS.md": "b5a35af4f5c2d60a5c307995b6da0093efb1fb96eb2f5784e8c6f7156a311dde",
+    ".github/workflows/checks.yml": "6a5b0aa3ba7ca8ba97b5aa22d337c1f21289cd1bdf0097bf3fea5883f9a8c90a",
+    ".github/workflows/pages.yml": "447acd9b8032124eca11117c9834a83f6f53793145906d7303a9eab6075ca419"
+  }
+}

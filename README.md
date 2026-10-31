@@ -63,3 +63,21 @@ Jednorazowo w repozytorium otwórz **Settings → Pages → Build and deployment
 Adres po udanej publikacji: `https://kozackybohun.github.io/PixelHub/`. Samo dodanie workflow nie oznacza, że adres już działa; wynik publikacji jest widoczny w zakładce Actions. Dla prywatnego repozytorium dostępność Pages zależy od planu GitHub.
 
 Vite generuje względne adresy zasobów (`vite.config.ts`), więc wszystkie skrypty, tekstury i style działają również pod ścieżką `/PixelHub/`. Gra działa w całości w przeglądarce; nie potrzebuje backendu ani pobierania plików źródłowych w trakcie gry.
+
+## Audyt techniczny
+
+[PIXELHUB_AUDIT_REPORT.md](PIXELHUB_AUDIT_REPORT.md) opisuje niezależne odtworzenia, poprawki, wyniki 52 testów oraz ograniczenia. `npm run typecheck` sprawdza również testy i benchmark.
+
+Powtarzalny pomiar planowania:
+
+```sh
+node --experimental-strip-types scripts/audit_benchmark.ts --baseline ee23be2 --repeat 5 --output /tmp/pixelhub-benchmark.json
+```
+
+Dodatkowy audyt przeglądarkowy wymaga działającego serwera, tych samych zależności Playwright i Chromium co `test:browser`:
+
+```sh
+python scripts/audit_browser.py
+```
+
+Skrypt wykonuje interakcje myszy, sprawdza orientację i kolejność rysowania, anulowanie, odjazd busa oraz mierzy rzeczywiste ×4. Wyniki zapisuje w ignorowanym `artifacts/audit/`. Pomiarów płynności w środowisku headless nie należy traktować jako benchmarku urządzeń użytkowników. Workflow `checks.yml` waliduje PR bez wdrażania gry.

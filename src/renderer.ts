@@ -201,23 +201,6 @@ export class Renderer {
       });
       c.setLineDash([]);
     }
-    for (const cr of g.crates) {
-      const p = locationPoint(cr.loc);
-      if (p && !(cr.loc.kind === "inbound" && g.inbound !== "docked")) {
-        this.crate(
-          cr,
-          p,
-          0,
-          g.task?.crate === cr.id && g.task.phase === "LIFT" ? g.forkHeight : 0,
-        );
-        if (g.source === cr.id || g.highlight === cr.id) {
-          const s = gridToScreen(p);
-          c.strokeStyle = g.highlight === cr.id ? "#e23e39" : "#f8edaf";
-          c.lineWidth = 3;
-          c.strokeRect(s.x + 4, s.y + 3, 41, 43);
-        }
-      }
-    }
     const { head, back } = workerVisual(g),
       a = gridToScreen(head),
       b = gridToScreen(back);
@@ -239,10 +222,27 @@ export class Renderer {
     this.rect(-12, -14, 6, 4, "#455452");
     this.rect(-12, 10, 6, 4, "#455452");
     c.restore();
+    // Floor cargo occludes the forks both before lifting and after lowering.
+    for (const cr of g.crates) {
+      const p = locationPoint(cr.loc);
+      if (p && !(cr.loc.kind === "inbound" && g.inbound !== "docked")) {
+        this.crate(
+          cr,
+          p,
+          g.crateAngle(cr),
+          g.task?.crate === cr.id && g.task.phase === "LIFT" ? g.forkHeight : 0,
+        );
+        if (g.source === cr.id || g.highlight === cr.id) {
+          const s = gridToScreen(p);
+          c.strokeStyle = g.highlight === cr.id ? "#e23e39" : "#f8edaf";
+          c.lineWidth = 3;
+          c.strokeRect(s.x + 4, s.y + 3, 41, 43);
+        }
+      }
+    }
     if (g.carried) {
       const cr = g.crates.find((cr) => cr.id === g.carried)!;
-      const v = g.transportGeometry.heading;
-      this.crate(cr, back, Math.atan2(v.y, v.x), g.forkHeight);
+      this.crate(cr, back, g.crateAngle(cr), g.forkHeight);
     }
     if (g.selected) {
       c.strokeStyle = "#f8e8a6";

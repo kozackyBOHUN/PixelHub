@@ -182,6 +182,61 @@ export function geometryFree(
 export function legal(p: Pose, free: (p: Point) => boolean) {
   return p.d % 2 === 0 && geometryFree(geometry(p), free);
 }
+// Bounds displacement of every body point per unit of normalized progress.
+// Includes worker/hinge translation, drawbar articulation and rotating corners.
+function sweepMargin(
+  kind: "switch" | "straight" | "turn",
+  span: number,
+  samples: number,
+) {
+  const rate =
+    kind === "turn"
+      ? (Math.PI / 2) * (cfg.worker.turnRadiusTiles + 1.6) +
+        DRAWBAR_LENGTH * cfg.worker.drawbarSteeringRadians * Math.PI
+      : kind === "straight"
+        ? 1
+        : 0;
+  return (rate * span) / (2 * samples) + (rate ? 1e-6 : 0);
+}
+export function transitionRange(
+  a: Pose,
+  b: Pose,
+  free: (p: Point) => boolean,
+  loaded = true,
+  from = 0,
+  to = 1,
+) {
+  if (
+    !Number.isFinite(from) ||
+    !Number.isFinite(to) ||
+    from < 0 ||
+    to > 1 ||
+    from > to
+  )
+    return false;
+  const kind = motionKind(a, b);
+  if (!kind)
+    return (
+      same(a, b) &&
+      a.d === b.d &&
+      a.mode === b.mode &&
+      geometryFree(geometry(a), free, loaded)
+    );
+  const span = to - from,
+    samples = Math.max(1, Math.ceil((kind === "turn" ? 64 : 32) * span));
+  const margin = sweepMargin(kind, span, samples);
+  for (let i = 0; i <= samples; i++)
+    if (
+      !geometryFree(
+        geometry(a, b, from + (span * i) / samples),
+        free,
+        loaded,
+        margin,
+      )
+    )
+      return false;
+  return true;
+}
 const sweptCache = new Map<string, Point[]>();
 export function sweptCells(a: Pose, b: Pose, loaded = true): Point[] {
   const kind = motionKind(a, b);
@@ -193,16 +248,7 @@ export function sweptCells(a: Pose, b: Pose, loaded = true): Point[] {
     const aa = { ...a, x: a.x - origin.x, y: a.y - origin.y },
       bb = { ...b, x: b.x - origin.x, y: b.y - origin.y };
     const samples = kind === "turn" ? 64 : 32;
-    const margin =
-      kind === "switch"
-        ? 0
-        : (kind === "turn"
-            ? (Math.PI / 2) * (cfg.worker.turnRadiusTiles + 1.6) +
-              DRAWBAR_LENGTH * cfg.worker.drawbarSteeringRadians * Math.PI
-            : 1) /
-            samples /
-            2 +
-          1e-6;
+    const margin = sweepMargin(kind, 1, samples);
     const visited = new Map<string, Point>();
     for (let i = 0; i <= samples; i++)
       geometryFree(
