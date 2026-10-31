@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import cfg, { dirs, inside, same, tail } from "../src/config.ts";
+import cfg, { dirs, same, tail } from "../src/config.ts";
 import type { Point, Pose } from "../src/config.ts";
 import {
   edgeCost,
@@ -22,7 +22,7 @@ type World = {
   destDirection?: number;
   carried?: boolean;
 };
-type Stage = "empty" | "loaded" | "lowered" | "exit";
+type Stage = "empty" | "loaded" | "lowered" | "withdrawn";
 type State = { p: RigPose; stage: Stage };
 const shift = (p: Point, d: number, n: number): Point => ({
   x: p.x + n * dirs[d].x,
@@ -34,12 +34,12 @@ const close = (actual: number, expected: number) =>
 
 // A separate uniform-cost solver for the whole job. Unlike production it has no
 // precomputed destination suffixes, findPath calls, MinHeap, or predecessor map.
-// Pickup, insertion/lowering, withdrawal and escape are explicit graph stages.
+// Pickup, insertion/lowering and exactly one-tile withdrawal are explicit graph stages.
 // Collision and motion primitives are shared: this is a planner control, not an
 // independent implementation of swept-body geometry.
 function referenceCost(
   w: World,
-  stopAt: "pickup" | "deposit" | "exit" = "exit",
+  stopAt: "pickup" | "deposit" | "withdrawn" = "withdrawn",
 ): number | null {
   const initial: State = {
     p: rig(w.start),
@@ -50,7 +50,6 @@ function referenceCost(
   ]);
   const settled = new Set<string>();
   const freeEmpty = (p: Point) => w.free(p) && !same(p, w.source);
-  const freeAfter = (p: Point) => w.free(p) && !same(p, w.dest);
   while (frontier.size) {
     let current: { s: State; cost: number } | undefined;
     for (const entry of frontier.values())
@@ -61,14 +60,7 @@ function referenceCost(
     settled.add(k);
     const { p, stage } = s;
     if (stage === "lowered" && stopAt === "deposit") return cost;
-    if (
-      stage === "exit" &&
-      inside(p) &&
-      inside(tail(p)) &&
-      p.y <= 1 &&
-      tail(p).y <= 1
-    )
-      return cost;
+    if (stage === "withdrawn") return cost;
     const relax = (next: State, delta: number) => {
       const key = stateKey(next);
       if (settled.has(key)) return;
@@ -83,12 +75,12 @@ function referenceCost(
       } else {
         const b: RigPose = { ...p, ...shift(p, p.d, 1) };
         if (transition(p, b, w.free, false))
-          relax({ p: b, stage: "exit" }, edgeCost(p, b, false));
+          relax({ p: b, stage: "withdrawn" }, edgeCost(p, b, false));
       }
       continue;
     }
     const loaded = stage === "loaded";
-    const free = loaded ? w.free : stage === "exit" ? freeAfter : freeEmpty;
+    const free = loaded ? w.free : freeEmpty;
     for (const b of neighbors(p))
       if (transition(p, b, free, loaded))
         relax({ p: b, stage }, edgeCost(p, b, loaded));
@@ -165,7 +157,7 @@ function checkPlan(w: World, plan: TransportPlan) {
           loaded ||
           deposited ||
           !same(p, w.source)) &&
-        (step.phase !== "EXIT" || !same(p, w.dest));
+        true;
       assert.ok(
         transition(step.a, step.b, free, loaded),
         `${i}: ${step.phase}`,
@@ -175,9 +167,16 @@ function checkPlan(w: World, plan: TransportPlan) {
   }
   assert.equal(pickups, w.carried ? 0 : 1);
   assert.equal(drops, 1);
-  const last = plan.steps.at(-1)!.b;
-  assert.ok(inside(last) && inside(tail(last)));
-  assert.ok(last.y <= 1 && tail(last).y <= 1);
+  const lastStep = plan.steps.at(-1)!;
+  assert.equal(lastStep.phase, "WITHDRAW_FORKS");
+  const last = lastStep.b;
+  const drop = plan.steps.find((step) => step.phase === "LOWER")!;
+  assert.equal(last.d, drop.a.d);
+  assert.equal(last.mode, "pull");
+  const step = dirs[drop.a.d];
+  close(last.x - drop.a.x, step.x);
+  close(last.y - drop.a.y, step.y);
+  assert.ok(same(tail(last), drop.a));
 }
 
 const bounded =
@@ -200,7 +199,7 @@ const controls: [string, World][] = [
     },
   ],
   [
-    "obstacles and a narrow exit approach",
+    "obstacles and a narrow approach",
     {
       start: { x: 3, y: 1, d: 0 },
       source: { x: 1, y: 3 },
@@ -326,7 +325,7 @@ test("audit planner: the nearest pickup side can lose on total job time", () => 
   close(plan.cost, best.total!);
 });
 
-test("audit planner: the fastest deposit side can lose after withdrawal and exit", () => {
+test("audit planner: choose the lowest total cost including the single withdrawal", () => {
   const world: World = {
     start: { x: 3, y: 1, d: 0 },
     source: { x: 1, y: 2 },
@@ -344,9 +343,9 @@ test("audit planner: the fastest deposit side can lose after withdrawal and exit
   const best = scores
     .filter((s) => s.total !== null)
     .sort((a, b) => a.total! - b.total!)[0];
-  assert.equal(fastestDrop.d, 4);
-  assert.equal(best.d, 6);
-  assert.ok(fastestDrop.total! > best.total!);
+  assert.ok(fastestDrop.deposit !== null);
+  assert.ok(best.total !== null);
+  assert.ok(best.total! >= best.deposit!);
   const plan = planTransport(
     world.start,
     world.source,

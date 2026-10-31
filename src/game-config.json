@@ -128,9 +128,8 @@
     "unloadRewardPerCrate": 10,
     "storageRewardPerCratePerCompletedRound": 5,
     "deliveryRewardPerCrate": 20,
-    "workerWagePerFullGameMinute": 20,
-    "wageIntervalGameSeconds": 60,
-    "wageMode": "discrete",
+    "workerWagePerRound": 20,
+    "wageMode": "per_completed_round",
     "wageEmployeeCount": 1,
     "gameOverWhenBalanceAtOrBelow": 0
   },

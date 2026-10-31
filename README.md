@@ -17,11 +17,11 @@ Vite uruchamia grę na porcie 5173. `npm run build` sprawdza typy i tworzy `dist
 
 1. Kliknij kartonik CMR z czterema ikonami, aby przyjąć dostawę.
 2. Kliknij pracownika (niebieska czapka), dostępną skrzynię, następnie wolne pole podłogi.
-3. Paleciak musi mieć miejsce na ustawienie wideł, skręt i wycofanie. Przy dłuższej pracy wysyłaj mniejsze partie, aby zachować środki na płace. Po podsumowaniu przejdź do rundy 2. Załaduj własnego busa i kliknij „Wyślij busa”. Powtórz do dostarczenia wszystkich 8 skrzyń.
+3. Paleciak musi mieć miejsce na ustawienie wideł, skręt i wycofanie. Po odstawieniu skrzyni pracownik cofa paleciak o jedną kratkę i tam czeka na kolejne polecenie. Po podsumowaniu przejdź do rundy 2. Załaduj własnego busa i kliknij „Wyślij busa”. Powtórz do dostarczenia wszystkich 8 skrzyń.
 
 W każdym pasie auta tylny slot blokuje przedni. Ładuj najpierw przód. Dostępny ładunek można także wyjąć z własnego busa. Pomieszczenia i rampy nie są miejscami składowania. `Anuluj` / Escape przerywa wybór lub zadanie; przewożony ładunek pozostaje na paleciaku i wymaga wskazania nowego celu. Brak kolejki.
 
-`×1`, `×2`, `×4` zmieniają tempo całej symulacji. Klawisz `G` / przycisk „Siatka” pokazuje współrzędne, przeszkody i obrys zestawu. Płace są pobierane co pełne 60 sekund gry, również gdy nic nie robisz. Saldo ≤0 kończy grę.
+`×1`, `×2`, `×4` zmieniają tempo całej symulacji. Klawisz `G` / przycisk „Siatka” pokazuje współrzędne, przeszkody i obrys zestawu. Pensja wynosi 20 USD za ukończoną rundę (łącznie 40 USD za dwie rundy), bez naliczania kosztów za upływ czasu. Saldo ≤0 kończy grę.
 
 ## Testy
 

@@ -305,7 +305,7 @@ export class Game {
   updateRoute() {
     const t = this.task;
     if (!t) return;
-    t.phase = t.steps[0]?.phase ?? "EXIT";
+    t.phase = t.steps[0]?.phase ?? "WITHDRAW_FORKS";
     t.route = t.steps.length
       ? [t.steps[0].a, ...t.steps.map((s) => s.b)]
       : [this.pose];
@@ -388,15 +388,7 @@ export class Game {
   }
   step(dt: number) {
     if (this.status !== "playing") return;
-    const old = this.time;
     this.time = Math.round((this.time + dt) * 1e6) / 1e6;
-    if (
-      Math.floor(this.time / cfg.economy.wageIntervalGameSeconds) >
-      Math.floor(old / cfg.economy.wageIntervalGameSeconds)
-    ) {
-      this.money(-cfg.economy.workerWagePerFullGameMinute, "Pensja");
-      if (this.cash <= 0) return;
-    }
     if (this.inbound === "arriving" || this.inbound === "departing") {
       this.inboundTimer -= dt;
       if (this.inboundTimer <= 1e-8)
@@ -523,6 +515,8 @@ export class Game {
         4 * cfg.economy.storageRewardPerCratePerCompletedRound,
         "Przechowanie",
       );
+      if (this.status === "playing")
+        this.money(-cfg.economy.workerWagePerRound, "Pensja — runda 1");
       if (this.status === "playing") this.status = "summary";
     }
     if (
@@ -532,7 +526,10 @@ export class Game {
       this.crates.length === 8 &&
       this.crates.every((c) => c.loc.kind === "delivered")
     )
-      this.status = "won";
+    {
+      this.money(-cfg.economy.workerWagePerRound, "Pensja — runda 2");
+      if (this.status === "playing") this.status = "won";
+    }
   }
   assertInvariant() {
     const occupied = new Set<string>();

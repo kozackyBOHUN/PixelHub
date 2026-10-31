@@ -91,13 +91,15 @@ with sync_playwright() as p:
     advance(1.1)
     page.wait_for_function('document.querySelector("#end").open')
     assert page.evaluate('pixelhub.game.status') == 'summary'
+    assert page.evaluate('pixelhub.game.cash') == 90
+    assert page.evaluate('pixelhub.game.ledger.filter(e=>e.label.startsWith("Pensja")).length') == 1
     page.screenshot(path='artifacts/round-1.png', full_page=True)
     page.locator('#continue').click()
     page.wait_for_function('document.querySelector("#round").textContent === "Runda 2/2"')
     page.locator('[data-speed="1"]').click()
     page.locator('#cmr').click()
     advance(1.1)
-    # Clear accessible stored crates first; send colour pairs before wages exhaust cash.
+    # Clear accessible stored crates first; round wages are not time-based.
     for i, crate_id in enumerate(['1-1-0', '1-1-1', '1-0-0', '1-0-1']):
         move(crate_id, 21 if i % 2 == 0 else 20, 2)
         if i % 2:
@@ -116,14 +118,17 @@ with sync_playwright() as p:
             advance(30)
     page.wait_for_function('document.querySelector("#end").open')
     assert page.evaluate('pixelhub.game.status') == 'won'
+    assert page.evaluate('pixelhub.game.cash') == 270
+    assert page.evaluate('pixelhub.game.ledger.filter(e=>e.label.startsWith("Pensja")).length') == 2
     assert page.evaluate('pixelhub.game.crates.filter(c=>c.loc.kind==="delivered").length') == 8
     page.screenshot(path='artifacts/victory-mobile.png', full_page=True)
     page.locator('#restart').click()
     page.wait_for_function('!document.querySelector("#end").open')
     advance(180)
-    page.wait_for_function('document.querySelector("#end").open')
-    assert page.locator('#end-title').inner_text() == 'Bankructwo'
+    assert page.evaluate('pixelhub.game.status') == 'playing'
+    assert page.evaluate('pixelhub.game.cash') == 50
+    assert not page.locator('#end').evaluate('(el)=>el.open')
     assert not errors, errors
     assert not console_errors, console_errors
-    print(json.dumps({'browser':'Chromium','scenario':'mouse: two rounds, physical pickup/turn/lower/withdraw, per-frame invariants and continuity, x1/x2/x4, resize, restart, bankruptcy','console_errors':errors,'result':'PASS'}, ensure_ascii=False))
+    print(json.dumps({'browser':'Chromium','scenario':'mouse: two rounds, physical pickup/turn/lower/withdraw, per-frame invariants and continuity, x1/x2/x4, resize, restart, no time-based wages','console_errors':errors,'result':'PASS'}, ensure_ascii=False))
     browser.close()

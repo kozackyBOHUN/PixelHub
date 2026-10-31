@@ -1,4 +1,4 @@
-import cfg, { dirs, tail, same, inside } from "./config.ts";
+import cfg, { dirs, tail, same } from "./config.ts";
 import type { Point, Pose } from "./config.ts";
 import {
   MinHeap,
@@ -7,7 +7,6 @@ import {
   neighbors,
   transition,
   edgeCost,
-  findPath,
 } from "./pathfinding.ts";
 import type { RigPose } from "./pathfinding.ts";
 export type Phase =
@@ -21,7 +20,7 @@ export type Phase =
   | "PUSH_TO_TARGET"
   | "LOWER"
   | "WITHDRAW_FORKS"
-  | "EXIT";
+  | "CLEAR_VEHICLE";
 export type TransportStep = {
   a: RigPose;
   b: RigPose;
@@ -70,7 +69,7 @@ const stationary = (
   duration: number,
 ): TransportStep => ({ a: p, b: p, loaded: true, phase, duration });
 // One Dijkstra search spans empty travel, all pickup sides and loaded travel.
-// Every goal includes final insertion, lowering, withdrawal and vehicle exit.
+// Every goal includes final insertion, lowering and one-tile fork withdrawal.
 // Thus the selected goal minimizes the entire job, including pickup choice.
 export function planTransport(
   start: Pose,
@@ -92,20 +91,22 @@ export function planTransport(
     // Pallet overlaps the deposited crate only during this axial withdrawal.
     if (!transition({ ...drop, mode: "pull" }, after, freeLoaded, false))
       continue;
-    const freeAfter = (p: Point) => freeLoaded(p) && !same(p, dest);
-    const exit = findPath(
-      after,
-      (p) => inside(p) && inside(tail(p)) && p.y <= 1 && tail(p).y <= 1,
-      freeAfter,
-    );
-    if (!exit) continue;
+    // A completed delivery ends after exactly one tile of empty fork withdrawal.
+    // Never force the worker to drive to a distant corridor after depositing.
     const list = [
       travel(pre, drop, true, "PUSH_TO_TARGET"),
       stationary(drop, "LOWER", cfg.worker.dropSeconds),
       travel(drop, { ...drop, mode: "pull" }, false),
       travel({ ...drop, mode: "pull" }, after, false, "WITHDRAW_FORKS"),
-      ...exit.slice(1).map((p, i) => travel(exit[i], p, false, "EXIT")),
     ];
+    // One tile clears the forks. Only a deep outbound vehicle slot additionally
+    // needs the pallet to leave the vehicle before dispatch is physically safe.
+    // This is the minimum required extra movement, not a trip to a corridor.
+    if (dest.x >= 20 && tail(after).x >= 20) {
+      const clear = { ...offset(after, after.d, 1), d: after.d, mode: "pull" as const };
+      if (!transition(after, clear, freeLoaded, false)) continue;
+      list.push(travel(after, clear, false, "CLEAR_VEHICLE"));
+    }
     suffix.set(poseKey(pre), list);
   }
   if (!suffix.size) return null;

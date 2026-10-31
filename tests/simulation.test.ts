@@ -65,16 +65,16 @@ test("C01,C02,C04: oriented footprint and corner clearance", () => {
     7,
   );
 });
-test("E01,E02,E06,E07: discrete wages, speed, frozen end and bankruptcy", () => {
+test("E01,E02,E06,E07: idle time and speed do not charge wages; explicit bankruptcy still freezes the game", () => {
   const g = new Game();
-  g.advance(59.99);
+  g.advance(60);
   assert.equal(g.cash, 50);
-  g.advance(0.01);
-  assert.equal(g.cash, 30);
   g.speed = 4;
-  g.advance(15);
-  assert.equal(g.cash, 10);
-  g.advance(15);
+  g.advance(100);
+  assert.equal(g.cash, 50);
+  assert.equal(g.status, "playing");
+  assert.equal(g.ledger.filter((e) => e.label.startsWith("Pensja")).length, 0);
+  g.money(-50, "Kontrolny koszt");
   assert.equal(g.status, "lost");
   const time = g.time;
   g.advance(100);
@@ -85,6 +85,8 @@ test("E01,E02,E06,E07: discrete wages, speed, frozen end and bankruptcy", () => 
 test("D01–D10,E03–E05,E08: play both rounds with normal movement and economy", () => {
   const g = new Game();
   roundOne(g);
+  assert.equal(g.cash, 90);
+  assert.deepEqual(g.ledger.filter((e) => e.label.startsWith("Pensja")).map((e) => e.amount), [-20]);
   console.log("R1", g.time, g.cash);
   assert.equal(g.ledger.filter((e) => e.label === "Rozładunek").length, 4);
   assert.equal(
@@ -106,7 +108,7 @@ test("D01–D10,E03–E05,E08: play both rounds with normal movement and economy
   assert.equal(g.outbound, "docked");
   g.accept();
   g.advance(1.1);
-  // Dispatch each colour pair promptly: wages continue during physical transport.
+  // Dispatch colour pairs; wages are charged once at each round completion.
   for (const [i, id] of ["1-1-0", "1-1-1", "1-0-0", "1-0-1"].entries()) {
     move(g, id, { kind: "outbound", lane: 0, depth: i % 2 === 0 ? 1 : 0 });
     if (i % 2 === 1) {
@@ -135,6 +137,8 @@ test("D01–D10,E03–E05,E08: play both rounds with normal movement and economy
     160,
   );
   assert.equal(g.ledger.filter((e) => e.label === "Rozładunek").length, 8);
+  assert.equal(g.cash, 270);
+  assert.deepEqual(g.ledger.filter((e) => e.label.startsWith("Pensja")).map((e) => e.amount), [-20, -20]);
   console.log("R2", g.time, g.cash);
   g.assertInvariant();
 });
