@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
-    "test": "node --experimental-strip-types tests/simulation.test.ts",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
     "test:browser": "python scripts/browser_test.py",
     "preview": "vite preview --host 0.0.0.0"
   },

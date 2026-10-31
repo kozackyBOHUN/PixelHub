@@ -1,6 +1,14 @@
 import cfg, { inside, room, dock, key, same, tail } from "./config.ts";
 import type { Point, Pose } from "./config.ts";
-import { findPath, transition, edgeCost } from "./pathfinding.ts";
+import {
+  findPath,
+  transition,
+  geometry,
+  geometryFree,
+  rig,
+} from "./pathfinding.ts";
+import { planTransport, pointAt, offset, travel } from "./transport.ts";
+import type { TransportStep, Phase } from "./transport.ts";
 export type Location =
   | { kind: "floor"; x: number; y: number }
   | { kind: "inbound" | "outbound"; lane: number; depth: number }
@@ -12,16 +20,27 @@ export type Crate = {
   paid: boolean;
   loc: Location;
 };
-type Task = {
+export type Task = {
   crate: string;
   dest: Location;
-  phase: "to_source" | "picking" | "to_destination" | "dropping";
+  phase: Phase;
+  steps: TransportStep[];
   route: Pose[];
-  loadedRoute: Pose[];
   elapsed: number;
   blocked: boolean;
+  cost: number;
+  inserted: boolean;
+  deposited: boolean;
   cancelRequested?: boolean;
+  recovery?: boolean;
 };
+export function locationPoint(l: Location): Point | null {
+  return l.kind === "floor"
+    ? l
+    : "lane" in l
+      ? pointAt(l.kind, l.lane, l.depth)
+      : null;
+}
 export class Game {
   round = 1;
   time = 0;
@@ -78,6 +97,15 @@ export class Game {
   }
   accessible(l: Location) {
     if (l.kind === "inbound" || l.kind === "outbound") {
+      if (
+        !Number.isInteger(l.lane) ||
+        !Number.isInteger(l.depth) ||
+        l.lane < 0 ||
+        l.lane > 1 ||
+        l.depth < 0 ||
+        l.depth > 1
+      )
+        return false;
       if ((l.kind === "inbound" ? this.inbound : this.outbound) !== "docked")
         return false;
       return l.depth === 0 || !this.slot(l.kind, l.lane, 0);
@@ -85,30 +113,76 @@ export class Game {
     return true;
   }
   free(ignore?: string, extra?: Point) {
-    return (p: Point) =>
-      inside(p) &&
-      !room(p) &&
-      !(this.round === 1 && p.x === 19 && dock(p)) &&
-      !this.reservations.has(key(p)) &&
-      (!extra || !same(p, extra)) &&
-      !this.crates.some(
-        (c) => c.id !== ignore && c.loc.kind === "floor" && same(c.loc, p),
+    return (p: Point) => {
+      const vehicle =
+        (p.x === -1 || p.x === -2) && (p.y === 2 || p.y === 3)
+          ? this.inbound === "docked"
+          : (p.x === 20 || p.x === 21) && (p.y === 2 || p.y === 3)
+            ? this.outbound === "docked"
+            : false;
+      return (
+        ((inside(p) &&
+          !room(p) &&
+          !(this.round === 1 && p.x === 19 && dock(p))) ||
+          vehicle) &&
+        !this.reservations.has(key(p)) &&
+        (!extra || !same(p, extra)) &&
+        !this.crates.some(
+          (c) =>
+            c.id !== ignore &&
+            !!locationPoint(c.loc) &&
+            same(locationPoint(c.loc)!, p),
+        )
       );
+    };
   }
   storage(p: Point) {
-    return this.free()(p) && !dock(p);
+    return (
+      Number.isInteger(p.x) &&
+      Number.isInteger(p.y) &&
+      inside(p) &&
+      this.free()(p) &&
+      !dock(p)
+    );
   }
   contact(l: Location, p: Pose) {
-    if (l.kind === "floor") {
-      const t = tail(p);
-      return Math.abs(t.x - l.x) + Math.abs(t.y - l.y) === 1 && !same(p, l);
-    }
-    if (l.kind === "inbound" || l.kind === "outbound")
-      return (
-        tail(p).x === (l.kind === "inbound" ? 0 : 19) &&
-        tail(p).y === l.lane + 2
-      );
-    return false;
+    const q = locationPoint(l);
+    return (
+      !!q && same(tail(p), offset(q, p.d, 1)) && this.sourceDirection(l, p.d)
+    );
+  }
+  sourceDirection(l: Location, d: number) {
+    return l.kind === "inbound"
+      ? d === 0
+      : l.kind === "outbound"
+        ? d === 4
+        : true;
+  }
+  get transportGeometry() {
+    const t = this.task,
+      step = t?.steps[0];
+    return step
+      ? geometry(step.a, step.b, Math.min(1, t!.elapsed / step.duration))
+      : geometry(this.pose);
+  }
+  get forkHeight() {
+    const t = this.task;
+    if (t?.phase === "LIFT")
+      return Math.min(1, t.elapsed / cfg.worker.pickupSeconds);
+    if (t?.phase === "LOWER")
+      return Math.max(0, 1 - t.elapsed / cfg.worker.dropSeconds);
+    return this.carried ? 1 : 0;
+  }
+  get transportState() {
+    return this.task?.blocked ? "BLOCKED" : (this.task?.phase ?? "IDLE");
+  }
+  vehicleOccupied(kind: "inbound" | "outbound") {
+    const g = this.transportGeometry;
+    return !geometryFree(
+      g,
+      (p) => (kind === "inbound" ? p.x >= 0 : p.x < 20),
+      !!this.carried,
+    );
   }
   selectWorker() {
     if (this.status !== "playing") return;
@@ -166,65 +240,49 @@ export class Game {
         return false;
       }
     } else return false;
-    const from = this.carried
-      ? [this.pose]
-      : findPath(this.pose, (p) => this.contact(c.loc, p), this.free());
-    if (!from) return false;
-    // Select a reachable pickup pose that also permits the loaded route.
-    let approach: Pose[] | null = from,
-      loaded: Pose[] | null = null;
-    const goal = (p: Pose) =>
-      this.contact(dest, p) && (dest.kind !== "floor" || !same(tail(p), dest));
-    const loadFree = this.free(c.id, dest.kind === "floor" ? dest : undefined);
-    loaded = findPath(from.at(-1)!, goal, loadFree);
-    if (!loaded && !this.carried) {
-      const candidates: Pose[] = [];
-      for (let x = 0; x < 20; x++)
-        for (let y = 0; y < 6; y++)
-          for (let d = 0; d < 8; d++) {
-            const p = { x, y, d };
-            if (this.contact(c.loc, p)) candidates.push(p);
-          }
-      for (const p of candidates) {
-        const a = findPath(
-          this.pose,
-          (q) => same(q, p) && q.d === p.d,
-          this.free(),
-        );
-        if (!a) continue;
-        const b = findPath(p, goal, loadFree);
-        if (b) {
-          approach = a;
-          loaded = b;
-          break;
-        }
-      }
-    }
-    if (!loaded) {
+    const source = locationPoint(c.loc) ?? tail(this.pose),
+      target = locationPoint(dest)!;
+    const plan = planTransport(
+      this.pose,
+      source,
+      target,
+      this.free(),
+      this.free(c.id),
+      c.loc.kind === "inbound" ? 0 : c.loc.kind === "outbound" ? 4 : undefined,
+      dest.kind === "outbound" ? 4 : undefined,
+      !!this.carried,
+    );
+    if (!plan) {
       this.message =
-        "Brak bezpiecznej trasy dla zestawu 1×2 do wskazanego celu.";
+        "Brak pełnego bezpiecznego manewru: dojazd, wsunięcie, transport, odstawienie i wycofanie wideł.";
       return false;
     }
     this.task = {
       crate: c.id,
       dest,
-      phase: this.carried ? "to_destination" : "to_source",
-      route: this.carried ? loaded : approach!,
-      loadedRoute: loaded,
+      steps: plan.steps,
+      phase: plan.steps[0].phase,
+      route: [],
       elapsed: 0,
       blocked: false,
+      cost: plan.cost,
+      inserted: false,
+      deposited: false,
     };
+    this.updateRoute();
     this.source = null;
     this.message = "Zadanie przyjęte.";
     return true;
   }
-  cancel() {
-    if (this.status !== "playing") return;
-    if (this.task && this.task.elapsed > 1e-8) {
-      this.task.cancelRequested = true;
-      this.message = "Anulowanie: powrót do ostatniej bezpiecznej pozycji.";
-      return;
-    }
+  updateRoute() {
+    const t = this.task;
+    if (!t) return;
+    t.phase = t.steps[0]?.phase ?? "EXIT";
+    t.route = t.steps.length
+      ? [t.steps[0].a, ...t.steps.map((s) => s.b)]
+      : [this.pose];
+  }
+  clearTask() {
     this.task = null;
     this.source = null;
     this.selected = !!this.carried;
@@ -232,10 +290,27 @@ export class Game {
       ? "Ładunek pozostaje na paleciaku. Wskaż nowe miejsce."
       : "Wybór anulowany. Kliknij pracownika.";
   }
+  cancel() {
+    if (this.status !== "playing") return;
+    const t = this.task;
+    if (!t) {
+      this.clearTask();
+      return;
+    }
+    // Once lowered, finish disengaging before accepting another job.
+    if (t.deposited) {
+      t.cancelRequested = false;
+      this.message = "Kończenie bezpiecznego wycofania wideł.";
+      return;
+    }
+    t.cancelRequested = true;
+    this.message = "Anulowanie: bezpieczne wycofanie bieżącego manewru.";
+  }
   dispatch() {
     if (
       this.status !== "playing" ||
       this.outbound !== "docked" ||
+      this.vehicleOccupied("outbound") ||
       this.task?.dest.kind === "outbound" ||
       this.crates.some(
         (c) => c.id === this.task?.crate && c.loc.kind === "outbound",
@@ -302,107 +377,101 @@ export class Game {
       }
     }
     const t = this.task;
-    if (t?.cancelRequested) {
-      t.elapsed = Math.max(0, t.elapsed - dt);
-      if (t.elapsed <= 1e-8) {
-        t.elapsed = 0;
-        this.cancel();
-      }
-      return;
-    }
     if (t) {
-      const c = this.crates.find((c) => c.id === t.crate)!;
-      if (t.phase === "to_source" || t.phase === "to_destination") {
-        if (t.route.length > 1) {
-          const a = t.route[0],
-            b = t.route[1];
+      const c = this.crates.find((c) => c.id === t.crate)!,
+        s = t.steps[0];
+      const ignore =
+        this.carried || t.inserted || t.deposited || s.phase === "INSERT_FORKS"
+          ? c.id
+          : undefined;
+      const free = this.free(ignore);
+      let safe =
+        s.a === s.b ||
+        (same(s.a, s.b) && s.a.d === s.b.d && s.a.mode === s.b.mode)
+          ? geometryFree(this.transportGeometry, free, !!this.carried)
+          : transition(s.a, s.b, free, !!this.carried);
+      if (t.cancelRequested) {
+        // Only the already traversed part is needed for reversing. An obstacle
+        // ahead must not prevent cancellation at the last safe configuration.
+        safe = true;
+        const fraction = Math.min(1, t.elapsed / s.duration);
+        for (let i = 0; i <= 32; i++)
           if (
-            !transition(
-              a,
-              b,
-              this.free(
-                this.carried ?? undefined,
-                t.phase === "to_destination" && t.dest.kind === "floor"
-                  ? t.dest
-                  : undefined,
-              ),
+            !geometryFree(
+              geometry(s.a, s.b, (fraction * i) / 32),
+              free,
+              !!this.carried,
+              0.002,
             )
-          ) {
-            t.blocked = true;
-            this.message =
-              "Trasa zablokowana. Usuń przeszkodę lub anuluj polecenie.";
-          } else {
-            t.blocked = false;
-            t.elapsed += dt;
-            const duration =
-              edgeCost(a, b) *
-              (this.carried
-                ? cfg.worker.loadedSecondsPerCardinalTile
-                : cfg.worker.emptySecondsPerCardinalTile);
-            if (t.elapsed + 1e-8 >= duration) {
-              t.elapsed -= duration;
-              this.pose = { ...b };
-              t.route.shift();
-            }
+          )
+            safe = false;
+      }
+      if (!safe) {
+        t.blocked = true;
+        this.message =
+          "Trasa zablokowana. Usuń przeszkodę lub anuluj polecenie.";
+      } else {
+        t.blocked = false;
+        if (t.cancelRequested) {
+          t.elapsed = Math.max(0, t.elapsed - dt);
+          if (t.elapsed <= 1e-8) {
+            this.pose = { ...s.a };
+            if (t.inserted && !this.carried) {
+              const a = rig(this.pose),
+                b = { ...offset(a, a.d, 1), d: a.d, mode: "pull" as const };
+              t.steps = [
+                travel(a, { ...a, mode: "pull" }, false),
+                travel({ ...a, mode: "pull" }, b, false, "WITHDRAW_FORKS"),
+              ];
+              t.recovery = true;
+              t.cancelRequested = false;
+              this.updateRoute();
+            } else this.clearTask();
           }
         } else {
-          t.phase = t.phase === "to_source" ? "picking" : "dropping";
-          t.elapsed = 0;
-        }
-      } else {
-        t.elapsed += dt;
-        if (
-          t.elapsed + 1e-8 >=
-          (t.phase === "picking"
-            ? cfg.worker.pickupSeconds
-            : cfg.worker.dropSeconds)
-        ) {
-          if (t.phase === "picking") {
-            if (!this.accessible(c.loc) || !this.contact(c.loc, this.pose)) {
-              t.blocked = true;
-              return;
+          t.elapsed += dt;
+          if (t.elapsed + 1e-8 >= s.duration) {
+            t.elapsed = Math.max(0, t.elapsed - s.duration);
+            this.pose = { ...s.b };
+            t.steps.shift();
+            if (s.phase === "INSERT_FORKS") t.inserted = true;
+            if (s.phase === "LIFT") {
+              c.loc = { kind: "worker" };
+              this.carried = c.id;
+              t.inserted = false;
             }
-            const wasInbound = c.loc.kind === "inbound";
-            c.loc = { kind: "worker" };
-            this.carried = c.id;
-            if (
-              wasInbound &&
-              !this.crates.some((c) => c.loc.kind === "inbound")
-            ) {
-              this.inbound = "departing";
-              this.inboundTimer = 1;
+            if (s.phase === "LOWER") {
+              c.loc = { ...t.dest };
+              this.carried = null;
+              t.deposited = true;
             }
-            t.phase = "to_destination";
-            t.route = t.loadedRoute;
-            t.elapsed = 0;
-          } else {
-            const available =
-              t.dest.kind === "floor"
-                ? this.storage(t.dest)
-                : t.dest.kind === "outbound" &&
-                  this.accessible(t.dest) &&
-                  !this.slot("outbound", t.dest.lane, t.dest.depth);
-            if (!available) {
-              t.blocked = true;
-              this.message =
-                "Cel zablokowany. Zwolnij miejsce lub anuluj polecenie.";
-              return;
-            }
-            c.loc = { ...t.dest };
-            this.carried = null;
-            if (c.loc.kind === "floor" && !c.paid) {
-              c.paid = true;
-              this.money(cfg.economy.unloadRewardPerCrate, "Rozładunek");
-            }
-            this.task = null;
-            this.selected = false;
-            this.message = "Odłożono skrzynię. Kliknij pracownika.";
+            if (!t.steps.length) {
+              if (t.deposited && c.loc.kind === "floor" && !c.paid) {
+                c.paid = true;
+                this.money(cfg.economy.unloadRewardPerCrate, "Rozładunek");
+              }
+              this.clearTask();
+              if (!t.recovery)
+                this.message =
+                  "Odłożono skrzynię i wycofano widły. Kliknij pracownika.";
+            } else this.updateRoute();
           }
         }
       }
+    }
+    // Vehicles wait until the entire rig has physically left their cargo space.
+    if (
+      !this.task &&
+      this.inbound === "docked" &&
+      !this.crates.some((c) => c.loc.kind === "inbound") &&
+      !this.vehicleOccupied("inbound")
+    ) {
+      this.inbound = "departing";
+      this.inboundTimer = 1;
     }
     if (this.status !== "playing") return;
     if (
+      !this.task &&
       this.round === 1 &&
       this.inbound === "absent" &&
       this.crates.length === 4 &&
@@ -438,7 +507,13 @@ export class Game {
       ids.add(c.id);
       let k: string;
       if (c.loc.kind === "floor") {
-        if (!inside(c.loc) || room(c.loc) || dock(c.loc))
+        if (
+          !Number.isInteger(c.loc.x) ||
+          !Number.isInteger(c.loc.y) ||
+          !inside(c.loc) ||
+          room(c.loc) ||
+          dock(c.loc)
+        )
           throw Error("Skrzynia poza magazynem");
         k = key(c.loc);
       } else if ("lane" in c.loc)
@@ -448,8 +523,27 @@ export class Game {
       if (occupied.has(k)) throw Error("Kolizja skrzyń");
       occupied.add(k);
     }
-    if (!this.free()(this.pose) || !this.free()(tail(this.pose)))
-      throw Error("Kolizja pracownika");
+    const ignore =
+      this.carried ??
+      (this.task?.inserted ||
+      this.task?.deposited ||
+      this.task?.phase === "INSERT_FORKS"
+        ? this.task.crate
+        : undefined);
+    if (
+      !geometryFree(this.transportGeometry, this.free(ignore), !!this.carried)
+    )
+      throw Error("Kolizja zestawu");
+    if (
+      this.crates.filter((c) => c.loc.kind === "worker").length !==
+      (this.carried ? 1 : 0)
+    )
+      throw Error("Własność ładunku");
+    if (
+      this.carried &&
+      !this.crates.some((c) => c.id === this.carried && c.loc.kind === "worker")
+    )
+      throw Error("Nieprawidłowy właściciel ładunku");
     return true;
   }
 }
