@@ -3,32 +3,7 @@ import assert from "node:assert/strict";
 import { Game } from "../src/simulation.ts";
 import cfg, { room, dock, tail, same } from "../src/config.ts";
 import { findPath, transition } from "../src/pathfinding.ts";
-export function finish(g: Game) {
-  let i = 0;
-  while (g.task && g.status === "playing" && i++ < 20000) g.advance(0.05);
-  assert.equal(g.task, null, `Unfinished: ${g.message}`);
-  assert.notEqual(g.status, "lost", "Bankruptcy");
-  g.assertInvariant();
-}
-export function move(g: Game, id: string, dest: any) {
-  g.selectWorker();
-  assert.ok(g.choose(id), g.message);
-  assert.ok(g.order(dest), g.message);
-  finish(g);
-}
-export const storage = [
-  { x: 2, y: 3 },
-  { x: 2, y: 4 },
-  { x: 1, y: 3 },
-  { x: 1, y: 4 },
-];
-export function roundOne(g: Game) {
-  g.accept();
-  g.advance(1.1);
-  for (const [i, id] of ["1-0-0", "1-0-1", "1-1-0", "1-1-1"].entries())
-    move(g, id, { kind: "floor", ...storage[i] });
-  assert.equal(g.status, "summary");
-}
+import { finish, move, roundOne, storage } from "./helpers.ts";
 test("A01–A03, A06: exact geometry and initial state", () => {
   const g = new Game();
   let rooms = 0,
@@ -87,7 +62,7 @@ test("C01,C02,C04: oriented footprint and corner clearance", () => {
       (p) => p.x === 4 && p.y === 1,
       (p) => p.y === 1 && p.x >= 0 && p.x <= 5,
     )?.length,
-    4,
+    7,
   );
 });
 test("E01,E02,E06,E07: discrete wages, speed, frozen end and bankruptcy", () => {
@@ -131,30 +106,26 @@ test("D01–D10,E03–E05,E08: play both rounds with normal movement and economy
   assert.equal(g.outbound, "docked");
   g.accept();
   g.advance(1.1);
-  // Free the floor first; each load uses precise front-then-rear slots.
-  for (const [i, id] of ["1-0-0", "1-0-1", "1-1-0", "1-1-1"].entries())
-    move(g, id, {
-      kind: "outbound",
-      lane: Math.floor(i / 2),
-      depth: i % 2 === 0 ? 1 : 0,
-    });
-  assert.equal(g.crates.filter((c) => c.loc.kind === "delivered").length, 0);
-  assert.ok(g.dispatch());
-  assert.equal(g.deliveryRemaining, 45);
-  assert.equal(g.dispatch(), false);
-  g.advance(45);
-  assert.equal(g.outbound, "docked");
+  // Dispatch each colour pair promptly: wages continue during physical transport.
+  for (const [i, id] of ["1-1-0", "1-1-1", "1-0-0", "1-0-1"].entries()) {
+    move(g, id, { kind: "outbound", lane: 0, depth: i % 2 === 0 ? 1 : 0 });
+    if (i % 2 === 1) {
+      assert.ok(g.dispatch());
+      assert.equal(g.deliveryRemaining, 30);
+      assert.equal(g.dispatch(), false);
+      g.advance(30);
+      assert.equal(g.outbound, "docked");
+    }
+  }
   assert.equal(g.crates.filter((c) => c.loc.kind === "delivered").length, 4);
   for (const [i, id] of ["2-0-0", "2-0-1", "2-1-0", "2-1-1"].entries()) {
-    move(g, id, { kind: "floor", ...storage[i] });
-    move(g, id, {
-      kind: "outbound",
-      lane: Math.floor(i / 2),
-      depth: i % 2 === 0 ? 1 : 0,
-    });
+    move(g, id, { kind: "floor", x: 2, y: 3 });
+    move(g, id, { kind: "outbound", lane: 0, depth: i % 2 === 0 ? 1 : 0 });
+    if (i % 2 === 1) {
+      assert.ok(g.dispatch());
+      g.advance(30);
+    }
   }
-  assert.ok(g.dispatch());
-  g.advance(45);
   assert.equal(g.status, "won");
   assert.equal(g.crates.filter((c) => c.loc.kind === "delivered").length, 8);
   assert.equal(
@@ -171,10 +142,10 @@ test("B07,D07,D09: own-vehicle unload, single-color partial course and one-time 
   const g = new Game();
   roundOne(g);
   g.nextRound();
-  move(g, "1-0-0", { kind: "outbound", lane: 0, depth: 1 });
-  move(g, "1-0-0", { kind: "floor", x: 16, y: 4 });
+  move(g, "1-1-0", { kind: "outbound", lane: 0, depth: 1 });
+  move(g, "1-1-0", { kind: "floor", x: 16, y: 4 });
   assert.equal(g.ledger.filter((e) => e.label === "Rozładunek").length, 4);
-  move(g, "1-0-0", { kind: "outbound", lane: 0, depth: 0 });
+  move(g, "1-1-0", { kind: "outbound", lane: 0, depth: 0 });
   assert.ok(g.dispatch());
   assert.equal(g.deliveryRemaining, 30);
   assert.equal(g.order({ kind: "outbound", lane: 1, depth: 0 }), false);
@@ -196,8 +167,10 @@ test("C06: retain blocked task, resume original route; cancel preserves carried 
   g.selectWorker();
   g.choose("1-0-0");
   g.order({ kind: "floor", x: 17, y: 4 });
-  while (g.task?.phase !== "to_destination") g.advance(0.05);
+  for (let i = 0; !g.carried && i < 10000 && g.status === "playing"; i++)
+    g.advance(0.05);
   assert.ok(g.carried);
+  assert.ok(g.task, "The loaded task must remain active");
   const route = g.task.route;
   const target = route[Math.min(5, route.length - 1)];
   g.reservations.add(`${target.x},${target.y}`);
@@ -213,10 +186,12 @@ test("C06: retain blocked task, resume original route; cancel preserves carried 
   g.selectWorker();
   g.choose("1-0-1");
   g.order({ kind: "floor", x: 16, y: 4 });
-  while (!g.carried) g.advance(0.05);
+  for (let i = 0; !g.carried && i < 10000 && g.status === "playing"; i++)
+    g.advance(0.05);
   const id = g.carried;
   g.cancel();
-  while (g.task) g.advance(0.05);
+  for (let i = 0; g.task && i < 10000 && g.status === "playing"; i++)
+    g.advance(0.05);
   assert.equal(g.carried, id);
   assert.ok(g.order({ kind: "floor", x: 2, y: 4 }));
   finish(g);
@@ -239,7 +214,7 @@ test("Regression: loading carry-over before accepting R2 CMR keeps the CMR waiti
   const g = new Game();
   roundOne(g);
   g.nextRound();
-  move(g, "1-0-0", { kind: "outbound", lane: 0, depth: 1 });
+  move(g, "1-1-0", { kind: "outbound", lane: 0, depth: 1 });
   assert.equal(g.inbound, "waiting");
   g.accept();
   g.advance(1.1);
@@ -265,7 +240,8 @@ test("B02,C03: mid-edge cancellation rolls back smoothly without losing cargo", 
   g.selectWorker();
   g.choose("1-0-0");
   g.order({ kind: "floor", x: 17, y: 4 });
-  while (!g.carried) g.advance(0.05);
+  for (let i = 0; !g.carried && i < 10000 && g.status === "playing"; i++)
+    g.advance(0.05);
   g.advance(0.2);
   const pose = { ...g.pose },
     id = g.carried,
@@ -275,7 +251,8 @@ test("B02,C03: mid-edge cancellation rolls back smoothly without losing cargo", 
   assert.ok(g.task?.cancelRequested);
   g.advance(0.05);
   assert.ok(g.task!.elapsed < elapsed);
-  while (g.task) g.advance(0.05);
+  for (let i = 0; g.task && i < 10000 && g.status === "playing"; i++)
+    g.advance(0.05);
   assert.deepEqual(g.pose, pose);
   assert.equal(g.carried, id);
   g.assertInvariant();

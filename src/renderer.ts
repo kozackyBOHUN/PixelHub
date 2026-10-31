@@ -1,7 +1,8 @@
 import cfg, { room, dock, tail } from "./config.ts";
 import type { Point, Pose } from "./config.ts";
 import type { Game, Crate, Location } from "./simulation.ts";
-import { edgeCost } from "./pathfinding.ts";
+import { geometry } from "./pathfinding.ts";
+import { locationPoint as logicalLocationPoint } from "./simulation.ts";
 export const TILE = 49,
   OX = 210,
   OY = 205;
@@ -20,45 +21,9 @@ export function slotPoint(
 ) {
   return { x: kind === "inbound" ? -1 - depth : 20 + depth, y: 2 + lane };
 }
-export function locationPoint(loc: Location) {
-  if (loc.kind === "floor") return loc;
-  if ("lane" in loc) return slotPoint(loc.kind, loc.lane, loc.depth);
-  return null;
-}
+export const locationPoint = logicalLocationPoint;
 export function workerVisual(g: Game) {
-  let head: Point = g.pose,
-    back: Point = tail(g.pose);
-  const t = g.task;
-  if (t && t.route.length > 1) {
-    const a = t.route[0],
-      b = t.route[1],
-      f = Math.min(
-        1,
-        t.elapsed /
-          (edgeCost(a, b) *
-            (g.carried
-              ? cfg.worker.loadedSecondsPerCardinalTile
-              : cfg.worker.emptySecondsPerCardinalTile)),
-      );
-    head = { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
-    const at = tail(a),
-      bt = tail(b);
-    if (a.d !== b.d) {
-      const aa = Math.atan2(at.y - a.y, at.x - a.x),
-        bb = Math.atan2(bt.y - b.y, bt.x - b.x);
-      const delta = Math.atan2(Math.sin(bb - aa), Math.cos(bb - aa));
-      const radius =
-        Math.hypot(at.x - a.x, at.y - a.y) +
-        (Math.hypot(bt.x - b.x, bt.y - b.y) -
-          Math.hypot(at.x - a.x, at.y - a.y)) *
-          f;
-      back = {
-        x: head.x + Math.cos(aa + delta * f) * radius,
-        y: head.y + Math.sin(aa + delta * f) * radius,
-      };
-    } else back = { x: at.x + (bt.x - at.x) * f, y: at.y + (bt.y - at.y) * f };
-  }
-  return { head, back };
+  return g.transportGeometry;
 }
 export class Renderer {
   debug = false;
@@ -89,10 +54,14 @@ export class Renderer {
     this.ctx.font = `bold ${size}px monospace`;
     this.ctx.fillText(s, x, y);
   }
-  crate(c: Crate, p: Point) {
-    const q = gridToScreen(p),
+  crate(c: Crate, p: Point, angle = 0, height = 0) {
+    this.ctx.save();
+    const center = gridToScreen(p);
+    this.ctx.translate(center.x + TILE / 2, center.y + TILE / 2);
+    this.ctx.rotate(angle);
+    const q = { x: -TILE / 2, y: -TILE / 2 },
       x = q.x + 8,
-      y = q.y + 8;
+      y = q.y + 8 - height * 4;
     const col =
       c.color === "red"
         ? c.active
@@ -101,7 +70,7 @@ export class Renderer {
         : c.active
           ? "#5f91bb"
           : "#a0b8ca";
-    this.rect(x + 3, y + 8, 34, 32, "#203b4333");
+    this.rect(x + 3, q.y + 16, 34, 32, "#203b4333");
     this.rect(x, y, 33, 32, "#5b6260");
     this.rect(x + 2, y + 2, 29, 27, col);
     this.rect(x + 3, y + 3, 27, 4, "#ffffff55");
@@ -109,6 +78,7 @@ export class Renderer {
     this.rect(x + 3, y + 22, 27, 3, "#273b4c33");
     this.rect(x - 1, y + 31, 36, 4, "#a88d65");
     if (!c.active) this.text("1", x + 7, y + 20, "#fff8e9", 13);
+    this.ctx.restore();
   }
   draw(g: Game) {
     const c = this.ctx;
@@ -210,33 +180,26 @@ export class Renderer {
     if (g.round === 2) this.vehicle(g, "outbound");
     if (g.selected && g.task) {
       const t = g.task;
-      c.strokeStyle = t.blocked ? "#df5454" : g.carried ? "#43c16f" : "#4299e1";
       c.lineWidth = 4;
       c.setLineDash([7, 5]);
-      c.beginPath();
-      t.route.forEach((p, i) => {
-        const s = gridToScreen(p);
-        if (!i) c.moveTo(s.x + 24, s.y + 24);
-        else c.lineTo(s.x + 24, s.y + 24);
-      });
-      c.stroke();
-      c.setLineDash([]);
-    }
-    for (const cr of g.crates) {
-      const p = locationPoint(cr.loc);
-      if (
-        p &&
-        !(cr.loc.kind === "inbound" && g.inbound !== "docked") &&
-        !(g.task?.crate === cr.id && g.task.phase === "picking")
-      ) {
-        this.crate(cr, p);
-        if (g.source === cr.id || g.highlight === cr.id) {
+      t.steps.forEach((step, index) => {
+        c.strokeStyle =
+          t.blocked && index === 0
+            ? "#df5454"
+            : step.loaded
+              ? "#43c16f"
+              : "#4299e1";
+        c.beginPath();
+        const from = index === 0 ? Math.min(1, t.elapsed / step.duration) : 0;
+        for (let i = 0; i <= 16; i++) {
+          const p = geometry(step.a, step.b, from + ((1 - from) * i) / 16).head;
           const s = gridToScreen(p);
-          c.strokeStyle = g.highlight === cr.id ? "#e23e39" : "#f8edaf";
-          c.lineWidth = 3;
-          c.strokeRect(s.x + 4, s.y + 3, 41, 43);
+          if (!i) c.moveTo(s.x + TILE / 2, s.y + TILE / 2);
+          else c.lineTo(s.x + TILE / 2, s.y + TILE / 2);
         }
-      }
+        c.stroke();
+      });
+      c.setLineDash([]);
     }
     const { head, back } = workerVisual(g),
       a = gridToScreen(head),
@@ -245,38 +208,41 @@ export class Renderer {
     c.lineWidth = 5;
     c.beginPath();
     c.moveTo(a.x + 24, a.y + 25);
-    c.lineTo(b.x + 24, b.y + 26);
+    const hitch = gridToScreen(g.transportGeometry.hitch);
+    c.lineTo(hitch.x + TILE / 2, hitch.y + TILE / 2);
     c.stroke();
-    this.rect(b.x + 12, b.y + 13, 26, 29, "#dcb557");
-    this.rect(b.x + 9, b.y + 41, 7, 5, "#455452");
-    this.rect(b.x + 33, b.y + 41, 7, 5, "#455452");
+    c.save();
+    c.translate(b.x + TILE / 2, b.y + TILE / 2);
+    c.rotate(
+      Math.atan2(g.transportGeometry.heading.y, g.transportGeometry.heading.x),
+    );
+    this.rect(-17, -12, 32, 7, "#dcb557");
+    this.rect(-17, 5, 32, 7, "#dcb557");
+    this.rect(8, -13, 8, 26, "#be943b");
+    this.rect(-12, -14, 6, 4, "#455452");
+    this.rect(-12, 10, 6, 4, "#455452");
+    c.restore();
+    // Floor cargo occludes the forks both before lifting and after lowering.
+    for (const cr of g.crates) {
+      const p = locationPoint(cr.loc);
+      if (p && !(cr.loc.kind === "inbound" && g.inbound !== "docked")) {
+        this.crate(
+          cr,
+          p,
+          g.crateAngle(cr),
+          g.task?.crate === cr.id && g.task.phase === "LIFT" ? g.forkHeight : 0,
+        );
+        if (g.source === cr.id || g.highlight === cr.id) {
+          const s = gridToScreen(p);
+          c.strokeStyle = g.highlight === cr.id ? "#e23e39" : "#f8edaf";
+          c.lineWidth = 3;
+          c.strokeRect(s.x + 4, s.y + 3, 41, 43);
+        }
+      }
+    }
     if (g.carried) {
       const cr = g.crates.find((cr) => cr.id === g.carried)!;
-      const dest =
-        g.task?.phase === "dropping" ? locationPoint(g.task.dest) : null;
-      const f = dest
-        ? Math.min(1, g.task!.elapsed / cfg.worker.dropSeconds)
-        : 0;
-      this.crate(
-        cr,
-        dest
-          ? {
-              x: back.x + (dest.x - back.x) * f,
-              y: back.y + (dest.y - back.y) * f,
-            }
-          : back,
-      );
-    }
-    if (g.task?.phase === "picking") {
-      const cr = g.crates.find((cr) => cr.id === g.task!.crate)!;
-      const p = locationPoint(cr.loc);
-      if (p) {
-        const f = Math.min(1, g.task.elapsed / cfg.worker.pickupSeconds);
-        this.crate(cr, {
-          x: p.x + (back.x - p.x) * f,
-          y: p.y + (back.y - p.y) * f,
-        });
-      }
+      this.crate(cr, back, g.crateAngle(cr), g.forkHeight);
     }
     if (g.selected) {
       c.strokeStyle = "#f8e8a6";
@@ -287,6 +253,11 @@ export class Renderer {
         c.strokeRect(b.x + 2, b.y + 2, 45, 45);
       }
     }
+    // Keep visible body pixels inside the same collision footprint.
+    c.save();
+    c.translate(a.x + TILE / 2, a.y + TILE / 2);
+    c.scale(0.88, 0.88);
+    c.translate(-a.x - TILE / 2, -a.y - TILE / 2);
     this.rect(a.x + 16, a.y + 30, 7, 13, "#39566b");
     this.rect(a.x + 28, a.y + 30, 7, 13, "#39566b");
     this.rect(a.x + 12, a.y + 13, 26, 20, "#de9e4f");
@@ -294,6 +265,7 @@ export class Renderer {
     this.rect(a.x + 19, a.y + 3, 16, 13, "#d9b18b");
     this.rect(a.x + 15, a.y, 24, 6, "#5088a8");
     this.rect(a.x + 11, a.y + 5, 31, 4, "#426a84");
+    c.restore();
     const last = g.ledger.at(-1)!;
     if (g.time - last.time < 3 && last.time > 0) {
       const elapsed = g.time - last.time;

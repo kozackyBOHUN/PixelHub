@@ -1,0 +1,192 @@
+{
+  "browser": "154.0.8037.57",
+  "renderer": {
+    "vendor": "Google Inc. (Google)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "blocked_source": {
+    "source": null,
+    "highlight": "1-0-0",
+    "message": "Ta skrzynia jest zablokowana przez inną lub auto jest w ruchu."
+  },
+  "escape_selection": {
+    "selected": false,
+    "source": null,
+    "task": false
+  },
+  "invalid_room": {
+    "source": "1-0-0",
+    "task": false,
+    "message": "To pole jest zajęte, zablokowane lub jest rampą."
+  },
+  "mobile": {
+    "viewport": 390,
+    "scroll": 390,
+    "canvas": {
+      "x": 11,
+      "y": 302.390625,
+      "width": 368,
+      "height": 170.84375,
+      "top": 302.390625,
+      "right": 379,
+      "bottom": 473.234375,
+      "left": 11
+    }
+  },
+  "mobile_hit_source": "1-0-0",
+  "lower_orientation": {
+    "before": {
+      "phase": "LOWER",
+      "elapsed": 1.4516301785729162,
+      "duration": 1.5,
+      "heading": {
+        "x": 0,
+        "y": -1
+      },
+      "crate": {
+        "id": "1-0-0",
+        "angle": -1.5707963267948966,
+        "height": 0.0322465476180559,
+        "loc": {
+          "kind": "worker"
+        }
+      }
+    },
+    "after": {
+      "phase": "SWITCH_DIRECTION",
+      "crate": {
+        "id": "1-0-0",
+        "angle": 0,
+        "height": 0,
+        "loc": {
+          "kind": "floor",
+          "x": 3,
+          "y": 5
+        }
+      }
+    }
+  },
+  "cancel_loaded": {
+    "carried": "1-0-1",
+    "selected": true,
+    "task": false,
+    "message": "Ładunek pozostaje na paleciaku. Wskaż nowe miejsce.",
+    "crates": [
+      {
+        "id": "1-0-0",
+        "loc": {
+          "kind": "floor",
+          "x": 3,
+          "y": 5
+        }
+      },
+      {
+        "id": "1-0-1",
+        "loc": {
+          "kind": "worker"
+        }
+      },
+      {
+        "id": "1-1-0",
+        "loc": {
+          "kind": "inbound",
+          "lane": 1,
+          "depth": 0
+        }
+      },
+      {
+        "id": "1-1-1",
+        "loc": {
+          "kind": "inbound",
+          "lane": 1,
+          "depth": 1
+        }
+      }
+    ]
+  },
+  "cancel_reorder": {
+    "task": true,
+    "dest": {
+      "kind": "floor",
+      "x": 2,
+      "y": 5
+    }
+  },
+  "planning": {
+    "chooseMouseWallMs": 61.08779000010145,
+    "orderMouseWallMs": 151.67274800000996,
+    "cpuMetricDelta": {
+      "TaskDuration": 0.21239399999999997,
+      "ScriptDuration": 0.07641500000000001
+    }
+  },
+  "x4_5second_sample": {
+    "frames": {
+      "count": 277,
+      "mean": 18.290252707581224,
+      "p50": 16.699999999999818,
+      "p95": 33.30000000000018,
+      "max": 66.69999999999982
+    },
+    "draw": {
+      "count": 277,
+      "mean": 0.2483754512670682,
+      "p50": 0.19999999995343387,
+      "p95": 0.4000000001396984,
+      "max": 1.3999999999068677
+    },
+    "advance": {
+      "count": 277,
+      "mean": 0.04115523464829805,
+      "p50": 0,
+      "p95": 0.10000000009313226,
+      "max": 0.30000000004656613
+    },
+    "long": [
+      {
+        "start": 4738.399999999907,
+        "duration": 58
+      }
+    ],
+    "task": "PUSH_TO_TARGET",
+    "wallSeconds": 5.007904592999921,
+    "gameSeconds": 20.15,
+    "ratio": 4.023638954337467,
+    "cpuTaskSeconds": 4.719435,
+    "cpuScriptSeconds": 0.5585429999999999,
+    "heapStart": 20216008,
+    "heapEnd": 15585432,
+    "domNodesStart": 1279,
+    "domNodesEnd": 4854
+  },
+  "console": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x1074001b5400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x1074001b5400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x1074001b5400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x1074001b5400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+    }
+  ],
+  "exceptions": [],
+  "failedRequests": [],
+  "context": {
+    "revision": "ee23be2afe945e241a4775d4e099e047c7457e87",
+    "server": "Vite development server",
+    "result": "PASS; reproduced LOWER crate yaw snap",
+    "performanceLimit": "One five-second sample in shared headless SwiftShader environment; not a comparative benchmark."
+  }
+}

@@ -104,6 +104,7 @@ function hud() {
   $("dispatch").hidden =
     game.outbound !== "docked" ||
     !inBus ||
+    game.vehicleOccupied("outbound") ||
     game.task?.dest.kind === "outbound" ||
     game.crates.some(
       (c) => c.id === game.task?.crate && c.loc.kind === "outbound",

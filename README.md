@@ -17,7 +17,7 @@ Vite uruchamia grę na porcie 5173. `npm run build` sprawdza typy i tworzy `dist
 
 1. Kliknij kartonik CMR z czterema ikonami, aby przyjąć dostawę.
 2. Kliknij pracownika (niebieska czapka), dostępną skrzynię, następnie wolne pole podłogi.
-3. Po podsumowaniu przejdź do rundy 2. Załaduj własnego busa i kliknij „Wyślij busa”. Powtórz do dostarczenia wszystkich 8 skrzyń.
+3. Paleciak musi mieć miejsce na ustawienie wideł, skręt i wycofanie. Przy dłuższej pracy wysyłaj mniejsze partie, aby zachować środki na płace. Po podsumowaniu przejdź do rundy 2. Załaduj własnego busa i kliknij „Wyślij busa”. Powtórz do dostarczenia wszystkich 8 skrzyń.
 
 W każdym pasie auta tylny slot blokuje przedni. Ładuj najpierw przód. Dostępny ładunek można także wyjąć z własnego busa. Pomieszczenia i rampy nie są miejscami składowania. `Anuluj` / Escape przerywa wybór lub zadanie; przewożony ładunek pozostaje na paleciaku i wymaga wskazania nowego celu. Brak kolejki.
 
@@ -44,7 +44,8 @@ Domyślnie test korzysta z `/usr/bin/chromium`. Ścieżkę można nadpisać zmie
 
 - `src/game-config.json` — jedno miejsce zmiany mapy, czasów i stawek; kopia konfiguracji dostarczonej w dokumentacji.
 - `src/config.ts` — geometria, typy i walidacja mapy.
-- `src/pathfinding.ts` — wyszukiwanie konfiguracji 1×2 i kontrola przestrzeni manewru.
+- `src/pathfinding.ts` — geometria przegubowego zestawu, dozwolone manewry, obrysy zamiatane i wyszukiwanie według czasu.
+- `src/transport.ts` — planowanie pełnego zadania: pobranie, ciągnięcie/pchanie, odstawienie, wycofanie i wyjazd.
 - `src/simulation.ts` — zegar, zadania, skrzynie, sloty, pojazdy, rundy i księga transakcji, niezależne od DOM/renderera.
 - `src/renderer.ts` — grafika proceduralna, animacje i wspólne odwzorowanie współrzędnych.
 - `src/main.ts`, `index.html`, `style.css` — PixiJS, sterowanie i polski HUD.
@@ -62,3 +63,21 @@ Jednorazowo w repozytorium otwórz **Settings → Pages → Build and deployment
 Adres po udanej publikacji: `https://kozackybohun.github.io/PixelHub/`. Samo dodanie workflow nie oznacza, że adres już działa; wynik publikacji jest widoczny w zakładce Actions. Dla prywatnego repozytorium dostępność Pages zależy od planu GitHub.
 
 Vite generuje względne adresy zasobów (`vite.config.ts`), więc wszystkie skrypty, tekstury i style działają również pod ścieżką `/PixelHub/`. Gra działa w całości w przeglądarce; nie potrzebuje backendu ani pobierania plików źródłowych w trakcie gry.
+
+## Audyt techniczny
+
+[PIXELHUB_AUDIT_REPORT.md](PIXELHUB_AUDIT_REPORT.md) opisuje niezależne odtworzenia, poprawki, wyniki 52 testów oraz ograniczenia. `npm run typecheck` sprawdza również testy i benchmark.
+
+Powtarzalny pomiar planowania:
+
+```sh
+node --experimental-strip-types scripts/audit_benchmark.ts --baseline ee23be2 --repeat 5 --output /tmp/pixelhub-benchmark.json
+```
+
+Dodatkowy audyt przeglądarkowy wymaga działającego serwera, tych samych zależności Playwright i Chromium co `test:browser`:
+
+```sh
+python scripts/audit_browser.py
+```
+
+Skrypt wykonuje interakcje myszy, sprawdza orientację i kolejność rysowania, anulowanie, odjazd busa oraz mierzy rzeczywiste ×4. Wyniki zapisuje w ignorowanym `artifacts/audit/`. Pomiarów płynności w środowisku headless nie należy traktować jako benchmarku urządzeń użytkowników. Workflow `checks.yml` waliduje PR bez wdrażania gry.

@@ -82,7 +82,7 @@
       },
       "heading": "E"
     },
-    "allowEightDirections": true,
+    "allowEightDirections": false,
     "preventCornerCutting": true,
     "articulatedTurning": true,
     "emptySecondsPerCardinalTile": 0.8,
@@ -91,7 +91,11 @@
     "pickupSeconds": 1.5,
     "dropSeconds": 1.5,
     "maxActiveTasks": 1,
-    "canQueueTasks": false
+    "canQueueTasks": false,
+    "pushSecondsPerCardinalTile": 1.8,
+    "switchSeconds": 0.8,
+    "turnRadiusTiles": 0.5,
+    "drawbarSteeringRadians": 0.3
   },
   "cargo": {
     "crateWidthTiles": 1,
