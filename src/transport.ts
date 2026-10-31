@@ -19,7 +19,8 @@ export type Phase =
   | "MANEUVER"
   | "PUSH_TO_TARGET"
   | "LOWER"
-  | "WITHDRAW_FORKS";
+  | "WITHDRAW_FORKS"
+  | "CLEAR_VEHICLE";
 export type TransportStep = {
   a: RigPose;
   b: RigPose;
@@ -98,6 +99,14 @@ export function planTransport(
       travel(drop, { ...drop, mode: "pull" }, false),
       travel({ ...drop, mode: "pull" }, after, false, "WITHDRAW_FORKS"),
     ];
+    // One tile clears the forks. Only a deep outbound vehicle slot additionally
+    // needs the pallet to leave the vehicle before dispatch is physically safe.
+    // This is the minimum required extra movement, not a trip to a corridor.
+    if (dest.x >= 20 && tail(after).x >= 20) {
+      const clear = { ...offset(after, after.d, 1), d: after.d, mode: "pull" as const };
+      if (!transition(after, clear, freeLoaded, false)) continue;
+      list.push(travel(after, clear, false, "CLEAR_VEHICLE"));
+    }
     suffix.set(poseKey(pre), list);
   }
   if (!suffix.size) return null;
