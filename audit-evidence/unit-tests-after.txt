@@ -1,0 +1,66 @@
+
+> pixelhub@0.1.0 test
+> node --experimental-strip-types --test tests/*.test.ts
+
+✔ audit: independent polygon oracle encloses sampled rolling arcs in swept cells (3252.193268ms)
+✔ audit: cancellation blocks a narrow independently verified worker corner collision (2.544909ms)
+✔ audit planner: independent whole-job optimum, all pickup and deposit sides (102.725883ms)
+✔ audit planner: independent whole-job optimum, obstacles and a narrow exit approach (80.980065ms)
+✔ audit planner: independent whole-job optimum, restricted pickup and deposit headings (95.141468ms)
+✔ audit planner: independent whole-job optimum, already carrying cargo in pull mode (27.678107ms)
+✔ audit planner: independent whole-job optimum, already carrying cargo in push mode (52.076296ms)
+✔ audit planner: independent whole-job optimum, pickup cannot be approached on its required side (27.954ms)
+✔ audit planner: independent whole-job optimum, free target with no legal axial withdrawal (23.707799ms)
+✔ audit planner: the nearest pickup side can lose on total job time (170.484304ms)
+✔ audit planner: the fastest deposit side can lose after withdrawal and exit (238.473191ms)
+✔ audit planner: every source and target heading agrees with an independent search (400.731303ms)
+✔ dispatch invalidates a selected cargo source before the bus leaves (159.035646ms)
+✔ ordering cannot reclaim a stale source already carried by a moving bus (70.499906ms)
+✔ ordering cannot reclaim a delivered crate for a second delivery reward (72.358931ms)
+✔ cancelling again during pickup recovery finishes a finite withdrawal (45.103826ms)
+✔ an accepted destination remains stable when the caller reuses its object (39.027824ms)
+✔ invalid elapsed time cannot poison the deterministic game clock (0.275601ms)
+✔ cancelling before and after lowering preserves ownership and one-time rewards (165.95381ms)
+✔ mixed-color delivery returns after 45 game seconds across speed changes (152.908411ms)
+R1 109.8 90
+R2 778.3 70
+✔ A01–A03, A06: exact geometry and initial state (1.158931ms)
+✔ B01–B06: source blocking, cancel, invalid destinations and slot lanes (84.897032ms)
+✔ C01,C02,C04: oriented footprint and corner clearance (0.499075ms)
+✔ E01,E02,E06,E07: discrete wages, speed, frozen end and bankruptcy (0.735218ms)
+✔ D01–D10,E03–E05,E08: play both rounds with normal movement and economy (915.736753ms)
+✔ B07,D07,D09: own-vehicle unload, single-color partial course and one-time rewards (241.527473ms)
+✔ C06: retain blocked task, resume original route; cancel preserves carried crate (176.511845ms)
+✔ E08: same commands and game time are deterministic across render speeds (0.502841ms)
+✔ Regression: loading carry-over before accepting R2 CMR keeps the CMR waiting (211.184036ms)
+✔ B01: active task refuses replacement and remains the same object (28.304341ms)
+✔ B02,C03: mid-edge cancellation rolls back smoothly without losing cargo (50.153696ms)
+✔ 01–04: pickup requires an axial three-position approach and free insertion space (32.838131ms)
+✔ 05: forks actually enter beneath a stationary source before ownership changes (53.037883ms)
+✔ 06,08: straight pull and push use different times and the same connected rig (0.543762ms)
+✔ 07,09: pulling and reverse pushing arcs keep the wheel velocity axial in intermediate frames (0.54894ms)
+✔ 10–12: both direction switches cost 0.8 seconds without moving any element (0.356312ms)
+✔ 13: lateral translations and stationary rotations are not legal graph edges (0.150174ms)
+✔ 14: a swept corner collision is rejected even when both endpoints are clear (1.095265ms)
+✔ 15: a quarter turn fits two columns; U-turns are sequences of rolling arcs (1.640279ms)
+✔ 16: whole-job cost includes insertion, lift, switches, transport, lowering, withdrawal and escape (118.150834ms)
+✔ 17–18: lowering never slides cargo; completion and rewards follow full withdrawal (32.641669ms)
+✔ 19: reject an apparently free target with no legal withdrawal and exit (1.969962ms)
+✔ 20–21: rear cargo blocks deep cargo; deep pickup physically enters the cargo bay (76.75845ms)
+✔ 22–24: front/rear loading, own-bus unloading, and departure lock use physical bay cells (202.637975ms)
+✔ 25: dynamic obstruction freezes the exact intermediate pose and resumes the original job (28.804289ms)
+✔ 26–27: cancellation with cargo reverses continuously and never duplicates or loses the crate (42.265588ms)
+✔ cancelling partially inserted forks withdraws them before clearing the job (28.039897ms)
+✔ cancelling a blocked job at its starting node is allowed (27.610917ms)
+✔ 31: x1/x2/x4 produce identical transport poses, ownership and wages at equal game time (84.431687ms)
+✔ 32: rendering reads the exact logical geometry on every intermediate frame (31.118083ms)
+✔ 16 regression: a longer pulling route beats the shortest route measured in metres (22.553936ms)
+✔ the articulated drawbar steers while its hinge and length remain mechanically connected (0.180199ms)
+ℹ tests 52
+ℹ suites 0
+ℹ pass 52
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3358.462775

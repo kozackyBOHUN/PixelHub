@@ -9,7 +9,9 @@ with sync_playwright() as p:
     browser = p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH', '/usr/bin/chromium'), headless=True, args=['--no-sandbox'])
     page = browser.new_page(viewport={'width': 1440, 'height': 1000}, device_scale_factor=1)
     errors = []
+    console_errors = []
     page.on('pageerror', lambda e: errors.append(str(e)))
+    page.on('console', lambda msg: console_errors.append(msg.text) if msg.type == 'error' else None)
     page.goto(os.environ.get('PIXELHUB_URL', 'http://127.0.0.1:5173/') + '?test=1')
     page.wait_for_function('window.pixelhub && document.querySelector("#message").textContent.length > 0')
     assert page.locator('#round').inner_text() == 'Runda 1/2'
@@ -122,5 +124,6 @@ with sync_playwright() as p:
     page.wait_for_function('document.querySelector("#end").open')
     assert page.locator('#end-title').inner_text() == 'Bankructwo'
     assert not errors, errors
+    assert not console_errors, console_errors
     print(json.dumps({'browser':'Chromium','scenario':'mouse: two rounds, physical pickup/turn/lower/withdraw, per-frame invariants and continuity, x1/x2/x4, resize, restart, bankruptcy','console_errors':errors,'result':'PASS'}, ensure_ascii=False))
     browser.close()

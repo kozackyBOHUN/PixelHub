@@ -170,6 +170,7 @@ test("C06: retain blocked task, resume original route; cancel preserves carried 
   for (let i = 0; !g.carried && i < 10000 && g.status === "playing"; i++)
     g.advance(0.05);
   assert.ok(g.carried);
+  assert.ok(g.task, "The loaded task must remain active");
   const route = g.task.route;
   const target = route[Math.min(5, route.length - 1)];
   g.reservations.add(`${target.x},${target.y}`);

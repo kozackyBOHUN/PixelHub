@@ -3,6 +3,7 @@ import type { Point, Pose } from "./config.ts";
 import {
   findPath,
   transition,
+  transitionRange,
   geometry,
   geometryFree,
   rig,
@@ -19,6 +20,8 @@ export type Crate = {
   active: boolean;
   paid: boolean;
   loc: Location;
+  orientation?: number;
+  carriedAngleOffset?: number;
 };
 export type Task = {
   crate: string;
@@ -136,6 +139,16 @@ export class Game {
       );
     };
   }
+  // Search is synchronous: one occupancy snapshot is valid for the entire
+  // search, while execution always rechecks the live world through free().
+  planningFree(ignore?: string) {
+    const live = this.free(ignore),
+      allowed = new Set<string>();
+    for (let x = -2; x <= 21; x++)
+      for (let y = 0; y < 6; y++)
+        if (live({ x, y })) allowed.add(key({ x, y }));
+    return (p: Point) => allowed.has(key(p));
+  }
   storage(p: Point) {
     return (
       Number.isInteger(p.x) &&
@@ -164,6 +177,11 @@ export class Game {
     return step
       ? geometry(step.a, step.b, Math.min(1, t!.elapsed / step.duration))
       : geometry(this.pose);
+  }
+  crateAngle(crate: Crate) {
+    if (crate.loc.kind !== "worker") return crate.orientation ?? 0;
+    const v = this.transportGeometry.heading;
+    return (crate.carriedAngleOffset ?? 0) + Math.atan2(v.y, v.x);
   }
   get forkHeight() {
     const t = this.task;
@@ -209,7 +227,7 @@ export class Game {
     const route = findPath(
       this.pose,
       (p) => this.contact(c.loc, p),
-      this.free(),
+      this.planningFree(),
     );
     if (!route) {
       this.message = "Brak dojazdu dla zestawu 1×2.";
@@ -224,6 +242,16 @@ export class Game {
     if (this.status !== "playing" || this.task || !this.selected) return false;
     const c = this.crates.find((c) => c.id === (this.carried ?? this.source));
     if (!c) return false;
+    if (
+      !this.carried &&
+      (!["floor", "inbound", "outbound"].includes(c.loc.kind) ||
+        !this.accessible(c.loc))
+    ) {
+      this.source = null;
+      this.message =
+        "Wybrany ładunek nie jest już dostępny. Wybierz skrzynię ponownie.";
+      return false;
+    }
     if (dest.kind === "floor") {
       if (!this.storage(dest)) {
         this.message = "To pole jest zajęte, zablokowane lub jest rampą.";
@@ -246,8 +274,8 @@ export class Game {
       this.pose,
       source,
       target,
-      this.free(),
-      this.free(c.id),
+      this.planningFree(),
+      this.planningFree(c.id),
       c.loc.kind === "inbound" ? 0 : c.loc.kind === "outbound" ? 4 : undefined,
       dest.kind === "outbound" ? 4 : undefined,
       !!this.carried,
@@ -259,7 +287,7 @@ export class Game {
     }
     this.task = {
       crate: c.id,
-      dest,
+      dest: { ...dest },
       steps: plan.steps,
       phase: plan.steps[0].phase,
       route: [],
@@ -323,6 +351,11 @@ export class Game {
       new Set(cargo.map((c) => c.color)).size === 1
         ? cfg.vehicles.deliveryDurationGameSeconds.oneColor
         : cfg.vehicles.deliveryDurationGameSeconds.twoColors;
+    if (cargo.some((c) => c.id === this.source)) {
+      this.source = null;
+      this.highlight = null;
+      this.message = "Bus wyjechał. Wybierz inną dostępną skrzynię.";
+    }
     cargo.forEach((c) => (c.loc = { kind: "delivery" }));
     this.outbound = "delivering";
     return true;
@@ -340,7 +373,12 @@ export class Game {
       "Runda 2. Przyjmij CMR i dostarcz 8 skrzyń. Bus jest bezpłatny.";
   }
   advance(realSeconds: number) {
-    if (this.status !== "playing") return;
+    if (
+      this.status !== "playing" ||
+      !Number.isFinite(realSeconds) ||
+      realSeconds <= 0
+    )
+      return;
     this.accumulator += realSeconds * this.speed;
     while (this.accumulator + 1e-9 >= 0.05 && this.status === "playing") {
       this.accumulator -= 0.05;
@@ -393,18 +431,14 @@ export class Game {
       if (t.cancelRequested) {
         // Only the already traversed part is needed for reversing. An obstacle
         // ahead must not prevent cancellation at the last safe configuration.
-        safe = true;
-        const fraction = Math.min(1, t.elapsed / s.duration);
-        for (let i = 0; i <= 32; i++)
-          if (
-            !geometryFree(
-              geometry(s.a, s.b, (fraction * i) / 32),
-              free,
-              !!this.carried,
-              0.002,
-            )
-          )
-            safe = false;
+        safe = transitionRange(
+          s.a,
+          s.b,
+          free,
+          !!this.carried,
+          0,
+          Math.min(1, t.elapsed / s.duration),
+        );
       }
       if (!safe) {
         t.blocked = true;
@@ -420,7 +454,9 @@ export class Game {
               const a = rig(this.pose),
                 b = { ...offset(a, a.d, 1), d: a.d, mode: "pull" as const };
               t.steps = [
-                travel(a, { ...a, mode: "pull" }, false),
+                ...(a.mode === "pull"
+                  ? []
+                  : [travel(a, { ...a, mode: "pull" }, false)]),
                 travel({ ...a, mode: "pull" }, b, false, "WITHDRAW_FORKS"),
               ];
               t.recovery = true;
@@ -436,11 +472,17 @@ export class Game {
             t.steps.shift();
             if (s.phase === "INSERT_FORKS") t.inserted = true;
             if (s.phase === "LIFT") {
+              const v = geometry(s.b).heading;
+              c.carriedAngleOffset =
+                (c.orientation ?? 0) - Math.atan2(v.y, v.x);
               c.loc = { kind: "worker" };
               this.carried = c.id;
               t.inserted = false;
             }
             if (s.phase === "LOWER") {
+              const v = geometry(s.b).heading;
+              c.orientation =
+                (c.carriedAngleOffset ?? 0) + Math.atan2(v.y, v.x);
               c.loc = { ...t.dest };
               this.carried = null;
               t.deposited = true;

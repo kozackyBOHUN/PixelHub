@@ -1,5 +1,7 @@
 # Transport ręcznym paleciakiem
 
+Uwaga: poniższy zapis opisuje bazową przebudowę `ee23be2` i jej 32 testy. Aktualne ustalenia, poprawki oraz wyniki 52 testów znajdują się w [raporcie audytu](PIXELHUB_AUDIT_REPORT.md).
+
 ## Model i ruch
 
 `pathfinding.ts` definiuje konfigurację `(x, y, orientacja, tryb)` oraz jedną funkcję `geometry`, z której korzystają kolizje, symulacja i renderer. Pozycje węzłów opisują pracownika; `tail` daje pozycję paleciaka w węźle. Podczas manewru autorytatywne pozycje ciągłe są dostępne przez `Game.transportGeometry`, a `pose` oznacza ostatni zatwierdzony węzeł. Skrzynia na widłach jest przypisana do paleciaka, nie interpoluje samodzielnie między lokalizacjami.
