@@ -182,7 +182,7 @@ test("15: a quarter turn fits two columns; U-turns are sequences of rolling arcs
   for (let i = 1; i < path.length; i++)
     assert.ok(transition(path[i - 1], path[i], open));
 });
-test("16: whole-job cost includes insertion, lift, switches, transport, lowering, withdrawal and escape", () => {
+test("16: whole-job cost includes insertion, lift, switches, transport, lowering and exactly one-tile withdrawal", () => {
   const g = ordered(),
     t = g.task!;
   close(
@@ -197,7 +197,6 @@ test("16: whole-job cost includes insertion, lift, switches, transport, lowering
     "PUSH_TO_TARGET",
     "LOWER",
     "WITHDRAW_FORKS",
-    "EXIT",
   ])
     assert.ok(
       t.steps.some((s) => s.phase === phase),
@@ -257,7 +256,7 @@ test("17–18: lowering never slides cargo; completion and rewards follow full w
     ) >= 1,
   );
 });
-test("19: reject an apparently free target with no legal withdrawal and exit", () => {
+test("19: reject an apparently free target with no legal one-tile withdrawal", () => {
   const g = ready();
   for (const p of [
     { x: 1, y: 5 },
@@ -438,5 +437,34 @@ test("the articulated drawbar steers while its hinge and length remain mechanica
   for (const f of [0, 1]) {
     const g = geometry(a, b, f);
     close(Math.hypot(g.head.x - g.back.x, g.head.y - g.back.y), 1);
+  }
+});
+
+test("33: all four axial drop directions are plannable and end after one-tile withdrawal", () => {
+  const floorFree = (p: Point) => p.x >= 0 && p.x < 10 && p.y >= 0 && p.y < 8;
+  const source = { x: 1, y: 2 };
+  const dest = { x: 5, y: 4 };
+  const start = { x: 3, y: 1, d: 0 };
+  for (const direction of [0, 2, 4, 6]) {
+    const plan = planTransport(
+      start,
+      source,
+      dest,
+      (p) => floorFree(p) && !same(p, source),
+      floorFree,
+      undefined,
+      direction,
+    );
+    assert.ok(plan, `Expected a valid drop from direction ${direction}`);
+    const drop = plan.steps.find((s) => s.phase === "LOWER")!;
+    const withdrawal = plan.steps.at(-1)!;
+    assert.equal(drop.a.d, direction);
+    assert.equal(withdrawal.phase, "WITHDRAW_FORKS");
+    assert.equal(withdrawal.b.d, direction);
+    assert.equal(withdrawal.b.mode, "pull");
+    const v = dirs[direction];
+    close(withdrawal.b.x - drop.a.x, v.x);
+    close(withdrawal.b.y - drop.a.y, v.y);
+    assert.ok(!plan.steps.some((s) => s.phase === "EXIT"));
   }
 });
