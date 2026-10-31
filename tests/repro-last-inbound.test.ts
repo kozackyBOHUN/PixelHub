@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Game } from "../src/simulation.ts";
-import { findPath } from "../src/pathfinding.ts";
+import { findPath, neighbors, transition, geometry, geometryFree, sweptCells } from "../src/pathfinding.ts";
 
 test("repro: last crate in inbound truck remains reachable after three top-row deposits", () => {
   const g = new Game();
@@ -27,7 +27,16 @@ test("repro: last crate in inbound truck remains reachable after three top-row d
   }));
   g.assertInvariant();
   const goal = (p: any) => g.contact(crate.loc,p);
-  const route = findPath(g.pose, goal, g.planningFree());
+  const free = g.planningFree();
+  for (const b of neighbors({ ...g.pose, mode:"pull" })) {
+    const bad=sweptCells(g.pose,b,false).filter(p=>!free(p));
+    console.log("NEIGHBOR", JSON.stringify({b,legal:transition(g.pose,b,free,false),bad:bad.slice(0,12)}));
+  }
+  for (const remove of [[],["7,0"],["4,0","5,0"],["4,0","5,0","7,0"]]) {
+    const ignored = (p:any) => free(p)||remove.includes(p.x+","+p.y);
+    console.log("REMOVED",JSON.stringify({remove,route:findPath(g.pose,goal,ignored)?.length??null}));
+  }
+    const route = findPath(g.pose, goal, g.planningFree());
   console.log("REPRO ROUTE", JSON.stringify({count:route?.length ?? null,first:route?.slice(0,3),last:route?.at(-1)}));
   g.selectWorker();
   const chosen=g.choose(crate.id);
