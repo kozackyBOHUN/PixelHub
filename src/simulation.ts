@@ -305,7 +305,7 @@ export class Game {
   updateRoute() {
     const t = this.task;
     if (!t) return;
-    t.phase = t.steps[0]?.phase ?? "EXIT";
+    t.phase = t.steps[0]?.phase ?? "WITHDRAW_FORKS";
     t.route = t.steps.length
       ? [t.steps[0].a, ...t.steps.map((s) => s.b)]
       : [this.pose];
