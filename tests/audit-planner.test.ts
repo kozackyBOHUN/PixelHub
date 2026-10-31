@@ -32,6 +32,26 @@ const stateKey = ({ p, stage }: State) => `${stage}:${poseKey(p)}`;
 const close = (actual: number, expected: number) =>
   assert.ok(Math.abs(actual - expected) < 1e-7, `${actual} != ${expected}`);
 
+// Reference check for the post-drop viability rule. Search the empty rig's
+// reachable states, including legal direction switches, independently of the
+// production Dijkstra and the precomputed destination suffix.
+function canMoveAwayAfterDrop(world: World, after: RigPose): boolean {
+  const free = (p: Point) => world.free(p) && !same(p, world.dest);
+  const queue: RigPose[] = [after];
+  const seen = new Set<string>([poseKey(after)]);
+  for (let i = 0; i < queue.length; i++) {
+    const p = queue[i];
+    if (Math.hypot(p.x - after.x, p.y - after.y) >= 1.5) return true;
+    for (const next of neighbors(p)) {
+      const k = poseKey(next);
+      if (seen.has(k) || !transition(p, next, free, false)) continue;
+      seen.add(k);
+      queue.push(next);
+    }
+  }
+  return false;
+}
+
 // A separate uniform-cost solver for the whole job. Unlike production it has no
 // precomputed destination suffixes, findPath calls, MinHeap, or predecessor map.
 // Pickup, insertion/lowering and exactly one-tile withdrawal are explicit graph stages.
@@ -74,7 +94,10 @@ function referenceCost(
         relax({ p: b, stage }, edgeCost(p, b, false));
       } else {
         const b: RigPose = { ...p, ...shift(p, p.d, 1) };
-        if (transition(p, b, w.free, false))
+        if (
+          transition(p, b, w.free, false) &&
+          canMoveAwayAfterDrop(w, b)
+        )
           relax({ p: b, stage: "withdrawn" }, edgeCost(p, b, false));
       }
       continue;
@@ -177,6 +200,7 @@ function checkPlan(w: World, plan: TransportPlan) {
   close(last.x - drop.a.x, step.x);
   close(last.y - drop.a.y, step.y);
   assert.ok(same(tail(last), drop.a));
+  assert.ok(canMoveAwayAfterDrop(w, last), "End pose must allow leaving the local pocket");
 }
 
 const bounded =
