@@ -76,5 +76,11 @@ test("look-ahead rejects the trapping drop direction and preserves access to the
   assert.ok(game.pose.x >= 8, "Worker must finish on the accessible side");
   game.selectWorker();
   assert.ok(game.choose("1-0-1"), game.message);
+  assert.ok(game.order({ kind: "floor", x: 2, y: 5 }), game.message);
+  finish(game);
+  assert.deepEqual(
+    game.crates.find((crate) => crate.id === "1-0-1")!.loc,
+    { kind: "floor", x: 2, y: 5 },
+  );
   game.assertInvariant();
 });
