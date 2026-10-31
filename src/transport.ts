@@ -1,4 +1,4 @@
-import cfg, { dirs, tail, same } from "./config.ts";
+import cfg, { dirs, tail, same, inside } from "./config.ts";
 import type { Point, Pose } from "./config.ts";
 import {
   MinHeap,
@@ -7,6 +7,7 @@ import {
   neighbors,
   transition,
   edgeCost,
+  findPath,
 } from "./pathfinding.ts";
 import type { RigPose } from "./pathfinding.ts";
 export type Phase =
@@ -91,6 +92,20 @@ export function planTransport(
     // Pallet overlaps the deposited crate only during this axial withdrawal.
     if (!transition({ ...drop, mode: "pull" }, after, freeLoaded, false))
       continue;
+    // The crate becomes a solid obstacle immediately after lowering. Check
+    // that a worker who has withdrawn one tile can still leave the local pocket.
+    // This is a look-ahead ONLY: no exit movement is appended to the job.
+    // Without it, a quicker drop side can strand the jack between a crate and
+    // the social rooms, making the next inbound crate unreachable.
+    if (inside(dest)) {
+      const freeAfter = (p: Point) => freeLoaded(p) && !same(p, dest);
+      const escape = findPath(
+        after,
+        (p) => Math.hypot(p.x - after.x, p.y - after.y) >= 1.5,
+        freeAfter,
+      );
+      if (!escape) continue;
+    }
     // A completed delivery ends after exactly one tile of empty fork withdrawal.
     // Never force the worker to drive to a distant corridor after depositing.
     const list = [
