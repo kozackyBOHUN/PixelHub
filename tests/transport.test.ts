@@ -468,3 +468,36 @@ test("33: all four axial drop directions are plannable and end after one-tile wi
     assert.ok(!plan.steps.some((s) => s.phase === "EXIT"));
   }
 });
+
+test("34: a warehouse drop stops exactly one tile after withdrawal and stays idle", () => {
+  const g = ordered();
+  const lower = g.task!.steps.find((s) => s.phase === "LOWER")!;
+  const last = g.task!.steps.at(-1)!;
+  assert.equal(last.phase, "WITHDRAW_FORKS");
+  finish(g);
+  close(g.pose.x - lower.a.x, dirs[lower.a.d].x);
+  close(g.pose.y - lower.a.y, dirs[lower.a.d].y);
+  assert.equal(g.task, null);
+  const pose = structuredClone(g.pose);
+  const cash = g.cash;
+  g.advance(300);
+  assert.deepEqual(g.pose, pose);
+  assert.equal(g.cash, cash);
+  assert.equal(g.status, "playing");
+});
+
+test("35: a deep vehicle drop clears the truck before stopping and allowing departure", () => {
+  const g = ready();
+  g.round = 2;
+  g.outbound = "docked";
+  g.crates.forEach((c) => (c.active = true));
+  g.selectWorker();
+  assert.ok(g.choose("1-0-0"));
+  assert.ok(g.order({ kind: "outbound", lane: 0, depth: 1 }), g.message);
+  assert.equal(g.task!.steps.at(-2)?.phase, "WITHDRAW_FORKS");
+  assert.equal(g.task!.steps.at(-1)?.phase, "CLEAR_VEHICLE");
+  finish(g);
+  assert.equal(g.vehicleOccupied("outbound"), false);
+  assert.equal(g.task, null);
+  assert.ok(g.dispatch());
+});
