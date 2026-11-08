@@ -81,6 +81,8 @@ export function planTransport(
   sourceDirection?: number,
   destDirection?: number,
   carried = false,
+  contains: (p: Point) => boolean = inside,
+  escapeGoal?: (p: Pose) => boolean,
 ): TransportPlan | null {
   const suffix = new Map<string, TransportStep[]>();
   for (const d of [0, 2, 4, 6]) {
@@ -97,11 +99,11 @@ export function planTransport(
     // This is a look-ahead ONLY: no exit movement is appended to the job.
     // Without it, a quicker drop side can strand the jack between a crate and
     // the social rooms, making the next inbound crate unreachable.
-    if (inside(dest)) {
+    if (contains(dest)) {
       const freeAfter = (p: Point) => freeLoaded(p) && !same(p, dest);
       const escape = findPath(
         after,
-        (p) => Math.hypot(p.x - after.x, p.y - after.y) >= 1.5,
+        escapeGoal ?? ((p) => Math.hypot(p.x - after.x, p.y - after.y) >= 1.5),
         freeAfter,
       );
       if (!escape) continue;
@@ -118,7 +120,11 @@ export function planTransport(
     // needs the pallet to leave the vehicle before dispatch is physically safe.
     // This is the minimum required extra movement, not a trip to a corridor.
     if (dest.x >= 20 && tail(after).x >= 20) {
-      const clear = { ...offset(after, after.d, 1), d: after.d, mode: "pull" as const };
+      const clear = {
+        ...offset(after, after.d, 1),
+        d: after.d,
+        mode: "pull" as const,
+      };
       if (!transition(after, clear, freeLoaded, false)) continue;
       list.push(travel(after, clear, false, "CLEAR_VEHICLE"));
     }

@@ -1,11 +1,13 @@
+import { CampaignGame, station, sorterOutputs } from "./campaign-game.ts";
+import { COLORS, priorityMultiplier } from "./campaign.ts";
 import cfg, { room, dock, tail } from "./config.ts";
 import type { Point, Pose } from "./config.ts";
 import type { Game, Crate, Location } from "./simulation.ts";
 import { geometry } from "./pathfinding.ts";
 import { locationPoint as logicalLocationPoint } from "./simulation.ts";
 export const TILE = 49,
-  OX = 210,
-  OY = 205;
+  OX = 210;
+export let OY = 110;
 export const gridToScreen = (p: Point) => ({
   x: OX + p.x * TILE,
   y: OY + p.y * TILE,
@@ -62,14 +64,7 @@ export class Renderer {
     const q = { x: -TILE / 2, y: -TILE / 2 },
       x = q.x + 8,
       y = q.y + 8 - height * 4;
-    const col =
-      c.color === "red"
-        ? c.active
-          ? "#ca7068"
-          : "#cda19a"
-        : c.active
-          ? "#5f91bb"
-          : "#a0b8ca";
+    const col = COLORS[c.color];
     this.rect(x + 3, q.y + 16, 34, 32, "#203b4333");
     this.rect(x, y, 33, 32, "#5b6260");
     this.rect(x + 2, y + 2, 29, 27, col);
@@ -77,15 +72,76 @@ export class Renderer {
     this.rect(x + 14, y + 3, 4, 26, "#f2dfb788");
     this.rect(x + 3, y + 22, 27, 3, "#273b4c33");
     this.rect(x - 1, y + 31, 36, 4, "#a88d65");
-    if (!c.active) this.text("1", x + 7, y + 20, "#fff8e9", 13);
+    if (c.mix)
+      for (let i = 0; i < 4; i++)
+        this.rect(
+          x + 3 + (i % 2) * 13,
+          y + 6 + Math.floor(i / 2) * 10,
+          11,
+          8,
+          COLORS[c.mix[i % c.mix.length].color],
+        );
+    this.ctx.restore();
+    this.ctx.save();
+    this.ctx.translate(center.x + TILE / 2, center.y + TILE / 2);
+    if (c.dueRound && c.dueRound > this.round) {
+      this.rect(x - 3, y - 4, 17, 16, "#40595b");
+      this.text(String(c.dueRound - this.round), x - 1, y + 9, "#fff8e9", 12);
+    }
+    if (c.priority) {
+      const m = priorityMultiplier(c, this.time);
+      this.rect(
+        x + 22,
+        y - 3,
+        13,
+        13,
+        m === 2 ? "#52865d" : m === 1 ? "#e1bd54" : "#c96f65",
+      );
+      this.rect(x + 26, y - 6, 5, 3, "#40595b");
+      this.text("•", x + 25, y + 8, "#fff", 12);
+    }
+    if (c.temperature && c.temperature !== "standard") {
+      this.rect(x - 3, y + 25, 20, 13, "#476879");
+      this.text(
+        c.temperature === "chilled" ? "°C" : "*",
+        x - 1,
+        y + 36,
+        "#fff",
+        11,
+      );
+    }
+    if (c.condition && c.condition !== "standard") {
+      this.rect(x + 22, y + 25, 14, 13, "#8e5c65");
+      this.text(
+        c.condition === "damaged" ? "!" : "R",
+        x + 25,
+        y + 36,
+        "#fff",
+        11,
+      );
+    }
+
     this.ctx.restore();
   }
+  round = 1;
+  time = 0;
   draw(g: Game) {
+    this.round = g.round;
+    this.time = g.time;
+    const hub = g instanceof CampaignGame ? g : null;
+    const minY = hub?.minY ?? 0;
+    OY = 110 - minY * TILE;
+    const height = 500 - minY * TILE;
+    if (this.surface.height !== height) {
+      this.surface.height = height;
+      this.ctx.imageSmoothingEnabled = false;
+    }
+
     const c = this.ctx;
-    c.clearRect(0, 0, 1400, 650);
-    this.rect(0, 0, 1400, 650, "#bdcec4");
+    c.clearRect(0, 0, 1400, this.surface.height);
+    this.rect(0, 0, 1400, this.surface.height, "#bdcec4");
     // Exterior loading yard and planting outside warehouse footprint.
-    this.rect(0, 145, 1400, 415, "#879c96");
+    this.rect(0, 145, 1400, this.surface.height - 235, "#879c96");
     for (let x = 45; x < 1400; x += 95) this.rect(x, 550, 50, 3, "#c1c9b8");
     for (const x of [25, 1350])
       for (let y = 95; y < 550; y += 100) {
@@ -93,11 +149,11 @@ export class Renderer {
         this.rect(x - 6, y + 10, 28, 32, "#8aa777");
         this.rect(x + 2, y + 4, 15, 20, "#a5ba85");
       }
-    this.rect(OX - 8, OY - 38, 996, 40, "#4e6868");
-    this.rect(OX - 8, OY - 44, 996, 12, "#e5e8d7");
-    this.rect(OX - 8, OY - 30, 996, 7, "#c0ccbf");
+    this.rect(OX - 8, OY + minY * TILE - 38, 996, 40, "#4e6868");
+    this.rect(OX - 8, OY + minY * TILE - 44, 996, 12, "#e5e8d7");
+    this.rect(OX - 8, OY + minY * TILE - 30, 996, 7, "#c0ccbf");
     for (let x = 0; x < 20; x++)
-      for (let y = 0; y < 6; y++) {
+      for (let y = minY; y < 6; y++) {
         const p = gridToScreen({ x, y });
         this.rect(
           p.x,
@@ -156,7 +212,6 @@ export class Renderer {
         this.rect(p.x + 49, p.y + 49, 30, 21, "#405965");
         this.rect(p.x + 52, p.y + 51, 24, 15, "#9fc4c7");
         this.rect(p.x + 53, p.y + 101, 30, 25, "#6f8d88");
-        this.rect(p.x + 18, p.y + 143, 25, 25, "#b39e7e");
       }
       if (r.id === "locker")
         for (let i = 0; i < 4; i++) {
@@ -176,8 +231,56 @@ export class Renderer {
         this.rect(p.x + 18, p.y + 108, 25, 17, "#eef1e6");
       }
     }
+    if (hub) {
+      for (let x = 1; x < 19; x++)
+        for (let y = minY; y < 0; y++) {
+          const zone = hub.zoneAt({ x, y });
+          if (zone === "standard") continue;
+          const p = gridToScreen({ x, y });
+          this.rect(
+            p.x + 2,
+            p.y + 2,
+            TILE - 5,
+            TILE - 5,
+            zone === "chilled" ? "#a6d3d4" : "#9cafd4",
+          );
+          this.text(
+            zone === "chilled" ? "°C" : "*",
+            p.x + 17,
+            p.y + 28,
+            "#486379",
+            14,
+          );
+        }
+      for (const [name, p] of Object.entries(station))
+        if (hub.purchased.includes(name as "sorter" | "service")) {
+          const q = gridToScreen(p);
+          this.rect(q.x + 1, q.y + 1, 47, 47, "#6e8082");
+          this.rect(
+            q.x + 5,
+            q.y + 7,
+            39,
+            30,
+            name === "sorter" ? "#d0b882" : "#adbd98",
+          );
+          for (let i = 0; i < 4; i++)
+            this.rect(q.x + 7 + i * 9, q.y + 11, 5, 23, "#627679");
+          this.text(
+            name === "sorter" ? "MIX" : "SER",
+            q.x + 7,
+            q.y - 7,
+            "#40595b",
+            12,
+          );
+        }
+      if (hub.purchased.includes("sorter"))
+        for (const p of sorterOutputs) {
+          const q = gridToScreen(p);
+          this.text("WY", q.x + 12, q.y + 26, "#9c986c", 12);
+        }
+    }
     this.vehicle(g, "inbound");
-    if (g.round === 2) this.vehicle(g, "outbound");
+    if (g.round >= 2) this.vehicle(g, "outbound");
     if (g.selected && g.task) {
       const t = g.task;
       c.lineWidth = 4;
@@ -201,6 +304,70 @@ export class Renderer {
       });
       c.setLineDash([]);
     }
+    for (const worker of hub?.workers ?? [g]) this.drawJack(worker);
+    // Floor cargo occludes the forks both before lifting and after lowering.
+    for (const cr of g.crates) {
+      const p = locationPoint(cr.loc);
+      if (p && !(cr.loc.kind === "inbound" && g.inbound !== "docked")) {
+        this.crate(
+          cr,
+          p,
+          (hub?.workers[cr.owner ?? 0] ?? g).crateAngle(cr),
+          g.task?.crate === cr.id && g.task.phase === "LIFT" ? g.forkHeight : 0,
+        );
+        if (g.source === cr.id || g.highlight === cr.id) {
+          const s = gridToScreen(p);
+          c.strokeStyle = g.highlight === cr.id ? "#e23e39" : "#f8edaf";
+          c.lineWidth = 3;
+          c.strokeRect(s.x + 4, s.y + 3, 41, 43);
+        }
+      }
+    }
+    for (const worker of hub?.workers ?? [g]) this.drawWorker(worker);
+    const a = gridToScreen(workerVisual(g).head),
+      b = gridToScreen(workerVisual(g).back);
+    const last = g.ledger.at(-1)!;
+    if (g.time - last.time < 3 && last.time > 0) {
+      const elapsed = g.time - last.time;
+      c.globalAlpha = Math.max(0, 1 - elapsed / 3);
+      this.text(
+        `${last.amount > 0 ? "+" : ""}${last.amount} $`,
+        a.x - 5,
+        a.y - 15 - elapsed * 10,
+        last.amount > 0 ? "#3a7654" : "#aa4c45",
+        18,
+      );
+      c.globalAlpha = 1;
+    }
+    if (this.debug) {
+      for (let x = 0; x < 20; x++)
+        for (let y = minY; y < 6; y++) {
+          const p = gridToScreen({ x, y });
+          c.strokeStyle = room({ x, y }) ? "#a85c6677" : "#4f6b5e88";
+          c.lineWidth = 1;
+          c.strokeRect(p.x, p.y, TILE, TILE);
+          this.text(
+            `${x},${y}`,
+            p.x + 3,
+            p.y + 12,
+            room({ x, y }) ? "#7a3d4b" : "#385c51",
+            9,
+          );
+        }
+      c.strokeStyle = "#f8e8a6";
+      c.lineWidth = 3;
+      for (const q of [a, b]) c.strokeRect(q.x + 2, q.y + 2, 45, 45);
+      this.text(
+        "20 kolumn · pomieszczenia 12×3 · zachowaj przejazdy",
+        OX,
+        OY + 342,
+        "#355e55",
+        13,
+      );
+    }
+  }
+  drawJack(g: Game) {
+    const c = this.ctx;
     const { head, back } = workerVisual(g),
       a = gridToScreen(head),
       b = gridToScreen(back);
@@ -222,24 +389,12 @@ export class Renderer {
     this.rect(-12, -14, 6, 4, "#455452");
     this.rect(-12, 10, 6, 4, "#455452");
     c.restore();
-    // Floor cargo occludes the forks both before lifting and after lowering.
-    for (const cr of g.crates) {
-      const p = locationPoint(cr.loc);
-      if (p && !(cr.loc.kind === "inbound" && g.inbound !== "docked")) {
-        this.crate(
-          cr,
-          p,
-          g.crateAngle(cr),
-          g.task?.crate === cr.id && g.task.phase === "LIFT" ? g.forkHeight : 0,
-        );
-        if (g.source === cr.id || g.highlight === cr.id) {
-          const s = gridToScreen(p);
-          c.strokeStyle = g.highlight === cr.id ? "#e23e39" : "#f8edaf";
-          c.lineWidth = 3;
-          c.strokeRect(s.x + 4, s.y + 3, 41, 43);
-        }
-      }
-    }
+  }
+  drawWorker(g: Game) {
+    const c = this.ctx;
+    const { head, back } = workerVisual(g),
+      a = gridToScreen(head),
+      b = gridToScreen(back);
     if (g.carried) {
       const cr = g.crates.find((cr) => cr.id === g.carried)!;
       this.crate(cr, back, g.crateAngle(cr), g.forkHeight);
@@ -256,57 +411,75 @@ export class Renderer {
     // Keep visible body pixels inside the same collision footprint.
     c.save();
     c.translate(a.x + TILE / 2, a.y + TILE / 2);
+    c.rotate(
+      Math.atan2(g.transportGeometry.heading.y, g.transportGeometry.heading.x),
+    );
     c.scale(0.88, 0.88);
     c.translate(-a.x - TILE / 2, -a.y - TILE / 2);
-    this.rect(a.x + 16, a.y + 30, 7, 13, "#39566b");
-    this.rect(a.x + 28, a.y + 30, 7, 13, "#39566b");
+    this.rect(
+      a.x + 16,
+      a.y + 30 + (g.task ? (Math.floor(this.time * 6) % 2) * 3 : 0),
+      7,
+      13,
+      "#39566b",
+    );
+    this.rect(
+      a.x + 28,
+      a.y + 30 + (g.task ? (1 - (Math.floor(this.time * 6) % 2)) * 3 : 0),
+      7,
+      13,
+      "#39566b",
+    );
     this.rect(a.x + 12, a.y + 13, 26, 20, "#de9e4f");
     this.rect(a.x + 23, a.y + 14, 4, 18, "#f8dfa0");
     this.rect(a.x + 19, a.y + 3, 16, 13, "#d9b18b");
     this.rect(a.x + 15, a.y, 24, 6, "#5088a8");
     this.rect(a.x + 11, a.y + 5, 31, 4, "#426a84");
     c.restore();
-    const last = g.ledger.at(-1)!;
-    if (g.time - last.time < 3 && last.time > 0) {
-      const elapsed = g.time - last.time;
-      c.globalAlpha = Math.max(0, 1 - elapsed / 3);
-      this.text(
-        `${last.amount > 0 ? "+" : ""}${last.amount} $`,
-        a.x - 5,
-        a.y - 15 - elapsed * 10,
-        last.amount > 0 ? "#3a7654" : "#aa4c45",
-        18,
-      );
-      c.globalAlpha = 1;
-    }
-    if (this.debug) {
-      for (let x = 0; x < 20; x++)
-        for (let y = 0; y < 6; y++) {
-          const p = gridToScreen({ x, y });
-          c.strokeStyle = room({ x, y }) ? "#a85c6677" : "#4f6b5e88";
-          c.lineWidth = 1;
-          c.strokeRect(p.x, p.y, TILE, TILE);
-          this.text(
-            `${x},${y}`,
-            p.x + 3,
-            p.y + 12,
-            room({ x, y }) ? "#7a3d4b" : "#385c51",
-            9,
-          );
-        }
-      c.strokeStyle = "#f8e8a6";
-      c.lineWidth = 3;
-      for (const q of [a, b]) c.strokeRect(q.x + 2, q.y + 2, 45, 45);
-      this.text(
-        "20 kolumn × 6 rzędów · 36 pól pomieszczeń · 8 ramp · 76 pozostałych",
-        OX,
-        OY + 342,
-        "#355e55",
-        13,
-      );
-    }
   }
   vehicle(g: Game, kind: "inbound" | "outbound") {
+    if (g instanceof CampaignGame) {
+      for (const m of g.cmrs.filter(
+        (m) =>
+          m.kind === kind &&
+          ["arriving", "docked", "departing"].includes(m.state),
+      )) {
+        const depth = m.capacity / 2,
+          y = m.bay ? -4 : 2;
+        const shift =
+          (m.state === "arriving"
+            ? m.timer
+            : m.state === "departing"
+              ? 1 - m.timer
+              : 0) *
+          180 *
+          (kind === "inbound" ? -1 : 1);
+        const first = gridToScreen({ x: kind === "inbound" ? -depth : 20, y });
+        const cabinX =
+          kind === "inbound" ? first.x - 43 : first.x + depth * TILE;
+        this.rect(first.x + shift, first.y, depth * TILE, 2 * TILE, "#e1dfcc");
+        this.rect(
+          cabinX + shift,
+          first.y + 8,
+          41,
+          82,
+          kind === "inbound" ? "#bd8a7b" : "#88aba4",
+        );
+        this.rect(cabinX + 7 + shift, first.y + 16, 27, 24, "#527a89");
+        for (const dy of [2, 83])
+          this.rect(cabinX + 6 + shift, first.y + dy, 27, 12, "#485755");
+        for (let d = 0; d < depth; d++)
+          for (let l = 0; l < 2; l++) {
+            const p = gridToScreen({
+              x: kind === "inbound" ? -1 - d : 20 + d,
+              y: y + l,
+            });
+            this.rect(p.x + 4 + shift, p.y + 4, 41, 41, "#c1c6b6");
+          }
+        this.text(m.vehicle, first.x + shift, first.y - 12, "#eff3dd", 12);
+      }
+      return;
+    }
     const state = kind === "inbound" ? g.inbound : g.outbound;
     if (!["docked", "arriving", "departing"].includes(state)) return;
     let shift = 0;

@@ -192,10 +192,10 @@ test("audit: cancellation blocks a narrow independently verified worker corner c
   const originalSteering = cfg.worker.drawbarSteeringRadians;
   cfg.worker.drawbarSteeringRadians = 0.22;
   try {
-    const a = rig({ x: 17, y: 4.5, d: 0, mode: "push" }),
-      b = rig({ x: 15.5, y: 4, d: 6, mode: "push" }),
+    const a = rig({ x: 18, y: 4.5, d: 0, mode: "push" }),
+      b = rig({ x: 16.5, y: 4, d: 6, mode: "push" }),
       step = travel(a, b, false),
-      obstacle = { x: 17, y: 3 },
+      obstacle = { x: 18, y: 3 },
       g = new Game();
     g.pose = a;
     g.crates = [
@@ -209,7 +209,7 @@ test("audit: cancellation blocks a narrow independently verified worker corner c
     ];
     g.task = {
       crate: "audit",
-      dest: { kind: "floor", x: 16, y: 5 },
+      dest: { kind: "floor", x: 17, y: 5 },
       phase: step.phase,
       steps: [step],
       route: [a, b],
@@ -232,7 +232,7 @@ test("audit: cancellation blocks a narrow independently verified worker corner c
       overlapArea(bodies(a, b, nextFraction, false)[0], obstacle) > 9e-7,
       "The independent employee polygon must intersect the obstacle on the next rollback tick",
     );
-    g.reservations.add("17,3");
+    g.reservations.add("18,3");
     g.cancel();
     g.advance(0.05);
     assert.ok(

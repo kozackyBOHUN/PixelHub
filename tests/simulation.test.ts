@@ -31,7 +31,7 @@ test("B01–B06: source blocking, cancel, invalid destinations and slot lanes", 
   assert.equal(g.choose("1-0-1"), false);
   assert.ok(g.choose("1-0-0"));
   for (const p of [
-    { x: 4, y: 2 },
+    { x: 4, y: 3 },
     { x: 0, y: 2 },
     { x: 19, y: 2 },
     { x: -1, y: 0 },

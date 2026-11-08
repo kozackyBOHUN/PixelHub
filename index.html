@@ -4,81 +4,81 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link rel="icon" href="data:," />
-    <title>PixelHub • mały magazyn, wielka logistyka</title>
+    <title>PixelHub 0.2 — kampania 30 rund</title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
     <header>
       <a class="brand" href="./"
-        >▣
-        <span>PixelHub<small>MAŁY MAGAZYN. WIELKA LOGISTYKA.</small></span></a
+        ><span
+          >PixelHub <small>0.2 / MAŁY MAGAZYN. WIELKA LOGISTYKA.</small></span
+        ></a
       >
       <div class="round">
-        <span id="round">Runda 1/2</span
-        ><small id="round-name">Rozładunek i magazynowanie</small>
+        <span id="round"></span><small id="round-name"></small>
       </div>
-      <div class="money" id="cash">50 $</div>
+      <div class="money" id="cash"></div>
       <div class="speeds">
         <button data-speed="1">×1</button><button data-speed="2">×2</button
         ><button data-speed="4">×4</button>
       </div>
-      <time id="clock">00:00</time>
+      <time id="clock"></time>
     </header>
     <main>
       <div class="toolbar">
-        <button id="cmr" title="Przyjmij dostawę" aria-label="Przyjmij CMR">
-          <span class="clip"></span><span class="crate red">1</span
-          ><span class="crate red">1</span><span class="crate blue">1</span
-          ><span class="crate blue">1</span>
-        </button>
-        <div class="instruction">
-          <span class="eyebrow">CENTRUM OPERACYJNE / MAGAZYN 01</span>
-          <p id="message" role="status"></p>
-        </div>
-        <button id="cancel" hidden>Anuluj</button
-        ><button id="debug">Siatka · G</button>
+        <p id="message" role="status"></p>
+        <button id="cancel">Anuluj</button><button id="debug">Siatka · G</button
+        ><button id="save">Zapisz</button><button id="load">Wczytaj</button
+        ><button id="new-game">Nowa gra</button>
       </div>
+      <div id="cmrs" class="cmrs" aria-label="Dokumenty transportowe"></div>
+      <div id="cmr-actions" class="actions"></div>
+      <details>
+        <summary>Manifest wybranego CMR</summary>
+        <p id="manifest"></p>
+      </details>
+      <div id="workers" class="actions"></div>
       <section class="scene">
-        <div class="scene-label">
-          PIXELHUB LOGISTICS <span>20 × 6 / 120 PÓL</span>
-        </div>
         <canvas
           id="world"
           width="1400"
           height="650"
-          aria-label="Magazyn PixelHub 20 na 6 pól"
-        ></canvas
-        ><button id="dispatch" hidden>Wyślij busa →</button>
-        <div id="delivery" hidden></div>
-        <div class="legend">
-          <span>● Rozładunek</span><span>● Pracownik + paleciak</span
-          ><span>● Dystrybucja</span>
-        </div>
+          aria-label="Magazyn PixelHub: wybierz pracownika, paletę i cel transportu"
+        ></canvas>
       </section>
+      <p id="inspect" class="inspection"></p>
+      <p class="legend-text">
+        Lewy górny róg: rundy do wysyłki · prawy górny: stoper · lewy dolny: °C
+        chłodzone / * mrożone · prawy dolny: ! uszkodzenie / R zwrot. MIX:
+        wielokolorowe kartony.
+      </p>
       <footer>
         <div>
           <span class="eyebrow">TWOJE ZADANIE</span>
-          <h2 id="objective">Rozładuj. Odłóż. Zorganizuj.</h2>
+          <h2 id="objective"></h2>
           <p id="progress"></p>
         </div>
-        <div class="steps">
-          <span>01 <b>Pracownik</b></span
-          ><i>→</i><span>02 <b>Skrzynia</b></span
-          ><i>→</i><span>03 <b>Miejsce</b></span>
-        </div>
-        <div class="ledger">
-          <span class="eyebrow">OSTATNIA TRANSAKCJA</span>
-          <p id="transaction">Kapitał początkowy +50 $</p>
-        </div>
+        <div class="ledger"><p id="transaction"></p></div>
       </footer>
+      <details open>
+        <summary>Rozwój magazynu</summary>
+        <div id="upgrades" class="actions"></div>
+      </details>
+      <section id="dev-panel" hidden>
+        <h3>Laboratorium kampanii · osobny zapis</h3>
+        <select id="dev-round"></select
+        ><button id="dev-jump">Odtwórz historię do rundy</button
+        ><button id="dev-finish">Wykonaj fizycznie rundę</button
+        ><button id="dev-balance">Sprawdź bilans</button>
+        <p id="dev-status"></p>
+      </section>
     </main>
     <dialog id="end">
-      <span class="eyebrow">PIXELHUB / RAPORT OPERACYJNY</span>
+      <span class="eyebrow">PIXELHUB 0.2 / RAPORT OPERACYJNY</span>
       <h1 id="end-title"></h1>
       <p id="end-text"></p>
       <div id="totals"></div>
-      <button id="continue">Runda 2 →</button
-      ><button id="restart">Zagraj ponownie</button>
+      <button id="continue"></button><button id="restart">Nowa kampania</button>
     </dialog>
     <script type="module" src="/src/main.ts"></script>
   </body>

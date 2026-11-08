@@ -13,15 +13,15 @@
         "id": "office",
         "label": "Biuro",
         "x": 4,
-        "y": 2,
-        "width": 3,
-        "height": 4,
+        "y": 3,
+        "width": 4,
+        "height": 3,
         "walkable": false
       },
       {
         "id": "locker",
         "label": "Szatnia",
-        "x": 7,
+        "x": 8,
         "y": 3,
         "width": 3,
         "height": 3,
@@ -30,7 +30,7 @@
       {
         "id": "canteen",
         "label": "Stołówka",
-        "x": 10,
+        "x": 13,
         "y": 3,
         "width": 3,
         "height": 3,
@@ -40,7 +40,7 @@
       {
         "id": "toilet",
         "label": "Toaleta",
-        "x": 13,
+        "x": 11,
         "y": 3,
         "width": 2,
         "height": 3,
@@ -100,7 +100,10 @@
   "cargo": {
     "crateWidthTiles": 1,
     "crateHeightTiles": 1,
-    "destinationColors": ["red", "blue"],
+    "destinationColors": [
+      "red",
+      "blue"
+    ],
     "inactiveAlphaHint": 0.6,
     "activeColorOnNextRound": true
   },
@@ -134,7 +137,11 @@
     "gameOverWhenBalanceAtOrBelow": 0
   },
   "time": {
-    "speedMultipliers": [1, 2, 4],
+    "speedMultipliers": [
+      1,
+      2,
+      4
+    ],
     "defaultSpeedMultiplier": 1,
     "gameClockUnit": "seconds",
     "clockStopsOnModalEndScreen": true

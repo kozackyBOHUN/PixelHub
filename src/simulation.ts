@@ -12,11 +12,28 @@ import { planTransport, pointAt, offset, travel } from "./transport.ts";
 import type { TransportStep, Phase } from "./transport.ts";
 export type Location =
   | { kind: "floor"; x: number; y: number }
-  | { kind: "inbound" | "outbound"; lane: number; depth: number }
-  | { kind: "worker" | "delivery" | "delivered" };
+  | { kind: "inbound" | "outbound"; lane: number; depth: number; bay?: number }
+  | { kind: "worker" | "delivery" | "delivered" | "processing" | "consumed" };
 export type Crate = {
   id: string;
-  color: "red" | "blue";
+  color:
+    | "gray"
+    | "red"
+    | "blue"
+    | "yellow"
+    | "green"
+    | "purple"
+    | "orange"
+    | "teal"
+    | "pink";
+  dueRound?: number;
+  temperature?: "standard" | "chilled" | "frozen";
+  condition?: "standard" | "damaged" | "return";
+  mix?: { color: Crate["color"]; cartons: number }[];
+  priority?: { started: number; duration: number };
+  owner?: number;
+  processed?: boolean;
+  climateStored?: boolean;
   active: boolean;
   paid: boolean;
   loc: Location;
@@ -41,10 +58,11 @@ export function locationPoint(l: Location): Point | null {
   return l.kind === "floor"
     ? l
     : "lane" in l
-      ? pointAt(l.kind, l.lane, l.depth)
+      ? { ...pointAt(l.kind, l.lane, l.depth), y: (l.bay ? -4 : 2) + l.lane }
       : null;
 }
 export class Game {
+  transportOnly = false;
   round = 1;
   time = 0;
   speed = 1;
@@ -89,13 +107,14 @@ export class Game {
         });
     this.message = "Kliknij pracownika, następnie dostępną skrzynię.";
   }
-  slot(kind: "inbound" | "outbound", lane: number, depth: number) {
+  slot(kind: "inbound" | "outbound", lane: number, depth: number, bay = 0) {
     return this.crates.find(
       (c) =>
         c.loc.kind === kind &&
         "lane" in c.loc &&
         c.loc.lane === lane &&
-        c.loc.depth === depth,
+        c.loc.depth === depth &&
+        (c.loc.bay ?? 0) === bay,
     );
   }
   accessible(l: Location) {
@@ -157,6 +176,12 @@ export class Game {
       this.free()(p) &&
       !dock(p)
     );
+  }
+  contains(p: Point) {
+    return inside(p);
+  }
+  get escapeGoal(): ((p: Pose) => boolean) | undefined {
+    return undefined;
   }
   contact(l: Location, p: Pose) {
     const q = locationPoint(l);
@@ -261,7 +286,7 @@ export class Game {
       if (
         !c.active ||
         !this.accessible(dest) ||
-        this.slot("outbound", dest.lane, dest.depth)
+        this.slot("outbound", dest.lane, dest.depth, dest.bay ?? 0)
       ) {
         this.message =
           "Slot niedostępny. Najpierw załaduj przód; bus musi stać przy rampie.";
@@ -279,6 +304,8 @@ export class Game {
       c.loc.kind === "inbound" ? 0 : c.loc.kind === "outbound" ? 4 : undefined,
       dest.kind === "outbound" ? 4 : undefined,
       !!this.carried,
+      (p) => this.contains(p),
+      this.escapeGoal,
     );
     if (!plan) {
       this.message =
@@ -389,12 +416,15 @@ export class Game {
   step(dt: number) {
     if (this.status !== "playing") return;
     this.time = Math.round((this.time + dt) * 1e6) / 1e6;
-    if (this.inbound === "arriving" || this.inbound === "departing") {
+    if (
+      !this.transportOnly &&
+      (this.inbound === "arriving" || this.inbound === "departing")
+    ) {
       this.inboundTimer -= dt;
       if (this.inboundTimer <= 1e-8)
         this.inbound = this.inbound === "arriving" ? "docked" : "absent";
     }
-    if (this.outbound === "delivering") {
+    if (!this.transportOnly && this.outbound === "delivering") {
       this.deliveryRemaining = Math.max(0, this.deliveryRemaining - dt);
       if (this.deliveryRemaining < 1e-8) {
         const cargo = this.crates.filter((c) => c.loc.kind === "delivery");
@@ -493,6 +523,7 @@ export class Game {
         }
       }
     }
+    if (this.transportOnly) return;
     // Vehicles wait until the entire rig has physically left their cargo space.
     if (
       !this.task &&
@@ -525,8 +556,7 @@ export class Game {
       this.outbound === "docked" &&
       this.crates.length === 8 &&
       this.crates.every((c) => c.loc.kind === "delivered")
-    )
-    {
+    ) {
       this.money(-cfg.economy.workerWagePerRound, "Pensja — runda 2");
       if (this.status === "playing") this.status = "won";
     }

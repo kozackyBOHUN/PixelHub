@@ -349,3 +349,87 @@ dialog p {
     font-size: 16px;
   }
 }
+.cmrs {
+  display: flex;
+  gap: 8px;
+  overflow: auto;
+  padding: 12px 0;
+  max-height: 130px;
+}
+.cmrs button {
+  min-width: 165px;
+  max-width: 240px;
+  flex-shrink: 0;
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: normal;
+}
+.cmrs .inbound {
+  border-top: 4px solid #bd8a7b;
+}
+.cmrs .outbound {
+  border-top: 4px solid #88aba4;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+}
+details {
+  padding: 10px 0;
+  border-bottom: 1px solid #a7bcb0;
+}
+summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+#manifest {
+  font-size: 12px;
+  max-height: 150px;
+  overflow: auto;
+  line-height: 1.8;
+}
+.inspection {
+  font-size: 13px;
+  padding: 10px;
+  background: #d8e4d7;
+  margin-bottom: 0;
+}
+.legend-text {
+  font-size: 11px;
+  color: #52655c;
+  line-height: 1.7;
+}
+#objective {
+  font-size: 16px;
+  max-width: 800px;
+}
+#message {
+  flex: 1;
+  font-size: 14px;
+  min-height: 20px;
+}
+#dev-panel {
+  padding: 20px;
+  background: #d4dccb;
+}
+#dev-status {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+footer {
+  flex-wrap: wrap;
+}
+canvas {
+  height: auto !important;
+}
+.toolbar {
+  min-height: 70px;
+}
+.scene {
+  overflow: auto;
+}
+#workers button {
+  font-size: 12px;
+}

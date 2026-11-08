@@ -1,6 +1,6 @@
-# PixelHub
+# PixelHub 0.2
 
-Grywalna symulacja magazynu w przeglądarce: dwie rundy, dokładna mapa 20×6, jeden magazynier z paleciakiem i fizyczne przenoszenie skrzyń. Vite + TypeScript + PixiJS 8. Dokumentacja źródłowa: `PixelHub_Codex_Pack/`.
+Przeglądarkowa gra logistyczna: 30 rund, trwały magazyn, pracownicy z ręcznymi paleciakami, A*/planowanie pełnych manewrów, CMR i rozwój firmy. Rozwinięcie wersji 0.1 w TypeScript + PixiJS 8.
 
 ## Uruchomienie
 
@@ -11,73 +11,68 @@ npm ci
 npm run dev
 ```
 
-Vite uruchamia grę na porcie 5173. `npm run build` sprawdza typy i tworzy `dist/`; `npm run preview` udostępnia wynik produkcyjny.
+`npm run build` tworzy produkcyjne `dist/`, `npm run preview` udostępnia build. GitHub Pages publikuje `dist/` przez istniejący workflow po zmianie `main`. Zasoby używają względnych ścieżek.
 
-## Sterowanie
+## Sterowanie i kampania
 
-1. Kliknij kartonik CMR z czterema ikonami, aby przyjąć dostawę.
-2. Kliknij pracownika (niebieska czapka), dostępną skrzynię, następnie wolne pole podłogi.
-3. Paleciak musi mieć miejsce na ustawienie wideł, skręt i wycofanie. Po odstawieniu skrzyni pracownik cofa paleciak o jedną kratkę i tam czeka na kolejne polecenie. Po podsumowaniu przejdź do rundy 2. Załaduj własnego busa i kliknij „Wyślij busa”. Powtórz do dostarczenia wszystkich 8 skrzyń.
+1. Wybierz kartę CMR i kliknij „Podstaw”. Kolejność dostaw należy do gracza. Dokument wydania również trzeba podstawić.
+2. Kliknij pracownika, dostępną paletę, następnie cel: wolne pole albo slot samochodu. Ładuj głębsze miejsca przed tylnymi. Rozładunek odbywa się od tyłu.
+3. Po załadowaniu całego manifestu kliknij „Wyślij załadowany samochód”. CMR wymaga konkretnych identyfikatorów; inny kolor ani paleta na późniejszą rundę go nie zastąpią.
+4. Zachowuj szerokie przejazdy oraz przestrzeń na osiowe wsunięcie i wycofanie wideł. Zestaw fizycznie wykonuje całą trasę. `Anuluj` / Escape bezpiecznie przerywa manewr; przewożona paleta pozostaje na paleciaku.
+5. Rozwój kupujesz w dolnym panelu. Pierwsza rozbudowa dodaje 120 pól na północ (20×12), druga kolejne 120 (20×18). Istniejące palety, rampy i wyśrodkowane pomieszczenia 12×3 zachowują współrzędne.
+6. Zatrudnionych pracowników wybierasz na mapie albo w pasku pracowników. Każdy ma własną pozycję, paleciak i zadanie. Rezerwacja pełnej trasy zapobiega konfliktom; zbyt bliskie zadania należy wykonać kolejno.
 
-W każdym pasie auta tylny slot blokuje przedni. Ładuj najpierw przód. Dostępny ładunek można także wyjąć z własnego busa. Pomieszczenia i rampy nie są miejscami składowania. `Anuluj` / Escape przerywa wybór lub zadanie; przewożony ładunek pozostaje na paleciaku i wymaga wskazania nowego celu. Brak kolejki.
+Paleta: lewy górny róg to liczba rund do wysyłki; prawy górny to priorytet; lewy dolny to temperatura; prawy dolny to uszkodzenie `!` lub zwrot `R`. Kolor oznacza odbiorcę. Kliknięcie palety pokazuje jej ID i cechy w pasku pod mapą.
 
-`×1`, `×2`, `×4` zmieniają tempo całej symulacji. Klawisz `G` / przycisk „Siatka” pokazuje współrzędne, przeszkody i obrys zestawu. Pensja wynosi 20 USD za ukończoną rundę (łącznie 40 USD za dwie rundy), bez naliczania kosztów za upływ czasu. Saldo ≤0 kończy grę.
+Stoper zaczyna się przy podstawieniu dostawy. Pierwsza połowa czasu daje ×2, następne 25% ×1, pozostały czas i przekroczenie terminu ×0,5 przychodu za obsługę. Nie powoduje utraty towaru i nie resetuje się przy zapisie. Pensje wynoszą zawsze **20 USD na pracownika za ukończoną rundę**, pobierane dokładnie raz. Kapitał startowy: 50 USD.
 
-## Testy
+MIX: kup sorter, odstaw kolejno obie palety receptury na pole `(5,−2)`. Towar oczekuje w buforze; komplet dwóch MIX / ośmiu kartonów daje dwie palety po cztery kartony w polach `(9,−5)` i `(10,−5)`. Wynik czeka na wolne miejsca i nie może się powielić. Usuń wyniki przed następną recepturą. Uszkodzenia i zwroty wymagają stanowiska `(12,−2)`. Chłodnia obejmuje osiem pól `(1…8,−4)`, mroźnia osiem `(11…18,−4)`; rozbudowa stref dodaje takie same pola w rzędzie `−7`. Towar o wymaganej temperaturze musi odwiedzić właściwą strefę przed wydaniem i pozostawać w niej, jeśli zostaje na kolejną rundę.
+
+Runda kończy się po obsłużeniu wszystkich dokumentów i procesów. Palety nie znikają przy przejściu dalej. Finał wymaga fizycznego wydania 58 palet, w tym zapasów z poprzednich rund.
+
+## Zapis
+
+Automatycznie co 5 sekund oraz przy opuszczeniu strony; dodatkowo przyciski „Zapisz” / „Wczytaj”. Wersjonowany zapis 0.2 zawiera pozycje, trasy w toku, bufor sortera, CMR, priorytety, zakupy i rozliczenia. Uszkodzony zapis zgłasza błąd i nie jest automatycznie nadpisywany. Nową kampanię można rozpocząć z podsumowania. Stara wersja 0.1 nie miała formatu zapisu do migracji.
+
+## Laboratorium rund
+
+Dodaj `?dev=1` do adresu gry. Laboratorium nie pojawia się w normalnej kampanii i używa osobnego klucza zapisu. Wybierz rundę i kliknij „Odtwórz historię do rundy”. Stan wejściowy pochodzi z deterministycznego przejścia wszystkich poprzednich rund przez tego samego pracownika i planer, a nie z samej zmiany numeru.
+
+Dołączony skompresowany pakiet pozwala otworzyć każdą rundę natychmiast. To zapis rzeczywistego, sprawdzonego przejścia wcześniejszych rund. Po zmianie manifestów niezgodny pakiet jest pomijany i historia odtwarzana od początku. Pakiet można odtworzyć poleceniem `node --experimental-strip-types scripts/campaign-playthrough.ts --fixtures`.
+
+Przycisk „Wykonaj fizycznie rundę” przyspiesza wykonywanie prawidłowych poleceń `choose/order/step`. Nie teleportuje ładunków, nie dopisuje pieniędzy i nie pomija procesów. „Sprawdź bilans” pokazuje stan, dokumenty i bufor sortowania. Skoki oraz operator testowy nie modyfikują zwykłego zapisu.
+
+## Weryfikacja
 
 ```sh
 npm test
 npm run build
-python PixelHub_Codex_Pack/validate_config.py
+node --experimental-strip-types scripts/campaign-playthrough.ts
 ```
 
-Test przeglądarkowy wymaga uruchomionego `npm run dev`, Pythona, Playwright i Chromium:
+Test przeglądarkowy produkcyjnego builda (uruchom wcześniej `npm run preview -- --port 5173`):
 
 ```sh
 python -m pip install -r scripts/requirements-browser.txt
 npm run test:browser
 ```
 
-Domyślnie test korzysta z `/usr/bin/chromium`. Ścieżkę można nadpisać zmienną `CHROMIUM_PATH`. Test klika obiekty na canvasie, przechodzi obie rundy, zmienia szerokość okna, restartuje i sprawdza bankructwo. Przesuwa wyłącznie czas przez publiczny krok symulacji w trybie `?test=1`; nie zmienia salda, położeń ani stanów skrzyń. Zrzuty zapisuje w ignorowanym `artifacts/`.
+Domyślnie korzysta z zainstalowanego Chrome; można podać `CHROMIUM_PATH` albo `BROWSER_CHANNEL`. Wyniki i zrzuty trafiają do `artifacts/browser-0.2/`. Test klika rundę 1 myszką, sprawdza zapis/odczyt, otwiera scenariusze 18 i 30 i fizycznie przechodzi finał przez interfejs laboratorium.
 
-## Pliki
+Testy obejmują starą geometrię i transport, dokładne manifesty, cztery oznaczenia, zapis w trakcie podnoszenia, dwa równoległe zadania, zajęte wyjście sortera, temperaturę, uszkodzenia, niewłaściwy CMR oraz **fizyczne przejście rund 1–30** z kontrolą stanu po każdej rundzie. Test przejścia trwa około kilku minut zależnie od komputera. Nie zastępuje oceny wygody i balansu przez gracza.
 
-- `src/game-config.json` — jedno miejsce zmiany mapy, czasów i stawek; kopia konfiguracji dostarczonej w dokumentacji.
-- `src/config.ts` — geometria, typy i walidacja mapy.
-- `src/pathfinding.ts` — geometria przegubowego zestawu, dozwolone manewry, obrysy zamiatane i wyszukiwanie według czasu.
-- `src/transport.ts` — planowanie pełnego zadania: pobranie, ciągnięcie/pchanie, odstawienie, wycofanie i wyjazd.
-- `src/simulation.ts` — zegar, zadania, skrzynie, sloty, pojazdy, rundy i księga transakcji, niezależne od DOM/renderera.
-- `src/renderer.ts` — grafika proceduralna, animacje i wspólne odwzorowanie współrzędnych.
-- `src/main.ts`, `index.html`, `style.css` — PixiJS, sterowanie i polski HUD.
-- `tests/simulation.test.ts` — testy mechaniki, w tym pełne przejście scenariusza.
-- `scripts/browser_test.py` — test przeglądarkowy.
+## Architektura
 
-Szczegóły uproszczeń i wyników: [IMPLEMENTATION_NOTES.md](IMPLEMENTATION_NOTES.md).
+- `src/campaign-data.json` — konkretne rekordy 30 rund, CMR, palety, identyfikatory, terminy, receptury i cele; bilans 696 przyjęć / 696 wydań / 0 po finale.
+- `src/campaign.ts` — typy konfiguracji, walidacja manifestów i kartonów, kolory, parametry priorytetów i ceny rozwoju.
+- `src/campaign-game.ts` — trwały stan, CMR, rezerwacje pracowników, rozbudowa, procesy i rozliczenia.
+- `src/save.ts` — zapis v2 z sumą kontrolną i odtwarzaniem zadań w toku.
+- `src/developer.ts` — deterministyczny operator wykorzystujący rzeczywisty transport.
+- `src/simulation.ts`, `src/pathfinding.ts`, `src/transport.ts` — zachowany silnik transportu 0.1, rozszerzony o granice rozbudowanej hali i kontrolę wyjazdu do głównego przejazdu.
+- `src/renderer.ts`, `src/main.ts` — dotychczasowa grafika proceduralna pixel art, nowe oznaczenia, sprzęt i polski interfejs kampanii.
 
-## Publikacja z GitHub
+Specyfikacje w `PixelHub_Codex_Pack/`, wcześniejsze notatki i audyt opisują historyczną wersję 0.1. Rozbieżności mapy i rund rozstrzyga konfiguracja kampanii 0.2.
 
-Workflow `.github/workflows/pages.yml` po każdym pushu do `main` instaluje zależności z lockfile, uruchamia testy, buduje grę i publikuje wyłącznie `dist/` na GitHub Pages. Nie wymaga własnego serwera ani kluczy API.
+## Świadome uproszczenia
 
-Jednorazowo w repozytorium otwórz **Settings → Pages → Build and deployment → Source → GitHub Actions**. Następnie w **Actions → Build and deploy PixelHub** uruchom **Run workflow** (kolejne pushe do `main` uruchamiają publikację automatycznie).
-
-Adres po udanej publikacji: `https://kozackybohun.github.io/PixelHub/`. Samo dodanie workflow nie oznacza, że adres już działa; wynik publikacji jest widoczny w zakładce Actions. Dla prywatnego repozytorium dostępność Pages zależy od planu GitHub.
-
-Vite generuje względne adresy zasobów (`vite.config.ts`), więc wszystkie skrypty, tekstury i style działają również pod ścieżką `/PixelHub/`. Gra działa w całości w przeglądarce; nie potrzebuje backendu ani pobierania plików źródłowych w trakcie gry.
-
-## Audyt techniczny
-
-[PIXELHUB_AUDIT_REPORT.md](PIXELHUB_AUDIT_REPORT.md) opisuje niezależne odtworzenia, poprawki, wyniki 52 testów oraz ograniczenia. `npm run typecheck` sprawdza również testy i benchmark.
-
-Powtarzalny pomiar planowania:
-
-```sh
-node --experimental-strip-types scripts/audit_benchmark.ts --baseline ee23be2 --repeat 5 --output /tmp/pixelhub-benchmark.json
-```
-
-Dodatkowy audyt przeglądarkowy wymaga działającego serwera, tych samych zależności Playwright i Chromium co `test:browser`:
-
-```sh
-python scripts/audit_browser.py
-```
-
-Skrypt wykonuje interakcje myszy, sprawdza orientację i kolejność rysowania, anulowanie, odjazd busa oraz mierzy rzeczywiste ×4. Wyniki zapisuje w ignorowanym `artifacts/audit/`. Pomiarów płynności w środowisku headless nie należy traktować jako benchmarku urządzeń użytkowników. Workflow `checks.yml` waliduje PR bez wdrażania gry.
+Sorter i serwis przetwarzają towar po fizycznym odstawieniu i wycofaniu wideł; nie mają minigier ani symulacji zużycia energii. Receptury to pary 2→2 zachowujące kolory i liczbę kartonów. CMR wyjazdowy jest obsługiwany bezpłatnym pojazdem o czterech miejscach, przyjazdy mają modułowe przestrzenie do ośmiu miejsc. Pełne trasy są rezerwowane konserwatywnie; brak automatycznej kolejki i robotów. Grafika rozwija proceduralne sprite’y 0.1; nie dodano zewnętrznego atlasu docelowych assetów.
