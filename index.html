@@ -27,7 +27,11 @@
     <main>
       <div class="toolbar">
         <p id="message" role="status"></p>
-        <button id="cancel">Anuluj</button><button id="debug">Siatka · G</button
+        <button id="cancel">Anuluj</button
+        ><button id="debug">Diagnostyka · G</button
+        ><button id="zoom-out">Kamera −</button
+        ><button id="zoom-in">Kamera +</button
+        ><button id="camera-reset">Reset kamery</button
         ><button id="save">Zapisz</button><button id="load">Wczytaj</button
         ><button id="new-game">Nowa gra</button>
       </div>
@@ -63,6 +67,33 @@
       <details open>
         <summary>Rozwój magazynu</summary>
         <div id="upgrades" class="actions"></div>
+      </details>
+      <details id="graphics-panel">
+        <summary>Diagnostyka zasobów graficznych</summary>
+        <p>
+          Kotwice i dłonie: G. Przesuwanie kamery: środkowy przycisk myszy lub
+          Spacja + przeciągnięcie. Zoom nie zmienia geometrii.
+        </p>
+        <select id="asset-select"></select
+        ><label
+          >Kierunek
+          <input
+            id="asset-direction"
+            type="number"
+            min="0"
+            max="15"
+            value="0" /></label
+        ><label
+          >Klatka
+          <input id="asset-frame" type="number" min="0" max="3" value="0"
+        /></label>
+        <canvas
+          id="asset-preview"
+          aria-label="Podgląd assetu i kotwicy"
+        ></canvas>
+        <pre id="asset-info"></pre>
+        <button id="graphics-report">Raport kotwic, połączeń i zasobów</button>
+        <pre id="graphics-status"></pre>
       </details>
       <section id="dev-panel" hidden>
         <h3>Laboratorium kampanii · osobny zapis</h3>

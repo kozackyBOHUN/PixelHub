@@ -19,12 +19,15 @@ with sync_playwright() as p:
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.goto(BASE + '?test=1')
     page.wait_for_function('() => window.pixelhub')
+    page.get_by_role('button', name='Kamera −', exact=True).click()
+    page.wait_for_timeout(100)
     page.get_by_role('button', name='Podstaw · rampa 1', exact=True).click()
     page.evaluate('() => window.pixelhub.game.advance(1.2)')
     def click_cell(x, y):
         box = page.locator('#world').bounding_box()
         size = page.locator('#world').evaluate('(c) => ({w:c.width,h:c.height})')
-        page.mouse.click(box['x']+(210+(x+.5)*49)*box['width']/size['w'], box['y']+(110+(y+.5)*49)*box['height']/size['h'])
+        point = page.evaluate('([x,y]) => window.pixelhub.renderer.gridToScreen({x:x+.5,y:y+.5})', [x,y])
+        page.mouse.click(box['x']+point['x']*box['width']/size['w'], box['y']+point['y']*box['height']/size['h'])
     for i, target in enumerate([(3,5),(2,5),(1,5),(16,5)]):
         pose = page.evaluate('() => window.pixelhub.game.pose')
         click_cell(pose['x'], pose['y'])

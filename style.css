@@ -433,3 +433,29 @@ canvas {
 #workers button {
   font-size: 12px;
 }
+
+.scene {
+  max-height: 80vh;
+  overflow: auto;
+}
+#world {
+  width: auto;
+  max-width: none;
+  image-rendering: pixelated;
+}
+#asset-preview {
+  width: auto;
+  max-width: none;
+  image-rendering: pixelated;
+}
+#graphics-panel pre {
+  max-height: 260px;
+  overflow: auto;
+  font-size: 11px;
+}
+#graphics-panel input {
+  width: 60px;
+}
+.toolbar {
+  flex-wrap: wrap;
+}

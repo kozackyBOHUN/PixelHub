@@ -1,13 +1,7 @@
 import { Application, Sprite, Texture } from "pixi.js";
 import { CampaignGame } from "./campaign-game.ts";
-import {
-  Renderer,
-  screenToGrid,
-  gridToScreen,
-  locationPoint,
-  TILE,
-} from "./renderer.ts";
-import { campaign, upgrades, COLORS, priorityMultiplier } from "./campaign.ts";
+import { Renderer, locationPoint } from "./renderer.ts";
+import { campaign, upgrades, priorityMultiplier } from "./campaign.ts";
 import type { Upgrade } from "./campaign.ts";
 import { SAVE_KEY, serialize, restore } from "./save.ts";
 const $ = (id: string) => document.getElementById(id)!;
@@ -29,8 +23,8 @@ const renderer = new Renderer($("world") as HTMLCanvasElement);
 const app = new Application();
 await app.init({
   canvas: renderer.canvas,
-  width: 1400,
-  height: 650,
+  width: renderer.surface.width,
+  height: renderer.surface.height,
   backgroundAlpha: 0,
   antialias: false,
   resolution: 1,
@@ -74,7 +68,7 @@ function load() {
 }
 function clickAt(p: { x: number; y: number }) {
   if (game.status !== "playing" || busy) return;
-  const cell = screenToGrid(p),
+  const cell = renderer.screenToGrid(p),
     w = game.activeWorker;
   if (w.selected && (w.source || w.carried) && !w.task) {
     const bay = cell.y < 0 ? 1 : 0,
@@ -90,26 +84,147 @@ function clickAt(p: { x: number; y: number }) {
     return;
   }
   for (const [i, worker] of game.workers.entries()) {
-    const h = gridToScreen(worker.transportGeometry.head);
+    const h = renderer.gridToScreen({
+      x: worker.transportGeometry.head.x + 0.5,
+      y: worker.transportGeometry.head.y + 0.5,
+    });
     if (
-      Math.abs(p.x - h.x - TILE / 2) < TILE / 2 &&
-      Math.abs(p.y - h.y - TILE / 2) < TILE / 2
+      renderer.hitWorker(p, i) ||
+      (Math.abs(p.x - h.x) < renderer.camera.tile * 0.3 &&
+        Math.abs(p.y - h.y) < renderer.camera.tile * 0.3)
     ) {
       game.workerIndex = i;
       worker.selectWorker();
       return;
     }
   }
+  const hitCargo = renderer.hitCargo(p);
   const c = game.crates.find((c) => {
     const q = locationPoint(c.loc);
-    return q && q.x === cell.x && q.y === cell.y;
+    return hitCargo
+      ? c.id === hitCargo
+      : !!q && q.x === cell.x && q.y === cell.y;
   });
   if (c) {
     inspection = c.id;
     w.choose(c.id);
   }
 }
-$("world").addEventListener("click", (e) => clickAt(renderer.point(e)));
+let drag: { x: number; y: number; distance: number } | null = null,
+  space = false,
+  skipClick = false;
+$("world").addEventListener("pointerdown", (event) => {
+  const e = event as PointerEvent;
+  if (e.button === 1 || (e.button === 0 && space)) {
+    const p = renderer.point(e);
+    drag = { ...p, distance: 0 };
+    ($("world") as HTMLCanvasElement).setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }
+});
+$("world").addEventListener("pointermove", (event) => {
+  if (!drag) return;
+  const p = renderer.point(event as PointerEvent),
+    dx = p.x - drag.x,
+    dy = p.y - drag.y;
+  drag.distance += Math.hypot(dx, dy);
+  renderer.camera.move(dx, dy);
+  drag.x = p.x;
+  drag.y = p.y;
+});
+$("world").addEventListener("pointerup", () => {
+  skipClick = !!drag && drag.distance > 2;
+  drag = null;
+});
+$("world").addEventListener("click", (e) => {
+  if (skipClick) {
+    skipClick = false;
+    return;
+  }
+  clickAt(renderer.point(e));
+});
+window.addEventListener("keydown", (e) => {
+  if (
+    e.code === "Space" &&
+    !["INPUT", "SELECT", "TEXTAREA", "BUTTON"].includes(
+      (e.target as HTMLElement).tagName,
+    )
+  ) {
+    space = true;
+    e.preventDefault();
+  }
+});
+window.addEventListener("keyup", (e) => {
+  if (e.code === "Space") space = false;
+});
+window.addEventListener("blur", () => {
+  space = false;
+  drag = null;
+});
+$("zoom-out").onclick = () =>
+  renderer.camera.setZoom(Math.max(0.5, renderer.camera.zoom - 0.5));
+$("zoom-in").onclick = () =>
+  renderer.camera.setZoom(Math.min(3, renderer.camera.zoom + 0.5));
+$("camera-reset").onclick = () => renderer.camera.reset();
+const assetSelect = $("asset-select") as HTMLSelectElement;
+for (const id of [
+  ...renderer.registry.all().map((a) => a.id),
+  "demo/rack",
+  "demo/vehicle4",
+  "demo/vehicle6",
+  "demo/vehicle8",
+  "demo/vehicle10",
+]) {
+  const o = document.createElement("option");
+  o.value = id;
+  o.textContent = id;
+  assetSelect.append(o);
+}
+function updatePreview() {
+  const id = assetSelect.value;
+  const directionInput = $("asset-direction") as HTMLInputElement,
+    frameInput = $("asset-frame") as HTMLInputElement;
+  const demo = id.startsWith("demo/");
+  directionInput.disabled = demo;
+  frameInput.disabled = demo;
+  if (!demo) {
+    const def = renderer.registry.get(id);
+    directionInput.max = String(def.directions.length - 1);
+    frameInput.max = String(def.framesPerDirection - 1);
+    directionInput.value = String(
+      Math.max(
+        0,
+        Math.min(def.directions.length - 1, Number(directionInput.value)),
+      ),
+    );
+    frameInput.value = String(
+      Math.max(
+        0,
+        Math.min(def.framesPerDirection - 1, Number(frameInput.value)),
+      ),
+    );
+  }
+  renderer.preview(
+    $("asset-preview") as HTMLCanvasElement,
+    id,
+    Number(($("asset-direction") as HTMLInputElement).value),
+    Number(($("asset-frame") as HTMLInputElement).value),
+  );
+  $("asset-info").textContent = id.startsWith("demo/")
+    ? "Podgląd modułów — bez obiektów fizycznych w grze."
+    : JSON.stringify(renderer.registry.get(id), null, 2);
+}
+$("graphics-report").onclick = () => {
+  $("graphics-status").textContent = JSON.stringify(
+    renderer.diagnostics(),
+    null,
+    2,
+  );
+};
+if (params.has("graphics")) {
+  renderer.debug = true;
+  ($("graphics-panel") as HTMLDetailsElement).open = true;
+}
 $("cancel").onclick = () => game.activeWorker.cancel();
 $("debug").onclick = () => (renderer.debug = !renderer.debug);
 $("save").onclick = save;
@@ -310,7 +425,7 @@ if (dev) {
       sceneSprite,
       texture,
       clickCell: (x: number, y: number) =>
-        clickAt(gridToScreen({ x: x + 0.5, y: y + 0.5 })),
+        clickAt(renderer.gridToScreen({ x: x + 0.5, y: y + 0.5 })),
       save,
       load,
       replace: (g: CampaignGame) => (game = g),
@@ -377,18 +492,22 @@ function frame(now: number) {
   if (!busy) game.advance(Math.min(0.2, (now - last) / 1000));
   last = now;
   renderer.draw(game);
-  if (app.screen.height !== renderer.surface.height) {
-    app.renderer.resize(1400, renderer.surface.height);
-    texture.source.resize(1400, renderer.surface.height);
-    texture.frame.width = 1400;
+  if (
+    app.screen.height !== renderer.surface.height ||
+    app.screen.width !== renderer.surface.width
+  ) {
+    app.renderer.resize(renderer.surface.width, renderer.surface.height);
+    texture.source.resize(renderer.surface.width, renderer.surface.height);
+    texture.frame.width = renderer.surface.width;
     texture.frame.height = renderer.surface.height;
-    texture.orig.width = 1400;
+    texture.orig.width = renderer.surface.width;
     texture.orig.height = renderer.surface.height;
     texture.update();
-    sceneSprite.width = 1400;
+    sceneSprite.width = renderer.surface.width;
     sceneSprite.height = renderer.surface.height;
   }
   texture.source.update();
+  if (($("graphics-panel") as HTMLDetailsElement).open) updatePreview();
   hud();
   if (now - lastSave > 5000 && !busy && autosaveEnabled) {
     lastSave = now;

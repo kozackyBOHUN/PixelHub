@@ -2,6 +2,12 @@
 
 Przeglądarkowa gra logistyczna: 30 rund, trwały magazyn, pracownicy z ręcznymi paleciakami, A*/planowanie pełnych manewrów, CMR i rozwój firmy. Rozwinięcie wersji 0.1 w TypeScript + PixiJS 8.
 
+## Kontrakt graficzny
+
+Nowy renderer używa centralnego katalogu zasobów, dokładnej skali 24 px ×2, kamery, kierunkowych klatek i socketów dłoni. Obecnie rysuje placeholdery; po dodaniu PNG pod zadeklarowaną ścieżką używa bitmap bez zmiany symulacji. Diagnostyka: `?dev=1&graphics=1`, klawisz G i panel zasobów.
+
+Instrukcja dla grafika i opis modułów: [GRAPHICS_CONTRACT.md](GRAPHICS_CONTRACT.md). `npm run assets:manifest` eksportuje pełny kontrakt do `public/assets/catalog.json`; `npm run test:graphics` wykonuje techniczny test przeglądarkowy PNG i geometrii. Zestaw `npm run test:browser` obejmuje teraz również ten test, więc istniejące CI uruchamia obie weryfikacje.
+
 ## Uruchomienie
 
 Node.js 24 lub nowszy:
@@ -69,7 +75,7 @@ Testy obejmują starą geometrię i transport, dokładne manifesty, cztery oznac
 - `src/save.ts` — zapis v2 z sumą kontrolną i odtwarzaniem zadań w toku.
 - `src/developer.ts` — deterministyczny operator wykorzystujący rzeczywisty transport.
 - `src/simulation.ts`, `src/pathfinding.ts`, `src/transport.ts` — zachowany silnik transportu 0.1, rozszerzony o granice rozbudowanej hali i kontrolę wyjazdu do głównego przejazdu.
-- `src/renderer.ts`, `src/main.ts` — dotychczasowa grafika proceduralna pixel art, nowe oznaczenia, sprzęt i polski interfejs kampanii.
+- `src/renderer.ts`, `src/main.ts` — wspólny system zasobów PNG/placeholderów, kamera, oznaczenia, sprzęt i polski interfejs kampanii.
 
 Specyfikacje w `PixelHub_Codex_Pack/`, wcześniejsze notatki i audyt opisują historyczną wersję 0.1. Rozbieżności mapy i rund rozstrzyga konfiguracja kampanii 0.2.
 
