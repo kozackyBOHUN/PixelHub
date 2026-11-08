@@ -92,3 +92,9 @@ Zwykłe wyjazdy zamawiają ilości kolorów (`requirements`), nie identyfikatory
 `src/shipments.ts` wylicza wygląd i dopasowanie. Kafelki i licznik wynikają z faktycznego ładunku po odłożeniu palety; wyładunek cofa postęp. Po wysyłce `shippedPalletIds` przechowuje wyłącznie dowód faktycznie wysłanych palet. Pola `color`/`dueRound` pozostają zgodnymi aliasami starszego silnika; właściwe dane kampanii to `destinationColor`/`dispatchRound`.
 
 Testy akceptacyjne A–H i rezerwacje współbieżne: `tests/cmr.test.ts`. Test produkcyjnej strony, pionowych kart, telefonu, fizycznego załadunku i zapisu: `python scripts/cmr_browser_test.py` (serwer pod `PIXELHUB_URL`). Scenariusze laboratoryjne v3 pochodzą z pełnego fizycznego przejścia 30 rund; można odtworzyć je poleceniem `node --experimental-strip-types scripts/campaign-playthrough.ts --fixtures`.
+
+## Grafiki v1 — integracja lokalna
+
+Dostarczony pakiet `PixelHub-0.2-sprites-v1.zip` zastępuje placeholdery 64 plikami PNG RGBA (65 zasobów rejestru, 190 wyborów klatek; podłoga ma alias). Manifest zachowuje istniejące kotwice, sockety i prostokąty. Kod renderera, mechanika, zapis i kampania nie wymagają zmian. Produkcyjne bitmapy pozostają w skali źródłowej 24 px z przezroczystymi odstępami 1 px.
+
+`npm run test:sprites` sprawdza rzeczywiste PNG w Chrome bez mocków: wszystkie zasoby ready, 112 klatek pracownika, fizyczny transport z łukiem i podnoszeniem, połączenie uchwytu i dłoni oraz brak błędów zasobów. Wymaga działającego podglądu (`PIXELHUB_URL`, domyślnie port 5173) i Python Playwright. Raport i zrzuty zapisuje do `artifacts/sprites-v1/`. Pochodzenie i inwentarz zasobów: `ART_PROVENANCE.md` oraz `art/sprites-v1-inventory.json`.

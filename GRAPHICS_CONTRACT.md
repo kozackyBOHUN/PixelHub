@@ -1,6 +1,6 @@
 # Kontrakt graficzny PixelHub 0.2
 
-Implementacja techniczna przygotowuje grę na przyszłe PNG. Nie zawiera finalnych grafik ani nowych zasad składowania. Pozycje, kolizje, transport, paleciak, rampy, kampania, pieniądze i zapis pozostają w istniejącej symulacji.
+Implementacja obsługuje wymienne PNG. Lokalna integracja pakietu grafik v1 dostarcza wszystkie zasoby bieżącego katalogu; nie dodaje nowych zasad składowania. Pozycje, kolizje, transport, paleciak, rampy, kampania, pieniądze i zapis pozostają w istniejącej symulacji.
 
 ## Przepływ danych
 

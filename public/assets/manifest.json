@@ -1,1 +1,4010 @@
-{"version":1,"assets":{}}
+{
+  "version": 1,
+  "assets": {
+    "exterior/base": {
+      "path": "assets/exterior/base.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 0,
+      "anchorY": 0,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "worker/default/idle": {
+      "path": "assets/workers/default/idle.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 21,
+      "frames": {
+        "N": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 16
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 16
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 16
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 16
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 16
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 16
+              }
+            }
+          }
+        ],
+        "NE": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 25,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 25,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 15.121320343559642
+              }
+            }
+          }
+        ],
+        "E": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 50,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 7,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 5,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 9,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 50,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 7,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 5,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 9,
+                "y": 13
+              }
+            }
+          }
+        ],
+        "SE": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 75,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 75,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 10.878679656440358
+              }
+            }
+          }
+        ],
+        "S": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 100,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 10
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 10
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 10
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 100,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 10
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 10
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 10
+              }
+            }
+          }
+        ],
+        "SW": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 125,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 125,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 10.878679656440358
+              }
+            }
+          }
+        ],
+        "W": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 150,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 17,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 15,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 19,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 150,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 17,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 15,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 19,
+                "y": 13
+              }
+            }
+          }
+        ],
+        "NW": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 175,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 175,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 15.121320343559642
+              }
+            }
+          }
+        ]
+      }
+    },
+    "worker/default/walk": {
+      "path": "assets/workers/default/walk.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 21,
+      "frames": {
+        "N": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 16
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 16
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 16
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12.2,
+                "y": 16
+              },
+              "leftHandSocket": {
+                "x": 10.2,
+                "y": 16
+              },
+              "rightHandSocket": {
+                "x": 14.2,
+                "y": 16
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 16
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 16
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 16
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 11.8,
+                "y": 16
+              },
+              "leftHandSocket": {
+                "x": 9.8,
+                "y": 16
+              },
+              "rightHandSocket": {
+                "x": 13.8,
+                "y": 16
+              }
+            }
+          }
+        ],
+        "NE": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 25,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 25,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.664466094067262,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 6.6644660940672615,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 10.664466094067262,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 25,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 25,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.264466094067263,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 6.264466094067263,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 10.264466094067263,
+                "y": 15.121320343559642
+              }
+            }
+          }
+        ],
+        "E": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 50,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 7,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 5,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 9,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 50,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 7.2,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 5.2,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 9.2,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 50,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 7,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 5,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 9,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 50,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 6.8,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 4.8,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 8.8,
+                "y": 13
+              }
+            }
+          }
+        ],
+        "SE": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 75,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 75,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.664466094067262,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 6.6644660940672615,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 10.664466094067262,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 75,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 75,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.264466094067263,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 6.264466094067263,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 10.264466094067263,
+                "y": 10.878679656440358
+              }
+            }
+          }
+        ],
+        "S": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 100,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 10
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 10
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 10
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 100,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12.2,
+                "y": 10
+              },
+              "leftHandSocket": {
+                "x": 10.2,
+                "y": 10
+              },
+              "rightHandSocket": {
+                "x": 14.2,
+                "y": 10
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 100,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 10
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 10
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 10
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 100,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 11.8,
+                "y": 10
+              },
+              "leftHandSocket": {
+                "x": 9.8,
+                "y": 10
+              },
+              "rightHandSocket": {
+                "x": 13.8,
+                "y": 10
+              }
+            }
+          }
+        ],
+        "SW": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 125,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 125,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.735533905932737,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 13.735533905932737,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 17.735533905932737,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 125,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 125,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.335533905932738,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 13.335533905932738,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 17.33553390593274,
+                "y": 10.878679656440358
+              }
+            }
+          }
+        ],
+        "W": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 150,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 17,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 15,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 19,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 150,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 17.2,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 15.2,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 19.2,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 150,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 17,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 15,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 19,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 150,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 16.8,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 14.8,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 18.8,
+                "y": 13
+              }
+            }
+          }
+        ],
+        "NW": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 175,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 175,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.735533905932737,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 13.735533905932737,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 17.735533905932737,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 175,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 175,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.335533905932738,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 13.335533905932738,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 17.33553390593274,
+                "y": 15.121320343559642
+              }
+            }
+          }
+        ]
+      }
+    },
+    "worker/default/pull": {
+      "path": "assets/workers/default/pull.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 21,
+      "frames": {
+        "N": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 16
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 16
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 16
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12.2,
+                "y": 16
+              },
+              "leftHandSocket": {
+                "x": 10.2,
+                "y": 16
+              },
+              "rightHandSocket": {
+                "x": 14.2,
+                "y": 16
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 16
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 16
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 16
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 11.8,
+                "y": 16
+              },
+              "leftHandSocket": {
+                "x": 9.8,
+                "y": 16
+              },
+              "rightHandSocket": {
+                "x": 13.8,
+                "y": 16
+              }
+            }
+          }
+        ],
+        "NE": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 25,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 25,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.664466094067262,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 6.6644660940672615,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 10.664466094067262,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 25,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 25,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.264466094067263,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 6.264466094067263,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 10.264466094067263,
+                "y": 15.121320343559642
+              }
+            }
+          }
+        ],
+        "E": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 50,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 7,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 5,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 9,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 50,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 7.2,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 5.2,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 9.2,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 50,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 7,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 5,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 9,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 50,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 6.8,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 4.8,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 8.8,
+                "y": 13
+              }
+            }
+          }
+        ],
+        "SE": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 75,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 75,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.664466094067262,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 6.6644660940672615,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 10.664466094067262,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 75,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 75,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.264466094067263,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 6.264466094067263,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 10.264466094067263,
+                "y": 10.878679656440358
+              }
+            }
+          }
+        ],
+        "S": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 100,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 10
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 10
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 10
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 100,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12.2,
+                "y": 10
+              },
+              "leftHandSocket": {
+                "x": 10.2,
+                "y": 10
+              },
+              "rightHandSocket": {
+                "x": 14.2,
+                "y": 10
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 100,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 10
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 10
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 10
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 100,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 11.8,
+                "y": 10
+              },
+              "leftHandSocket": {
+                "x": 9.8,
+                "y": 10
+              },
+              "rightHandSocket": {
+                "x": 13.8,
+                "y": 10
+              }
+            }
+          }
+        ],
+        "SW": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 125,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 125,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.735533905932737,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 13.735533905932737,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 17.735533905932737,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 125,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 125,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.335533905932738,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 13.335533905932738,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 17.33553390593274,
+                "y": 10.878679656440358
+              }
+            }
+          }
+        ],
+        "W": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 150,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 17,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 15,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 19,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 150,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 17.2,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 15.2,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 19.2,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 150,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 17,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 15,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 19,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 150,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 16.8,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 14.8,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 18.8,
+                "y": 13
+              }
+            }
+          }
+        ],
+        "NW": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 175,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 175,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.735533905932737,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 13.735533905932737,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 17.735533905932737,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 175,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 175,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.335533905932738,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 13.335533905932738,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 17.33553390593274,
+                "y": 15.121320343559642
+              }
+            }
+          }
+        ]
+      }
+    },
+    "worker/default/push": {
+      "path": "assets/workers/default/push.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 21,
+      "frames": {
+        "N": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 10
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 10
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 10
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12.2,
+                "y": 10
+              },
+              "leftHandSocket": {
+                "x": 10.2,
+                "y": 10
+              },
+              "rightHandSocket": {
+                "x": 14.2,
+                "y": 10
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 10
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 10
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 10
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 11.8,
+                "y": 10
+              },
+              "leftHandSocket": {
+                "x": 9.8,
+                "y": 10
+              },
+              "rightHandSocket": {
+                "x": 13.8,
+                "y": 10
+              }
+            }
+          }
+        ],
+        "NE": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 25,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 25,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.735533905932737,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 13.735533905932737,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 17.735533905932737,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 25,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 25,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.335533905932738,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 13.335533905932738,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 17.33553390593274,
+                "y": 10.878679656440358
+              }
+            }
+          }
+        ],
+        "E": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 50,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 17,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 15,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 19,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 50,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 17.2,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 15.2,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 19.2,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 50,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 17,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 15,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 19,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 50,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 16.8,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 14.8,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 18.8,
+                "y": 13
+              }
+            }
+          }
+        ],
+        "SE": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 75,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 75,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.735533905932737,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 13.735533905932737,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 17.735533905932737,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 75,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.535533905932738,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 13.535533905932738,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 17.535533905932738,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 75,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 15.335533905932738,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 13.335533905932738,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 17.33553390593274,
+                "y": 15.121320343559642
+              }
+            }
+          }
+        ],
+        "S": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 100,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 16
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 16
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 16
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 100,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12.2,
+                "y": 16
+              },
+              "leftHandSocket": {
+                "x": 10.2,
+                "y": 16
+              },
+              "rightHandSocket": {
+                "x": 14.2,
+                "y": 16
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 100,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 12,
+                "y": 16
+              },
+              "leftHandSocket": {
+                "x": 10,
+                "y": 16
+              },
+              "rightHandSocket": {
+                "x": 14,
+                "y": 16
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 100,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 11.8,
+                "y": 16
+              },
+              "leftHandSocket": {
+                "x": 9.8,
+                "y": 16
+              },
+              "rightHandSocket": {
+                "x": 13.8,
+                "y": 16
+              }
+            }
+          }
+        ],
+        "SW": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 125,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 125,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.664466094067262,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 6.6644660940672615,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 10.664466094067262,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 125,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 15.121320343559642
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 125,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.264466094067263,
+                "y": 15.121320343559642
+              },
+              "leftHandSocket": {
+                "x": 6.264466094067263,
+                "y": 15.121320343559642
+              },
+              "rightHandSocket": {
+                "x": 10.264466094067263,
+                "y": 15.121320343559642
+              }
+            }
+          }
+        ],
+        "W": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 150,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 7,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 5,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 9,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 150,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 7.2,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 5.2,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 9.2,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 150,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 7,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 5,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 9,
+                "y": 13
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 150,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 6.8,
+                "y": 13
+              },
+              "leftHandSocket": {
+                "x": 4.8,
+                "y": 13
+              },
+              "rightHandSocket": {
+                "x": 8.8,
+                "y": 13
+              }
+            }
+          }
+        ],
+        "NW": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 175,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 25,
+              "y": 175,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.664466094067262,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 6.6644660940672615,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 10.664466094067262,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 50,
+              "y": 175,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.464466094067262,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 6.464466094067262,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 10.464466094067262,
+                "y": 10.878679656440358
+              }
+            }
+          },
+          {
+            "rect": {
+              "x": 75,
+              "y": 175,
+              "width": 24,
+              "height": 24
+            },
+            "sockets": {
+              "gripSocket": {
+                "x": 8.264466094067263,
+                "y": 10.878679656440358
+              },
+              "leftHandSocket": {
+                "x": 6.264466094067263,
+                "y": 10.878679656440358
+              },
+              "rightHandSocket": {
+                "x": 10.264466094067263,
+                "y": 10.878679656440358
+              }
+            }
+          }
+        ]
+      }
+    },
+    "jack/default/body": {
+      "path": "assets/pallet-jacks/default/body.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "0": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ],
+        "1": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 25,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ],
+        "2": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 50,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ],
+        "3": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 75,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ],
+        "4": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 100,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ],
+        "5": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 125,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ],
+        "6": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 150,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ],
+        "7": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 175,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ],
+        "8": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 200,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ],
+        "9": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 225,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ],
+        "10": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 250,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ],
+        "11": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 275,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ],
+        "12": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 300,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ],
+        "13": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 325,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ],
+        "14": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 350,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ],
+        "15": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 375,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "jack/default/handle": {
+      "path": "assets/pallet-jacks/default/handle.png",
+      "frameWidth": 16,
+      "frameHeight": 8,
+      "anchorX": 0,
+      "anchorY": 4,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 16,
+              "height": 8
+            }
+          }
+        ]
+      },
+      "attachmentPoints": {
+        "start": {
+          "x": 0,
+          "y": 4
+        },
+        "end": {
+          "x": 14,
+          "y": 4
+        }
+      }
+    },
+    "cargo/box/gray": {
+      "path": "assets/cargo/box/gray.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "cargo/box/red": {
+      "path": "assets/cargo/box/red.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "cargo/box/blue": {
+      "path": "assets/cargo/box/blue.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "cargo/box/yellow": {
+      "path": "assets/cargo/box/yellow.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "cargo/box/green": {
+      "path": "assets/cargo/box/green.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "cargo/box/purple": {
+      "path": "assets/cargo/box/purple.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "cargo/box/orange": {
+      "path": "assets/cargo/box/orange.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "cargo/box/teal": {
+      "path": "assets/cargo/box/teal.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "cargo/box/pink": {
+      "path": "assets/cargo/box/pink.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "cargo/pallet": {
+      "path": "assets/cargo/pallet.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "cargo/overlay/mix": {
+      "path": "assets/cargo/overlay/mix.png",
+      "frameWidth": 8,
+      "frameHeight": 8,
+      "anchorX": 4,
+      "anchorY": 4,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 8,
+              "height": 8
+            }
+          }
+        ]
+      }
+    },
+    "cargo/overlay/chilled": {
+      "path": "assets/cargo/overlay/chilled.png",
+      "frameWidth": 8,
+      "frameHeight": 8,
+      "anchorX": 4,
+      "anchorY": 4,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 8,
+              "height": 8
+            }
+          }
+        ]
+      }
+    },
+    "cargo/overlay/frozen": {
+      "path": "assets/cargo/overlay/frozen.png",
+      "frameWidth": 8,
+      "frameHeight": 8,
+      "anchorX": 4,
+      "anchorY": 4,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 8,
+              "height": 8
+            }
+          }
+        ]
+      }
+    },
+    "cargo/overlay/priority": {
+      "path": "assets/cargo/overlay/priority.png",
+      "frameWidth": 8,
+      "frameHeight": 8,
+      "anchorX": 4,
+      "anchorY": 4,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 8,
+              "height": 8
+            }
+          },
+          {
+            "rect": {
+              "x": 9,
+              "y": 0,
+              "width": 8,
+              "height": 8
+            }
+          },
+          {
+            "rect": {
+              "x": 18,
+              "y": 0,
+              "width": 8,
+              "height": 8
+            }
+          }
+        ]
+      }
+    },
+    "cargo/overlay/damaged": {
+      "path": "assets/cargo/overlay/damaged.png",
+      "frameWidth": 8,
+      "frameHeight": 8,
+      "anchorX": 4,
+      "anchorY": 4,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 8,
+              "height": 8
+            }
+          }
+        ]
+      }
+    },
+    "cargo/overlay/return": {
+      "path": "assets/cargo/overlay/return.png",
+      "frameWidth": 8,
+      "frameHeight": 8,
+      "anchorX": 4,
+      "anchorY": 4,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 8,
+              "height": 8
+            }
+          }
+        ]
+      }
+    },
+    "floor/base": {
+      "path": "assets/floors/base.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 0,
+      "anchorY": 0,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "floor/variant_01": {
+      "path": "assets/floors/variant_01.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 0,
+      "anchorY": 0,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "floor/variant_02": {
+      "path": "assets/floors/variant_02.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 0,
+      "anchorY": 0,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "floor/ramp": {
+      "path": "assets/floors/ramp.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 0,
+      "anchorY": 0,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "floor/loading_zone": {
+      "path": "assets/floors/loading_zone.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 0,
+      "anchorY": 0,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "floor/marking": {
+      "path": "assets/floors/marking.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 0,
+      "anchorY": 0,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "floor/worn": {
+      "path": "assets/floors/worn.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 0,
+      "anchorY": 0,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "wall/segment": {
+      "path": "assets/walls/segment.png",
+      "frameWidth": 24,
+      "frameHeight": 36,
+      "anchorX": 12,
+      "anchorY": 24,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 36
+            }
+          }
+        ]
+      },
+      "parts": [
+        {
+          "layer": 40,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 24,
+            "height": 24
+          }
+        },
+        {
+          "layer": 200,
+          "rect": {
+            "x": 0,
+            "y": 24,
+            "width": 24,
+            "height": 12
+          }
+        }
+      ]
+    },
+    "wall/corner": {
+      "path": "assets/walls/corner.png",
+      "frameWidth": 24,
+      "frameHeight": 36,
+      "anchorX": 12,
+      "anchorY": 24,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 36
+            }
+          }
+        ]
+      },
+      "parts": [
+        {
+          "layer": 40,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 24,
+            "height": 24
+          }
+        },
+        {
+          "layer": 200,
+          "rect": {
+            "x": 0,
+            "y": 24,
+            "width": 24,
+            "height": 12
+          }
+        }
+      ]
+    },
+    "wall/end": {
+      "path": "assets/walls/end.png",
+      "frameWidth": 24,
+      "frameHeight": 36,
+      "anchorX": 12,
+      "anchorY": 24,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 36
+            }
+          }
+        ]
+      },
+      "parts": [
+        {
+          "layer": 40,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 24,
+            "height": 24
+          }
+        },
+        {
+          "layer": 200,
+          "rect": {
+            "x": 0,
+            "y": 24,
+            "width": 24,
+            "height": 12
+          }
+        }
+      ]
+    },
+    "wall/gate": {
+      "path": "assets/walls/gate.png",
+      "frameWidth": 24,
+      "frameHeight": 36,
+      "anchorX": 12,
+      "anchorY": 24,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 36
+            }
+          }
+        ]
+      },
+      "parts": [
+        {
+          "layer": 40,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 24,
+            "height": 24
+          }
+        },
+        {
+          "layer": 200,
+          "rect": {
+            "x": 0,
+            "y": 24,
+            "width": 24,
+            "height": 12
+          }
+        }
+      ]
+    },
+    "wall/column": {
+      "path": "assets/walls/column.png",
+      "frameWidth": 24,
+      "frameHeight": 36,
+      "anchorX": 12,
+      "anchorY": 24,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 36
+            }
+          }
+        ]
+      },
+      "parts": [
+        {
+          "layer": 40,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 24,
+            "height": 24
+          }
+        },
+        {
+          "layer": 200,
+          "rect": {
+            "x": 0,
+            "y": 24,
+            "width": 24,
+            "height": 12
+          }
+        }
+      ]
+    },
+    "furniture/desk": {
+      "path": "assets/furniture/desk.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "furniture/monitor": {
+      "path": "assets/furniture/monitor.png",
+      "frameWidth": 12,
+      "frameHeight": 12,
+      "anchorX": 6,
+      "anchorY": 6,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 12,
+              "height": 12
+            }
+          }
+        ]
+      }
+    },
+    "furniture/chair": {
+      "path": "assets/furniture/chair.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "furniture/locker": {
+      "path": "assets/furniture/locker.png",
+      "frameWidth": 24,
+      "frameHeight": 32,
+      "anchorX": 12,
+      "anchorY": 20,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 32
+            }
+          }
+        ]
+      }
+    },
+    "furniture/bench": {
+      "path": "assets/furniture/bench.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "furniture/toilet": {
+      "path": "assets/furniture/toilet.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "furniture/sink": {
+      "path": "assets/furniture/sink.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "furniture/table": {
+      "path": "assets/furniture/table.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "rack/standard/segment": {
+      "path": "assets/racks/standard/segment.png",
+      "frameWidth": 24,
+      "frameHeight": 40,
+      "anchorX": 12,
+      "anchorY": 28,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 40
+            }
+          }
+        ]
+      }
+    },
+    "rack/standard/post": {
+      "path": "assets/racks/standard/post.png",
+      "frameWidth": 8,
+      "frameHeight": 40,
+      "anchorX": 4,
+      "anchorY": 28,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 8,
+              "height": 40
+            }
+          }
+        ]
+      }
+    },
+    "rack/standard/beam": {
+      "path": "assets/racks/standard/beam.png",
+      "frameWidth": 24,
+      "frameHeight": 8,
+      "anchorX": 12,
+      "anchorY": 4,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 8
+            }
+          }
+        ]
+      }
+    },
+    "rack/standard/shelf": {
+      "path": "assets/racks/standard/shelf.png",
+      "frameWidth": 24,
+      "frameHeight": 8,
+      "anchorX": 12,
+      "anchorY": 4,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 8
+            }
+          }
+        ]
+      }
+    },
+    "vehicle/default/cab": {
+      "path": "assets/vehicles/default/cab.png",
+      "frameWidth": 24,
+      "frameHeight": 48,
+      "anchorX": 0,
+      "anchorY": 0,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 48
+            }
+          }
+        ]
+      }
+    },
+    "vehicle/default/cargo_segment": {
+      "path": "assets/vehicles/default/cargo_segment.png",
+      "frameWidth": 24,
+      "frameHeight": 48,
+      "anchorX": 0,
+      "anchorY": 0,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 48
+            }
+          }
+        ]
+      }
+    },
+    "vehicle/default/end": {
+      "path": "assets/vehicles/default/end.png",
+      "frameWidth": 8,
+      "frameHeight": 48,
+      "anchorX": 0,
+      "anchorY": 0,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 8,
+              "height": 48
+            }
+          }
+        ]
+      }
+    },
+    "vehicle/default/wheel": {
+      "path": "assets/vehicles/default/wheel.png",
+      "frameWidth": 8,
+      "frameHeight": 8,
+      "anchorX": 4,
+      "anchorY": 4,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 8,
+              "height": 8
+            }
+          }
+        ]
+      }
+    },
+    "vehicle/default/slot": {
+      "path": "assets/vehicles/default/slot.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 0,
+      "anchorY": 0,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "shadow/worker": {
+      "path": "assets/effects/shadows/worker.png",
+      "frameWidth": 24,
+      "frameHeight": 12,
+      "anchorX": 12,
+      "anchorY": 6,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 12
+            }
+          }
+        ]
+      }
+    },
+    "shadow/jack": {
+      "path": "assets/effects/shadows/jack.png",
+      "frameWidth": 24,
+      "frameHeight": 12,
+      "anchorX": 12,
+      "anchorY": 6,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 12
+            }
+          }
+        ]
+      }
+    },
+    "shadow/cargo": {
+      "path": "assets/effects/shadows/cargo.png",
+      "frameWidth": 24,
+      "frameHeight": 12,
+      "anchorX": 12,
+      "anchorY": 6,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 12
+            }
+          }
+        ]
+      }
+    },
+    "shadow/vehicle": {
+      "path": "assets/effects/shadows/vehicle.png",
+      "frameWidth": 24,
+      "frameHeight": 12,
+      "anchorX": 12,
+      "anchorY": 6,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 12
+            }
+          }
+        ]
+      }
+    },
+    "shadow/furniture": {
+      "path": "assets/effects/shadows/furniture.png",
+      "frameWidth": 24,
+      "frameHeight": 12,
+      "anchorX": 12,
+      "anchorY": 6,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 12
+            }
+          }
+        ]
+      }
+    },
+    "machine/sorter": {
+      "path": "assets/equipment/sorter.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "machine/service": {
+      "path": "assets/equipment/service.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "ui/icon/small": {
+      "path": "assets/ui/icon/small.png",
+      "frameWidth": 8,
+      "frameHeight": 8,
+      "anchorX": 4,
+      "anchorY": 4,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 8,
+              "height": 8
+            }
+          }
+        ]
+      }
+    },
+    "ui/icon/standard": {
+      "path": "assets/ui/icon/standard.png",
+      "frameWidth": 16,
+      "frameHeight": 16,
+      "anchorX": 8,
+      "anchorY": 8,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 16,
+              "height": 16
+            }
+          }
+        ]
+      }
+    },
+    "ui/icon/cmr": {
+      "path": "assets/ui/icon/cmr.png",
+      "frameWidth": 16,
+      "frameHeight": 16,
+      "anchorX": 8,
+      "anchorY": 8,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 16,
+              "height": 16
+            }
+          }
+        ]
+      }
+    },
+    "ui/icon/decoration": {
+      "path": "assets/ui/icon/decoration.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 12,
+      "anchorY": 12,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    },
+    "ui/panel": {
+      "path": "assets/ui/panel.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 0,
+      "anchorY": 0,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      },
+      "nineSlice": {
+        "left": 8,
+        "top": 8,
+        "right": 8,
+        "bottom": 8
+      }
+    },
+    "floor/warehouse/base": {
+      "path": "assets/floors/base.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anchorX": 0,
+      "anchorY": 0,
+      "frames": {
+        "default": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 24
+            }
+          }
+        ]
+      }
+    }
+  }
+}

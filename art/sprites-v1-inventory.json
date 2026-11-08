@@ -1,0 +1,514 @@
+[
+  {
+    "id": "exterior/base",
+    "path": "assets/exterior/base.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "c4dcf356496491fe8a55dfb6b96fc3788914525e364af401072e935ffa46c54b"
+  },
+  {
+    "id": "worker/default/idle",
+    "path": "assets/workers/default/idle.png",
+    "width": 49,
+    "height": 199,
+    "frames": 16,
+    "sha256": "5862ab38cf625fe5961345018d9eaf4e9bb083f49598ae2eaf74ef01bf5c3061"
+  },
+  {
+    "id": "worker/default/walk",
+    "path": "assets/workers/default/walk.png",
+    "width": 99,
+    "height": 199,
+    "frames": 32,
+    "sha256": "9d74d8e0a203b4fd6c3695c72bd52083fd2bcda741f5363c9fc421c6fa3a62ef"
+  },
+  {
+    "id": "worker/default/pull",
+    "path": "assets/workers/default/pull.png",
+    "width": 99,
+    "height": 199,
+    "frames": 32,
+    "sha256": "830e44f9ae301525593646e53e8e270214f1ef529f5f5b259ab11962dfef16e4"
+  },
+  {
+    "id": "worker/default/push",
+    "path": "assets/workers/default/push.png",
+    "width": 99,
+    "height": 199,
+    "frames": 32,
+    "sha256": "4c4ba5c50015800c02ce575d1d8eb9abd2709d15d962a4e0a4ad58375e7182dd"
+  },
+  {
+    "id": "jack/default/body",
+    "path": "assets/pallet-jacks/default/body.png",
+    "width": 24,
+    "height": 399,
+    "frames": 16,
+    "sha256": "527ae1e6d56ab7af8d4d17f0ff6537de5e39222d0145c11aecf038cc026be0da"
+  },
+  {
+    "id": "jack/default/handle",
+    "path": "assets/pallet-jacks/default/handle.png",
+    "width": 16,
+    "height": 8,
+    "frames": 1,
+    "sha256": "2008bc77e9728cf85449fe9061493c6c01c42409c4024c78ddcb6e1032ecee64"
+  },
+  {
+    "id": "cargo/box/gray",
+    "path": "assets/cargo/box/gray.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "ee31bdaf95eea08b912750224f57dcb51147c9567b3c39492bbd31613256faca"
+  },
+  {
+    "id": "cargo/box/red",
+    "path": "assets/cargo/box/red.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "12abb75b2251b988c1e8dbd472326f2791870ed74dfc95b5447c0675cd923c56"
+  },
+  {
+    "id": "cargo/box/blue",
+    "path": "assets/cargo/box/blue.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "f0a3ce5fdc0121ce53d1159b630d9d59365e6c48eb2fe8aae89d477c85009646"
+  },
+  {
+    "id": "cargo/box/yellow",
+    "path": "assets/cargo/box/yellow.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "e2726cd48a9d0a3c036309576c8cf88b92247db497820c464a644ad99ef8f187"
+  },
+  {
+    "id": "cargo/box/green",
+    "path": "assets/cargo/box/green.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "52e0d248e153e539d3ae954a8420cee31bc07567df846ba96ca34017eb2a22f6"
+  },
+  {
+    "id": "cargo/box/purple",
+    "path": "assets/cargo/box/purple.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "990cdee9c7861dceb60ac3cace4d38aa80fb4eb1f82e1cd7fba120db4cf0da3d"
+  },
+  {
+    "id": "cargo/box/orange",
+    "path": "assets/cargo/box/orange.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "299caa41955e0d91ec053845e1e46fc30ea33f9ee1f6ac97a5baaec615601baa"
+  },
+  {
+    "id": "cargo/box/teal",
+    "path": "assets/cargo/box/teal.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "5997e456d511f1d679f48ca8962f0c9fa4ad88a992b1eb14681d89c4acce5788"
+  },
+  {
+    "id": "cargo/box/pink",
+    "path": "assets/cargo/box/pink.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "82b1425e550699f3547228177a0503e7d56bbddfe6ad33b69f313a8665c2092e"
+  },
+  {
+    "id": "cargo/pallet",
+    "path": "assets/cargo/pallet.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "d87266c6adb118d1d3d2caac4a6f60c3693346311cda8f5607c1e0bef0927f9c"
+  },
+  {
+    "id": "cargo/overlay/mix",
+    "path": "assets/cargo/overlay/mix.png",
+    "width": 8,
+    "height": 8,
+    "frames": 1,
+    "sha256": "8e81bb3b2b0b3b3634e2f3fadf73ed5f66c6ab4a22acd6b920a012a3c252fc64"
+  },
+  {
+    "id": "cargo/overlay/chilled",
+    "path": "assets/cargo/overlay/chilled.png",
+    "width": 8,
+    "height": 8,
+    "frames": 1,
+    "sha256": "958130d3ea333fb65915a2c469f80731ce22b3df2a893a3c175de8f0c030ed1f"
+  },
+  {
+    "id": "cargo/overlay/frozen",
+    "path": "assets/cargo/overlay/frozen.png",
+    "width": 8,
+    "height": 8,
+    "frames": 1,
+    "sha256": "0cbfb57affb98adef7155bfbb4fd563c686f1530969470c1ca53b694122e9a69"
+  },
+  {
+    "id": "cargo/overlay/priority",
+    "path": "assets/cargo/overlay/priority.png",
+    "width": 26,
+    "height": 8,
+    "frames": 3,
+    "sha256": "f9e7067b192aeac0ffa69db4c8cbab926971c20f6ff62926e6368605a1f5e7c4"
+  },
+  {
+    "id": "cargo/overlay/damaged",
+    "path": "assets/cargo/overlay/damaged.png",
+    "width": 8,
+    "height": 8,
+    "frames": 1,
+    "sha256": "bafcc2a67099db960c8fb260cbffbbd7b8bf832a611a5f4c987f39224a72bfce"
+  },
+  {
+    "id": "cargo/overlay/return",
+    "path": "assets/cargo/overlay/return.png",
+    "width": 8,
+    "height": 8,
+    "frames": 1,
+    "sha256": "2cc545a4f668c7cc6f08b2082659900b5da2e365bc83ba3f27bea79eaad20ab7"
+  },
+  {
+    "id": "floor/base",
+    "path": "assets/floors/base.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "9d4c4147d2fcb90b420b0431821e2ad4e5f04e14bc7157fb24cba9851df89702"
+  },
+  {
+    "id": "floor/variant_01",
+    "path": "assets/floors/variant_01.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "6db8fb57fe80af72e2f56698386c2a0adcf02481e61b8a9b249253cde3391b87"
+  },
+  {
+    "id": "floor/variant_02",
+    "path": "assets/floors/variant_02.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "19bede6c1634b5b605f06e26b9129ffc77b887becc1e3ea5ec04f3f2a66dd585"
+  },
+  {
+    "id": "floor/ramp",
+    "path": "assets/floors/ramp.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "6af918264bff863c2ce87fbf4f0d6e26f7f8dadec8e8d973e6f360e631b654d3"
+  },
+  {
+    "id": "floor/loading_zone",
+    "path": "assets/floors/loading_zone.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "21cba4accbef54348001eb067a51419f03ddaee711b741d61171defae72cdaa0"
+  },
+  {
+    "id": "floor/marking",
+    "path": "assets/floors/marking.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "7843a947f09fffa82398bfa0b6ec1860083d276d2ce124fb6c479eaeff2ec6a9"
+  },
+  {
+    "id": "floor/worn",
+    "path": "assets/floors/worn.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "70ec94e0153aa49c1b5c6f2d3a8eb9427b3724f9e13515fa2564daffe4ab230f"
+  },
+  {
+    "id": "wall/segment",
+    "path": "assets/walls/segment.png",
+    "width": 24,
+    "height": 36,
+    "frames": 1,
+    "sha256": "a8c3bf50e3318c1d037d56ec74cfc339d08ca29e7db5b01ef48a7593eb29814c"
+  },
+  {
+    "id": "wall/corner",
+    "path": "assets/walls/corner.png",
+    "width": 24,
+    "height": 36,
+    "frames": 1,
+    "sha256": "ce795761ad064d85ebe80d58e7ea19acec75b2538a17299955dccc7a1b0af2b7"
+  },
+  {
+    "id": "wall/end",
+    "path": "assets/walls/end.png",
+    "width": 24,
+    "height": 36,
+    "frames": 1,
+    "sha256": "ce795761ad064d85ebe80d58e7ea19acec75b2538a17299955dccc7a1b0af2b7"
+  },
+  {
+    "id": "wall/gate",
+    "path": "assets/walls/gate.png",
+    "width": 24,
+    "height": 36,
+    "frames": 1,
+    "sha256": "ce795761ad064d85ebe80d58e7ea19acec75b2538a17299955dccc7a1b0af2b7"
+  },
+  {
+    "id": "wall/column",
+    "path": "assets/walls/column.png",
+    "width": 24,
+    "height": 36,
+    "frames": 1,
+    "sha256": "105856c17e62fe8586eaac055e1b5b8ad40b1129c8651fa36b02002e664a7787"
+  },
+  {
+    "id": "furniture/desk",
+    "path": "assets/furniture/desk.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "385d317ba987444f41565fcee941f80729798fbf5185bbf13defdf45ce72697c"
+  },
+  {
+    "id": "furniture/monitor",
+    "path": "assets/furniture/monitor.png",
+    "width": 12,
+    "height": 12,
+    "frames": 1,
+    "sha256": "32ad6a140c3645c8b7d6f8186e39c079d5a4193ecc44492d7662f1b44621232d"
+  },
+  {
+    "id": "furniture/chair",
+    "path": "assets/furniture/chair.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "46831ae1880a40dae60e080d4728ad06674c442985e06ff272a1bfd66bee2c74"
+  },
+  {
+    "id": "furniture/locker",
+    "path": "assets/furniture/locker.png",
+    "width": 24,
+    "height": 32,
+    "frames": 1,
+    "sha256": "ffdadf574b65adf4da4c0281c2af847b35c89168b3f714132adaff27b5e95760"
+  },
+  {
+    "id": "furniture/bench",
+    "path": "assets/furniture/bench.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "01c28b8655d38ab3df2d287a836c27cf7af8134976cfa69d57d8da9f8dccfec6"
+  },
+  {
+    "id": "furniture/toilet",
+    "path": "assets/furniture/toilet.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "3ca137a4a6f60d595855ff3e2b96b3f8fb3e0cfbfd58a7d24a6434c9113a174e"
+  },
+  {
+    "id": "furniture/sink",
+    "path": "assets/furniture/sink.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "3ca137a4a6f60d595855ff3e2b96b3f8fb3e0cfbfd58a7d24a6434c9113a174e"
+  },
+  {
+    "id": "furniture/table",
+    "path": "assets/furniture/table.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "385d317ba987444f41565fcee941f80729798fbf5185bbf13defdf45ce72697c"
+  },
+  {
+    "id": "rack/standard/segment",
+    "path": "assets/racks/standard/segment.png",
+    "width": 24,
+    "height": 40,
+    "frames": 1,
+    "sha256": "c4561ed145d144d872df154d585f58265a94fc7a3da1dd9d151e8023ca951441"
+  },
+  {
+    "id": "rack/standard/post",
+    "path": "assets/racks/standard/post.png",
+    "width": 8,
+    "height": 40,
+    "frames": 1,
+    "sha256": "e0ba5e56d2f7eef4273d81f538e6d1b4a0f841b5aa962f7e8c9c74941a91c4ba"
+  },
+  {
+    "id": "rack/standard/beam",
+    "path": "assets/racks/standard/beam.png",
+    "width": 24,
+    "height": 8,
+    "frames": 1,
+    "sha256": "256cc3c8b232d1a929306d6bd4e5c4f1ef8275a99ebb895859b07d32696c2b9e"
+  },
+  {
+    "id": "rack/standard/shelf",
+    "path": "assets/racks/standard/shelf.png",
+    "width": 24,
+    "height": 8,
+    "frames": 1,
+    "sha256": "92a1b0d2c8c73285cffabdca4e16586bd9ec55e2ce8b2ce050b61e5a9985f859"
+  },
+  {
+    "id": "vehicle/default/cab",
+    "path": "assets/vehicles/default/cab.png",
+    "width": 24,
+    "height": 48,
+    "frames": 1,
+    "sha256": "47cafcb87f0798b1b18f89047969479db98ac32eb9ea3122045274b396f8a317"
+  },
+  {
+    "id": "vehicle/default/cargo_segment",
+    "path": "assets/vehicles/default/cargo_segment.png",
+    "width": 24,
+    "height": 48,
+    "frames": 1,
+    "sha256": "31f944918c74fe0aa3a437d13c62388ab0ac8910f05a020aae9d06cfc6cf365a"
+  },
+  {
+    "id": "vehicle/default/end",
+    "path": "assets/vehicles/default/end.png",
+    "width": 8,
+    "height": 48,
+    "frames": 1,
+    "sha256": "43b38789fffb85ff21293d89dd83c9d113716ba99ef6bd5edc2c1611264d456b"
+  },
+  {
+    "id": "vehicle/default/wheel",
+    "path": "assets/vehicles/default/wheel.png",
+    "width": 8,
+    "height": 8,
+    "frames": 1,
+    "sha256": "686263c2b2f059f549b4c873b9ea3e740b856f849f433f9e87a0c73ad0b5fdc8"
+  },
+  {
+    "id": "vehicle/default/slot",
+    "path": "assets/vehicles/default/slot.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "8597f6ef900877bad13d8ed87dd3fbd0215ae4682dbbf84eb337bc6a42d72711"
+  },
+  {
+    "id": "shadow/worker",
+    "path": "assets/effects/shadows/worker.png",
+    "width": 24,
+    "height": 12,
+    "frames": 1,
+    "sha256": "dae7c2c4f149010d0a0afb74dd5d26fbcbfc9e6665f532d658187b00d575c5f8"
+  },
+  {
+    "id": "shadow/jack",
+    "path": "assets/effects/shadows/jack.png",
+    "width": 24,
+    "height": 12,
+    "frames": 1,
+    "sha256": "dae7c2c4f149010d0a0afb74dd5d26fbcbfc9e6665f532d658187b00d575c5f8"
+  },
+  {
+    "id": "shadow/cargo",
+    "path": "assets/effects/shadows/cargo.png",
+    "width": 24,
+    "height": 12,
+    "frames": 1,
+    "sha256": "dae7c2c4f149010d0a0afb74dd5d26fbcbfc9e6665f532d658187b00d575c5f8"
+  },
+  {
+    "id": "shadow/vehicle",
+    "path": "assets/effects/shadows/vehicle.png",
+    "width": 24,
+    "height": 12,
+    "frames": 1,
+    "sha256": "dae7c2c4f149010d0a0afb74dd5d26fbcbfc9e6665f532d658187b00d575c5f8"
+  },
+  {
+    "id": "shadow/furniture",
+    "path": "assets/effects/shadows/furniture.png",
+    "width": 24,
+    "height": 12,
+    "frames": 1,
+    "sha256": "dae7c2c4f149010d0a0afb74dd5d26fbcbfc9e6665f532d658187b00d575c5f8"
+  },
+  {
+    "id": "machine/sorter",
+    "path": "assets/equipment/sorter.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "0074191c7d4df2c55b57eb00cb1a22444455d4555f56f4432b0da5cdc68ef7dd"
+  },
+  {
+    "id": "machine/service",
+    "path": "assets/equipment/service.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "76a3bee9a8624463f224d42393f0aba139e7f2fcd6e120a8c3e0d5acacd7d746"
+  },
+  {
+    "id": "ui/icon/small",
+    "path": "assets/ui/icon/small.png",
+    "width": 8,
+    "height": 8,
+    "frames": 1,
+    "sha256": "3d60d09a2e5e928254b00502f581a8c12f9405ae5eb07f7725b6c21fdad84e30"
+  },
+  {
+    "id": "ui/icon/standard",
+    "path": "assets/ui/icon/standard.png",
+    "width": 16,
+    "height": 16,
+    "frames": 1,
+    "sha256": "2da897c1d8ead4966b93a3d4a023e1399c2e6d324c133f307a0a13b0d314240e"
+  },
+  {
+    "id": "ui/icon/cmr",
+    "path": "assets/ui/icon/cmr.png",
+    "width": 16,
+    "height": 16,
+    "frames": 1,
+    "sha256": "2da897c1d8ead4966b93a3d4a023e1399c2e6d324c133f307a0a13b0d314240e"
+  },
+  {
+    "id": "ui/icon/decoration",
+    "path": "assets/ui/icon/decoration.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "4199c32b1a7017429d70600a399df9735ef0f5d30083acfbff3ee368dd611e31"
+  },
+  {
+    "id": "ui/panel",
+    "path": "assets/ui/panel.png",
+    "width": 24,
+    "height": 24,
+    "frames": 1,
+    "sha256": "df1755c328c4a76d6570c61b96042b8384decca76941fde7570ff7f955e5bf6f"
+  }
+]

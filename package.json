@@ -11,7 +11,8 @@
     "preview": "vite preview --host 0.0.0.0",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.tests.json",
     "assets:manifest": "node --experimental-strip-types scripts/export-assets.ts",
-    "test:graphics": "python scripts/graphics_browser_test.py"
+    "test:graphics": "python scripts/graphics_browser_test.py",
+    "test:sprites": "python scripts/sprites_browser_test.py"
   },
   "engines": {
     "node": ">=24"
