@@ -332,7 +332,7 @@ export class CampaignGame extends Game {
       const m = this.cmrAt("outbound", dest.bay ?? 0);
       if (!m || !this.canLoad(m, c, w)) {
         w.message = remainingRounds(c, this.round)
-          ? `Paleta pozostaje szara jeszcze przez ${remainingRounds(c, this.round)} rund. Wyjazd: R${dispatchRound(c)}.`
+          ? `Paleta czeka jeszcze ${remainingRounds(c, this.round)} rund. Wyjazd: R${dispatchRound(c)}.`
           : "CMR nie potrzebuje już tego koloru albo paleta wymaga sortowania, serwisu lub strefy temperatur.";
         return false;
       }

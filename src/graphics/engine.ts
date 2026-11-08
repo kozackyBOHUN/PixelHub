@@ -115,7 +115,7 @@ export type AssetCommand = {
   space?: "world" | "screen";
 };
 export type ShapeCommand = {
-  kind: "line" | "text" | "outline";
+  kind: "line" | "text" | "outline" | "badge" | "room";
   id: string;
   point: Point;
   end?: Point;
@@ -127,6 +127,7 @@ export type ShapeCommand = {
   width?: number;
   height?: number;
   after?: string[];
+  lineWidthSource?: number;
 };
 export type DrawCommand = AssetCommand | ShapeCommand;
 export class RenderQueue {
@@ -266,10 +267,72 @@ export class AssetPainter {
       ctx.strokeStyle = command.color;
       ctx.fillStyle = command.color;
       ctx.lineWidth = 1;
-      if (command.kind === "text") {
+      if (command.kind === "badge") {
+        const size = Math.max(12, Math.round(8 * this.camera.scale));
+        const padding = Math.max(2, Math.round(1.5 * this.camera.scale));
+        ctx.font = `bold ${size}px monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        const width =
+          Math.ceil(ctx.measureText(command.text ?? "").width) + padding * 2;
+        const height = size + padding * 2;
+        const x = Math.round(p.x - width / 2),
+          y = Math.round(p.y - height / 2);
+        ctx.fillStyle = "#152b3b";
+        ctx.fillRect(x, y, width, height);
+        ctx.strokeStyle = "#fff4cf";
+        ctx.strokeRect(x + 0.5, y + 0.5, width - 1, height - 1);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(command.text ?? "", x + width / 2, y + height / 2);
+      } else if (command.kind === "room") {
+        const tile = this.camera.tile;
+        const width = (command.width ?? 1) * tile,
+          height = (command.height ?? 1) * tile;
+        ctx.fillRect(p.x, p.y, width, height);
+        ctx.strokeStyle = "#ffffff38";
+        ctx.lineWidth = 1;
+        for (let x = tile; x < width; x += tile) {
+          ctx.beginPath();
+          ctx.moveTo(p.x + x, p.y);
+          ctx.lineTo(p.x + x, p.y + height);
+          ctx.stroke();
+        }
+        for (let y = tile; y < height; y += tile) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y + y);
+          ctx.lineTo(p.x + width, p.y + y);
+          ctx.stroke();
+        }
+        // All walls stay inside the non-walkable room, including their stroke.
+        const border = Math.max(1, 2 * this.camera.scale);
+        ctx.strokeStyle = "#526979";
+        ctx.lineWidth = border;
+        ctx.strokeRect(
+          p.x + border / 2,
+          p.y + border / 2,
+          width - border,
+          height - border,
+        );
+        ctx.fillStyle = "#344f63";
+        ctx.fillRect(
+          p.x + border,
+          p.y + border,
+          width - 2 * border,
+          0.43 * tile,
+        );
+        // A cutaway threshold gives each room a visible entrance without covering the aisle.
+        ctx.fillStyle = "#d5ae73";
+        ctx.fillRect(
+          p.x + width - tile * 0.7,
+          p.y + height - border,
+          tile * 0.4,
+          border,
+        );
+      } else if (command.kind === "text") {
         ctx.font = `${Math.max(8, 6 * this.camera.scale)}px monospace`;
         ctx.fillText(command.text ?? "", p.x, p.y);
       } else if (command.kind === "line" && command.end) {
+        ctx.lineWidth = (command.lineWidthSource ?? 0.5) * this.camera.scale;
         const end = this.camera.worldToScreen(command.end);
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);

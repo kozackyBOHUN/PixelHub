@@ -1,4 +1,4 @@
-import { displayColor, remainingRounds } from "../shipments.ts";
+import { destinationColor, remainingRounds } from "../shipments.ts";
 import { priorityMultiplier } from "../campaign.ts";
 import { CampaignGame, station, sorterOutputs } from "../campaign-game.ts";
 import cfg, { dock } from "../config.ts";
@@ -371,33 +371,47 @@ export class SceneBuilder {
     return this.queue;
   }
   wall(id: string, p: Point, kind = "segment") {
-    const d = this.registry.get(`wall/${kind}`);
-    for (const [i, part] of (
-      d.parts ?? [
-        {
-          layer: d.renderLayer,
-          rect: { x: 0, y: 0, width: d.frameWidth, height: d.frameHeight },
-        },
-      ]
-    ).entries())
-      this.asset(`wall/${id}/${i}`, d.id, p, {
-        layer: part.layer,
-        clip: part.rect,
-      });
+    const vertical = kind === "column";
+    this.queue.add({
+      kind: "line",
+      id: `wall/${id}/sill`,
+      point: pointAdd(p, vertical ? 0 : -0.5, vertical ? -0.5 : 0),
+      end: pointAdd(p, vertical ? 0 : 0.5, vertical ? 0.5 : 0),
+      color: "#486578",
+      lineWidthSource: 2,
+      floorY: p.y,
+      layer: LAYERS.constructionBack,
+      order: 0,
+    });
   }
   rooms() {
     for (const room of cfg.map.rooms) {
       for (let x = room.x; x < room.x + room.width; x++)
         for (let y = room.y; y < room.y + room.height; y++)
           this.asset(`room/${room.id}/floor/${x}/${y}`, "floor/worn", { x, y });
-      for (let x = room.x; x < room.x + room.width; x++)
-        this.wall(`room/${room.id}/north/${x}`, { x: x + 0.5, y: room.y });
+      const floorColors: Record<string, string> = {
+        office: "#d9cdb2",
+        locker: "#b6c8ce",
+        toilet: "#c9ded8",
+        canteen: "#d9c6ac",
+      };
+      this.queue.add({
+        kind: "room",
+        id: `room/${room.id}/interior`,
+        point: { x: room.x, y: room.y },
+        width: room.width,
+        height: room.height,
+        color: floorColors[room.id] ?? "#ccd1c6",
+        floorY: room.y,
+        layer: LAYERS.markings,
+        order: 10,
+      });
       this.queue.add({
         kind: "text",
         id: `room/${room.id}/label`,
-        point: { x: room.x + 0.15, y: room.y + 0.7 },
+        point: { x: room.x + 0.16, y: room.y + 0.38 },
         text: room.label,
-        color: "#4d6477",
+        color: "#ffffff",
         floorY: room.y,
         layer: LAYERS.effects,
         order: 0,
@@ -419,23 +433,26 @@ export class SceneBuilder {
         this.asset(`room/${room.id}/${id}`, `furniture/${asset}`, p, { order });
       };
       if (room.id === "office") {
-        furniture("desk", "desk", 1, 1.5);
-        furniture("monitor", "monitor", 1, 1.5, 2);
-        furniture("chair", "chair", 1, 2.4);
+        for (let i = 0; i < 2; i++) {
+          furniture(`desk/${i}`, "desk", 0.9 + i * 1.8, 1.35);
+          furniture(`monitor/${i}`, "monitor", 0.9 + i * 1.8, 1.35, 2);
+          furniture(`chair/${i}`, "chair", 0.9 + i * 1.8, 2.12);
+        }
       }
       if (room.id === "locker") {
         for (let i = 0; i < room.width; i++)
-          furniture(`locker/${i}`, "locker", i + 0.5, 1.6);
-        furniture("bench", "bench", 1.5, 2.5);
+          furniture(`locker/${i}`, "locker", i + 0.5, 1.45);
+        furniture("bench", "bench", 1.5, 2.25);
       }
       if (room.id === "toilet") {
-        furniture("toilet", "toilet", 0.65, 1.6);
-        furniture("sink", "sink", 1.5, 2.5);
+        furniture("toilet", "toilet", 0.65, 1.35);
+        furniture("sink", "sink", 1.4, 2.1);
       }
       if (room.id === "canteen") {
-        furniture("table", "table", 1.5, 1.8);
-        furniture("chair/0", "chair", 0.5, 1.8);
-        furniture("chair/1", "chair", 2.5, 1.8);
+        furniture("table", "table", 1.5, 1.5);
+        furniture("chair/0", "chair", 0.5, 1.55);
+        furniture("chair/1", "chair", 2.5, 1.55);
+        furniture("bench", "bench", 1.5, 2.28);
       }
     }
   }
@@ -548,13 +565,15 @@ export class SceneBuilder {
       alpha: 0.22,
     });
     this.asset(`${base}/pallet`, "cargo/pallet", point, {
-      angle,
+      angle: 0,
       liftSource: height * GRAPHICS.liftSource,
       order: 20,
       after,
     });
-    this.asset(`${base}/box`, `cargo/box/${displayColor(c, g.round)}`, point, {
-      angle,
+    // A 2.5D box has a fixed vertical face; rotating the bitmap tilts that face.
+    // Orientation and collision of the load still belong to the simulation.
+    this.asset(`${base}/box`, `cargo/box/${destinationColor(c)}`, point, {
+      angle: 0,
       liftSource: height * GRAPHICS.liftSource,
       order: 30,
       after: [`${base}/pallet`, ...after],
@@ -588,12 +607,12 @@ export class SceneBuilder {
       marker("condition", c.condition, 0.32, 0.3);
     if (remainingRounds(c, g.round))
       this.queue.add({
-        kind: "text",
+        kind: "badge",
         id: `${base}/due`,
         point: pointAdd(
           point,
-          -0.4,
-          -0.25 - (height * GRAPHICS.liftSource) / GRAPHICS.sourceTile,
+          -0.19,
+          -0.15 - (height * GRAPHICS.liftSource) / GRAPHICS.sourceTile,
         ),
         text: String(remainingRounds(c, g.round)),
         color: "#294b6b",

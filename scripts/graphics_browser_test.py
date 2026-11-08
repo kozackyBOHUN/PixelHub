@@ -27,7 +27,7 @@ with sync_playwright() as p:
     page.route('**/assets/manifest.json',lambda route:route.fulfill(content_type='application/json',body=json.dumps({'version':1,'assets':{'floor/base':{'path':'assets/test/floor.png'}}})))
     page.route('**/assets/test/floor.png',lambda route:route.fulfill(content_type='image/png',body=png))
     page.route('**/assets/workers/default/idle.png',lambda route:route.fulfill(content_type='image/png',body=worker_png))
-    page.route('**/assets/cargo/box/gray.png',lambda route:route.fulfill(content_type='image/png',body=cargo_png))
+    page.route('**/assets/cargo/box/red.png',lambda route:route.fulfill(content_type='image/png',body=cargo_png))
     page.goto(BASE+'?test=1')
     page.wait_for_function('''() => window.pixelhub && window.pixelhub.renderer.assets.diagnostics().some(r=>r.id==='floor/base'&&r.status==='ready')''')
     page.wait_for_function("() => window.pixelhub.renderer.assets.diagnostics().some(r=>r.id==='worker/default/idle'&&r.status==='ready')")
@@ -58,7 +58,7 @@ with sync_playwright() as p:
     }''')
     assert worker_sample['pixel']==worker_sample['expected'],worker_sample
     page.evaluate('() => {const g=window.pixelhub.game;g.accept();g.advance(1.2)}')
-    page.wait_for_function("() => window.pixelhub.renderer.assets.diagnostics().some(r=>r.id==='cargo/box/gray'&&r.status==='ready')")
+    page.wait_for_function("() => window.pixelhub.renderer.assets.diagnostics().some(r=>r.id==='cargo/box/red'&&r.status==='ready')")
     cargo_pixel=page.evaluate('''() => {const r=window.pixelhub.renderer;r.draw(window.pixelhub.game);const p=r.gridToScreen({x:-.5,y:2.5});return [...r.ctx.getImageData(Math.floor(p.x),Math.floor(p.y),1,1).data]}''')
     assert cargo_pixel==[192,55,145,255],cargo_pixel
     page.get_by_role('button',name='Diagnostyka · G',exact=True).click()
@@ -82,3 +82,4 @@ with sync_playwright() as p:
     (OUT/'results.json').write_text(json.dumps(result,indent=2),encoding='utf8')
     browser.close()
 print('PixelHub graphics contract: PNG replacement, exact scale, sockets, camera, modules and diagnostics passed.')
+
