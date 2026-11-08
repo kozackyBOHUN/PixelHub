@@ -232,7 +232,7 @@ test("0.2 settlement cannot be forced by a button or elapsed time", () => {
 });
 test(
   "0.2 complete physical campaign 1–30, inventory continuity, save/load and settlement idempotence",
-  { timeout: 600000 },
+  { timeout: process.env.CI ? 900000 : 600000 },
   async () => {
     let g = new CampaignGame();
     let prevStock = 0;
