@@ -1,3 +1,9 @@
+import {
+  matchCargo,
+  requirementCount,
+  dispatchRound,
+  remainingRounds,
+} from "./shipments.ts";
 import cfg, { key, same, room, dock, tail } from "./config.ts";
 import type { Point, Pose } from "./config.ts";
 import { Game, locationPoint } from "./simulation.ts";
@@ -10,6 +16,7 @@ export type CMR = Manifest & {
   state: "waiting" | "arriving" | "docked" | "departing" | "done";
   bay: number;
   timer: number;
+  shippedPalletIds?: string[];
 };
 export const station = { sorter: { x: 5, y: -2 }, service: { x: 12, y: -2 } };
 export const sorterOutputs = [
@@ -51,8 +58,49 @@ export class CampaignGame extends Game {
       (c) => !["consumed", "delivered"].includes(c.loc.kind),
     );
   }
-  get requiredIds() {
-    return new Set(this.config.departures.flatMap((m) => m.palletIds));
+  get requiredCount() {
+    return this.config.departures.reduce(
+      (n, m) => n + requirementCount(m.requirements),
+      0,
+    );
+  }
+  cargoFor(m: CMR) {
+    return this.crates.filter((c) =>
+      m.shippedPalletIds
+        ? m.shippedPalletIds.includes(c.id)
+        : m.state !== "waiting" &&
+          c.loc.kind === "outbound" &&
+          (c.loc.bay ?? 0) === m.bay,
+    );
+  }
+  progress(m: CMR) {
+    return matchCargo(m.requirements ?? [], this.cargoFor(m), this.round);
+  }
+  canLoad(m: CMR, c: Crate, worker?: Game) {
+    if (
+      m.kind !== "outbound" ||
+      m.state !== "docked" ||
+      ["delivered", "consumed"].includes(c.loc.kind)
+    )
+      return false;
+    const ids = new Set(
+      this.cargoFor(m)
+        .filter((x) => x.id !== c.id)
+        .map((x) => x.id),
+    );
+    for (const w of this.workers)
+      if (
+        w !== worker &&
+        w.task?.dest.kind === "outbound" &&
+        (w.task.dest.bay ?? 0) === m.bay &&
+        w.task.crate !== c.id
+      )
+        ids.add(w.task.crate);
+    const cargo = [...ids].map((id) => this.crates.find((c) => c.id === id)!);
+    return (
+      matchCargo(m.requirements ?? [], [...cargo, c], this.round).unmatchedIds
+        .length === 0
+    );
   }
   cmrAt(kind: "inbound" | "outbound", bay = 0) {
     return this.cmrs.find(
@@ -75,12 +123,12 @@ export class CampaignGame extends Game {
     this.inbound = "waiting";
     this.outbound = "absent";
     this.message = this.config.description;
-    for (const c of this.crates) c.active = c.dueRound === this.round;
+    for (const c of this.crates) c.active = dispatchRound(c) <= this.round;
   }
   createPallet(p: PalletSpec, loc: Location): Crate {
     return {
       ...structuredClone(p),
-      active: p.dueRound === this.round,
+      active: dispatchRound(p) <= this.round,
       paid: false,
       loc,
       ...(p.prioritySeconds
@@ -282,15 +330,10 @@ export class CampaignGame extends Game {
     if (c.owner !== undefined && c.owner !== owner) return false;
     if (dest.kind === "outbound") {
       const m = this.cmrAt("outbound", dest.bay ?? 0);
-      if (
-        !m ||
-        !m.palletIds.includes(c.id) ||
-        c.mix ||
-        c.condition !== "standard" ||
-        (c.temperature !== "standard" && !c.climateStored)
-      ) {
-        w.message =
-          "CMR nie zamawia tej palety albo wymaga ona sortowania, serwisu lub strefy temperatur.";
+      if (!m || !this.canLoad(m, c, w)) {
+        w.message = remainingRounds(c, this.round)
+          ? `Paleta pozostaje szara jeszcze przez ${remainingRounds(c, this.round)} rund. Wyjazd: R${dispatchRound(c)}.`
+          : "CMR nie potrzebuje już tego koloru albo paleta wymaga sortowania, serwisu lub strefy temperatur.";
         return false;
       }
     }
@@ -417,11 +460,7 @@ export class CampaignGame extends Game {
       (c) =>
         c.loc.kind === "outbound" && "bay" in c.loc && (c.loc.bay ?? 0) === bay,
     );
-    if (
-      !m.palletIds.every((id) => cargo.some((c) => c.id === id)) ||
-      cargo.length !== m.palletIds.length
-    )
-      return false;
+    if (!this.progress(m).complete) return false;
     if (
       this.vehicleBusy("outbound", bay) ||
       this.workers.some(
@@ -430,6 +469,7 @@ export class CampaignGame extends Game {
       )
     )
       return false;
+    m.shippedPalletIds = cargo.map((c) => c.id);
     for (const c of cargo) {
       c.loc = { kind: "delivered" };
       this.money(
@@ -569,9 +609,7 @@ export class CampaignGame extends Game {
     )
       return false;
     if (
-      [...this.requiredIds].some(
-        (id) => this.crates.find((c) => c.id === id)?.loc.kind !== "delivered",
-      )
+      this.cmrs.some((m) => m.kind === "outbound" && !this.progress(m).complete)
     )
       return false;
     const stock = this.stock;
@@ -652,6 +690,9 @@ export class CampaignGame extends Game {
       )
         throw Error("Kolizja zestawu pracownika");
     }
+    const shipments = this.cmrs.flatMap((m) => m.shippedPalletIds ?? []);
+    if (new Set(shipments).size !== shipments.length)
+      throw Error("Paleta wysłana dwukrotnie");
     const delivered = new Set(
       this.crates.filter((c) => c.loc.kind === "delivered").map((c) => c.id),
     );
@@ -660,7 +701,9 @@ export class CampaignGame extends Game {
         (m) =>
           m.kind === "outbound" &&
           m.state === "done" &&
-          m.palletIds.some((id) => !delivered.has(id)),
+          (!m.shippedPalletIds ||
+            m.shippedPalletIds.some((id) => !delivered.has(id)) ||
+            !this.progress(m).complete),
       )
     )
       throw Error("Niepełna wysyłka");

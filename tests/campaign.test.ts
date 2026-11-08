@@ -1,3 +1,5 @@
+import { writeFileSync } from "node:fs";
+import { gzipSync } from "node:zlib";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import cfg, { room } from "../src/config.ts";
@@ -212,6 +214,7 @@ test("0.2 shipping rejects nonexistent, wrong, unsorted, untreated or warm cargo
   g.dockCMR(g.config.departures[0].id);
   g.step(1.1);
   const c = crate("wrong", { kind: "floor", x: 16, y: 5 });
+  c.color = "pink";
   g.crates.push(c);
   g.selectWorker();
   g.source = c.id;
@@ -233,16 +236,19 @@ test(
   async () => {
     let g = new CampaignGame();
     let prevStock = 0;
+    const scenarios: Record<number, string> = {};
     for (let n = 1; n <= 30; n++) {
       const retained = g.stock.map((c) => ({
         id: c.id,
         loc: structuredClone(c.loc),
       }));
       assert.equal(retained.length, prevStock);
+      scenarios[n] = serialize(g);
       await solveRound(g);
+      console.log(`Fizyczna kampania R${n}/30`);
       assert.equal(
         g.stock.length,
-        prevStock + g.config.pallets.length - g.requiredIds.size,
+        prevStock + g.config.pallets.length - g.requiredCount,
       );
       assert.equal(g.stock.length, g.config.expectedStock);
       assert.equal(g.settled.filter((r) => r === n).length, 1);
@@ -268,6 +274,18 @@ test(
         positions,
       );
     }
+    if (process.env.PIXELHUB_WRITE_SCENARIOS)
+      writeFileSync(
+        "public/campaign-scenarios.json.gz",
+        gzipSync(
+          JSON.stringify({
+            version: 3,
+            campaign: JSON.stringify(campaign),
+            scenarios,
+          }),
+          { level: 9 },
+        ),
+      );
     assert.equal(g.status, "won");
     assert.equal(g.stock.length, 0);
     assert.equal(

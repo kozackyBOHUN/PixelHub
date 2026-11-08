@@ -26,6 +26,8 @@ export type Crate = {
     | "orange"
     | "teal"
     | "pink";
+  destinationColor?: Exclude<Crate["color"], "gray">;
+  dispatchRound?: number;
   dueRound?: number;
   temperature?: "standard" | "chilled" | "frozen";
   condition?: "standard" | "damaged" | "return";

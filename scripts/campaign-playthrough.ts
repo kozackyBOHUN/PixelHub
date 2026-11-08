@@ -26,7 +26,7 @@ if (process.argv.includes("--fixtures")) {
     "public/campaign-scenarios.json.gz",
     gzipSync(
       JSON.stringify({
-        version: 2,
+        version: 3,
         campaign: JSON.stringify(campaign),
         scenarios,
       }),

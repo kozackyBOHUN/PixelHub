@@ -1,3 +1,4 @@
+import { campaign } from "./campaign.ts";
 import { CampaignGame, WarehouseWorker } from "./campaign-game.ts";
 import type { Game } from "./simulation.ts";
 const workerKeys = [
@@ -43,13 +44,13 @@ export function serialize(game: CampaignGame) {
     game: fields(game, gameKeys),
     workers: game.workers.map((w) => fields(w, workerKeys)),
   });
-  return JSON.stringify({ version: 2, checksum: checksum(payload), payload });
+  return JSON.stringify({ version: 3, checksum: checksum(payload), payload });
 }
 export function restore(raw: string): CampaignGame {
   try {
     const envelope = JSON.parse(raw);
     if (
-      envelope.version !== 2 ||
+      ![2, 3].includes(envelope.version) ||
       typeof envelope.payload !== "string" ||
       checksum(envelope.payload) !== envelope.checksum
     )
@@ -75,6 +76,33 @@ export function restore(raw: string): CampaignGame {
       !Array.isArray(saved.completedRecipes)
     )
       throw Error("schemat");
+    if (envelope.version === 2) {
+      const specs = campaign.flatMap((r) => [
+        ...r.pallets,
+        ...r.recipes.flatMap((x) => x.outputs),
+      ]);
+      for (const c of saved.crates) {
+        const spec = specs.find((p) => p.id === c.id);
+        c.destinationColor =
+          c.destinationColor ??
+          (c.color === "gray" ? (spec?.destinationColor ?? "red") : c.color);
+        c.color = c.destinationColor;
+        c.dispatchRound =
+          c.dispatchRound ?? c.dueRound ?? spec?.dispatchRound ?? saved.round;
+        c.active = c.dispatchRound <= saved.round;
+      }
+      for (const m of saved.cmrs)
+        if (m.kind === "outbound") {
+          const config = campaign[saved.round - 1].departures.find(
+            (x) => x.id === m.id,
+          );
+          if (!config) throw Error("CMR migracja");
+          m.requirements = structuredClone(config.requirements);
+          if (["done", "departing"].includes(m.state))
+            m.shippedPalletIds = m.palletIds;
+          m.palletIds = [];
+        }
+    }
     const game = new CampaignGame();
     for (const k of gameKeys)
       if (k in saved)

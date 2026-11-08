@@ -1,6 +1,10 @@
+import { requirementCount } from "./shipments.ts";
+import type { Requirement } from "./shipments.ts";
 import data from "./campaign-data.json" with { type: "json" };
 import type { Crate } from "./simulation.ts";
 export type PalletSpec = Pick<Crate, "id" | "color"> & {
+  destinationColor: Exclude<Crate["color"], "gray">;
+  dispatchRound: number;
   dueRound: number;
   temperature: "standard" | "chilled" | "frozen";
   condition: "standard" | "damaged" | "return";
@@ -12,6 +16,7 @@ export type Manifest = {
   vehicle: string;
   capacity: number;
   palletIds: string[];
+  requirements?: Requirement[];
 };
 export type Recipe = {
   id: string;
@@ -91,11 +96,21 @@ export function validateCampaign() {
     )
       throw Error("Manifest przyjazdu");
     for (const m of [...r.arrivals, ...r.departures])
-      if (m.palletIds.length > m.capacity || !m.palletIds.length)
+      if (
+        (m.requirements
+          ? requirementCount(m.requirements)
+          : m.palletIds.length) > m.capacity ||
+        !(m.requirements
+          ? requirementCount(m.requirements)
+          : m.palletIds.length)
+      )
         throw Error("Pojemność CMR");
     for (const p of r.pallets) {
       if (
         all.has(p.id) ||
+        p.color !== p.destinationColor ||
+        p.dueRound !== p.dispatchRound ||
+        String(p.color) === "gray" ||
         !received.includes(p.id) ||
         p.dueRound < r.number ||
         p.dueRound > 30
@@ -134,10 +149,30 @@ export function validateCampaign() {
         stock.add(p.id);
       }
     }
-    for (const id of r.departures.flatMap((m) => m.palletIds)) {
-      if (!stock.delete(id) || all.get(id)?.dueRound !== r.number)
-        throw Error(`Niedostępna wysyłka ${id}`);
-      outgoing++;
+    for (const m of r.departures) {
+      if (!m.requirements?.length || m.palletIds.length)
+        throw Error("Zamówienie kolorów CMR");
+      for (const req of m.requirements) {
+        if (
+          !Number.isInteger(req.quantity) ||
+          req.quantity < 1 ||
+          req.color === ("gray" as string)
+        )
+          throw Error("Wymaganie CMR");
+        for (let n = 0; n < req.quantity; n++) {
+          const id = [...stock].find((id) => {
+            const c = all.get(id)!;
+            return (
+              c.destinationColor === req.color &&
+              c.dispatchRound <= r.number &&
+              (!req.temperature || req.temperature === c.temperature)
+            );
+          });
+          if (!id) throw Error(`Brak koloru ${req.color}, runda ${r.number}`);
+          stock.delete(id);
+          outgoing++;
+        }
+      }
     }
     if (stock.size !== r.expectedStock) throw Error("Bilans rundy");
   }

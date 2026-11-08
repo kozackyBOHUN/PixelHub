@@ -13,7 +13,7 @@ test("0.2 all 30 developer fixtures are real versioned entry states matching man
       ),
     ).toString(),
   );
-  assert.equal(data.version, 2);
+  assert.equal(data.version, 3);
   assert.equal(data.campaign, JSON.stringify(campaign));
   for (let n = 1; n <= 30; n++) {
     const g = restore(data.scenarios[n]);

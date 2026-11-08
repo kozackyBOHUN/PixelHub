@@ -1,3 +1,4 @@
+import { displayColor, remainingRounds } from "../shipments.ts";
 import { priorityMultiplier } from "../campaign.ts";
 import { CampaignGame, station, sorterOutputs } from "../campaign-game.ts";
 import cfg, { dock } from "../config.ts";
@@ -552,7 +553,7 @@ export class SceneBuilder {
       order: 20,
       after,
     });
-    this.asset(`${base}/box`, `cargo/box/${c.color}`, point, {
+    this.asset(`${base}/box`, `cargo/box/${displayColor(c, g.round)}`, point, {
       angle,
       liftSource: height * GRAPHICS.liftSource,
       order: 30,
@@ -585,7 +586,7 @@ export class SceneBuilder {
       marker("temperature", c.temperature, -0.32, 0.3);
     if (c.condition && c.condition !== "standard")
       marker("condition", c.condition, 0.32, 0.3);
-    if (c.dueRound && c.dueRound > g.round)
+    if (remainingRounds(c, g.round))
       this.queue.add({
         kind: "text",
         id: `${base}/due`,
@@ -594,7 +595,7 @@ export class SceneBuilder {
           -0.4,
           -0.25 - (height * GRAPHICS.liftSource) / GRAPHICS.sourceTile,
         ),
-        text: String(c.dueRound - g.round),
+        text: String(remainingRounds(c, g.round)),
         color: "#294b6b",
         floorY: p.y,
         layer: LAYERS.effects,

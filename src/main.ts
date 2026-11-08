@@ -1,3 +1,5 @@
+import { renderCMRs } from "./cmr-view.ts";
+import { destinationColor, dispatchRound } from "./shipments.ts";
 import { Application, Sprite, Texture } from "pixi.js";
 import { CampaignGame } from "./campaign-game.ts";
 import { Renderer, locationPoint } from "./renderer.ts";
@@ -274,18 +276,17 @@ function hud() {
     .filter((id) =>
       game.crates.some((c) => c.id === id && c.loc.kind !== "inbound"),
     ).length;
-  const sent = game.config.departures
-    .flatMap((m) => m.palletIds)
-    .filter((id) =>
-      game.crates.some((c) => c.id === id && c.loc.kind === "delivered"),
-    ).length;
+  const sent = game.cmrs
+    .filter((m) => m.kind === "outbound" && m.shippedPalletIds)
+    .reduce((n, m) => n + game.progress(m).loaded, 0);
   $("progress").textContent =
-    `Przyjęcia ${received}/${game.config.pallets.length} · Wydania ${sent}/${game.requiredIds.size} · Stan ${game.stock.length} → cel ${game.config.expectedStock} · Serwis/sortowanie ${game.operations}`;
+    `Przyjęcia ${received}/${game.config.pallets.length} · Wydania ${sent}/${game.requiredCount} · Stan ${game.stock.length} → cel ${game.config.expectedStock} · Serwis/sortowanie ${game.operations}`;
   $("transaction").textContent =
     `${game.ledger.at(-1)!.label}: ${game.ledger.at(-1)!.amount.toFixed(0)} $ · pensje ${20 * game.workers.length} $ / rundę`;
   const signature = JSON.stringify([
     game.round,
     game.cmrs,
+    game.crates.map((c) => [c.id, c.loc]),
     game.cash,
     game.workers.map((w) => [
       w.transportState,
@@ -315,34 +316,27 @@ function hud() {
         ),
       ),
     );
-    $("cmrs").replaceChildren(
-      ...game.cmrs.map((m) => {
-        const b = button(
-          `${m.kind === "inbound" ? "↓" : "↑"} ${m.id} · ${m.palletIds.length}/${m.capacity} · ${{ waiting: "oczekuje", arriving: "podjeżdża", docked: "podstawiony", departing: "odjeżdża", done: "zakończony" }[m.state]}`,
-          () => {
-            chosenCmr = m.id;
-          },
-        );
-        b.className = m.kind + (chosenCmr === m.id ? " active" : "");
-        return b;
-      }),
-    );
+    if (!game.cmrs.some((m) => m.id === chosenCmr))
+      chosenCmr = game.cmrs.find((m) => m.state !== "done")?.id ?? "";
+    renderCMRs($("cmrs"), game, chosenCmr, (id) => {
+      chosenCmr = id;
+    });
     const m =
       game.cmrs.find((m) => m.id === chosenCmr) ??
       game.cmrs.find((m) => m.state !== "done");
     $("cmr-actions").replaceChildren();
     $("manifest").textContent = "";
     if (m) {
-      const specs = m.palletIds.map(
-        (id) =>
-          game.crates.find((c) => c.id === id) ??
-          game.config.pallets.find((c) => c.id === id) ??
-          game.config.recipes
-            .flatMap((r) => r.outputs)
-            .find((c) => c.id === id),
-      );
       $("manifest").textContent =
-        `${m.id} · ${m.vehicle} · ${specs.map((c) => (c ? `${c.id}: ${c.color}, wyjazd R${c.dueRound}${"mix" in c && c.mix ? ", MIX" : ""}, ${c.temperature}, ${c.condition}` : "")).join(" | ")}`;
+        `${m.id} · ${m.vehicle} · ` +
+        (m.kind === "outbound"
+          ? (m.requirements ?? [])
+              .map(
+                (r) =>
+                  `${r.quantity} × ${r.color}${r.temperature ? ` (${r.temperature})` : ""}`,
+              )
+              .join(" · ")
+          : `${m.palletIds.length} palet; szare oczekują na swoją rundę wysyłki.`);
       if (m.kind === "outbound" && m.state === "docked")
         $("cmr-actions").append(
           button("Wycofaj pusty samochód", () =>
@@ -386,7 +380,7 @@ function hud() {
     );
     const cr = game.crates.find((c) => c.id === inspection);
     $("inspect").textContent = cr
-      ? `${cr.id} · ${cr.color} · wyjazd R${cr.dueRound} · ${cr.temperature} · ${cr.condition}${cr.mix ? " · MIX" : ""}${cr.priority ? ` · premia ×${priorityMultiplier(cr, game.time)} · pozostało ${Math.max(0, Math.ceil(cr.priority.duration - game.time + cr.priority.started))} s` : ""}`
+      ? `${cr.id} · ${destinationColor(cr)} · wyjazd R${dispatchRound(cr)} · ${cr.temperature} · ${cr.condition}${cr.mix ? " · MIX" : ""}${cr.priority ? ` · premia ×${priorityMultiplier(cr, game.time)} · pozostało ${Math.max(0, Math.ceil(cr.priority.duration - game.time + cr.priority.started))} s` : ""}`
       : "Kliknij paletę, aby sprawdzić jej ID i oznaczenia.";
   }
   document

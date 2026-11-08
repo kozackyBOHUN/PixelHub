@@ -28,7 +28,7 @@ npm run dev
 5. Rozwój kupujesz w dolnym panelu. Pierwsza rozbudowa dodaje 120 pól na północ (20×12), druga kolejne 120 (20×18). Istniejące palety, rampy i wyśrodkowane pomieszczenia 12×3 zachowują współrzędne.
 6. Zatrudnionych pracowników wybierasz na mapie albo w pasku pracowników. Każdy ma własną pozycję, paleciak i zadanie. Rezerwacja pełnej trasy zapobiega konfliktom; zbyt bliskie zadania należy wykonać kolejno.
 
-Paleta: lewy górny róg to liczba rund do wysyłki; prawy górny to priorytet; lewy dolny to temperatura; prawy dolny to uszkodzenie `!` lub zwrot `R`. Kolor oznacza odbiorcę. Kliknięcie palety pokazuje jej ID i cechy w pasku pod mapą.
+Paleta: lewy górny róg to liczba rund do wysyłki; prawy górny to priorytet; lewy dolny to temperatura; prawy dolny to uszkodzenie `!` lub zwrot `R`. Szary oznacza zatrzymanie do przyszłej rundy; mały kolorowy znacznik CMR wskazuje przyszłego odbiorcę. W rundzie wysyłki paleta automatycznie przyjmuje kolor docelowy, a licznik znika. Kliknięcie palety pokazuje jej ID i cechy w pasku pod mapą.
 
 Stoper zaczyna się przy podstawieniu dostawy. Pierwsza połowa czasu daje ×2, następne 25% ×1, pozostały czas i przekroczenie terminu ×0,5 przychodu za obsługę. Nie powoduje utraty towaru i nie resetuje się przy zapisie. Pensje wynoszą zawsze **20 USD na pracownika za ukończoną rundę**, pobierane dokładnie raz. Kapitał startowy: 50 USD.
 
@@ -38,7 +38,7 @@ Runda kończy się po obsłużeniu wszystkich dokumentów i procesów. Palety ni
 
 ## Zapis
 
-Automatycznie co 5 sekund oraz przy opuszczeniu strony; dodatkowo przyciski „Zapisz” / „Wczytaj”. Wersjonowany zapis 0.2 zawiera pozycje, trasy w toku, bufor sortera, CMR, priorytety, zakupy i rozliczenia. Uszkodzony zapis zgłasza błąd i nie jest automatycznie nadpisywany. Nową kampanię można rozpocząć z podsumowania. Stara wersja 0.1 nie miała formatu zapisu do migracji.
+Automatycznie co 5 sekund oraz przy opuszczeniu strony; dodatkowo przyciski „Zapisz” / „Wczytaj”. Wersjonowany zapis 0.2 zawiera pozycje, trasy w toku, bufor sortera, CMR, priorytety, zakupy i rozliczenia. Uszkodzony zapis zgłasza błąd i nie jest automatycznie nadpisywany. Nową kampanię można rozpocząć z podsumowania. Zapis v3 automatycznie migruje dotychczasowe zapisy v2: zachowuje pozycje, zadania i fizyczny ładunek, rozdziela kolor docelowy od terminu oraz zamienia wyjazdowe listy ID na zamówienia kolorów. Stara wersja 0.1 nie miała formatu zapisu do migracji.
 
 ## Laboratorium rund
 
@@ -82,3 +82,13 @@ Specyfikacje w `PixelHub_Codex_Pack/`, wcześniejsze notatki i audyt opisują hi
 ## Świadome uproszczenia
 
 Sorter i serwis przetwarzają towar po fizycznym odstawieniu i wycofaniu wideł; nie mają minigier ani symulacji zużycia energii. Receptury to pary 2→2 zachowujące kolory i liczbę kartonów. CMR wyjazdowy jest obsługiwany bezpłatnym pojazdem o czterech miejscach, przyjazdy mają modułowe przestrzenie do ośmiu miejsc. Pełne trasy są rezerwowane konserwatywnie; brak automatycznej kolejki i robotów. Grafika rozwija proceduralne sprite’y 0.1; nie dodano zewnętrznego atlasu docelowych assetów.
+
+## Poprawka grywalności CMR
+
+Przyjazdy i wyjazdy mają oddzielne pionowe, przewijane listy dokumentów. Karty pokazują wszystkie palety, stan oraz postęp. Kliknij dokument, a następnie wybierz rampę. W rundzie 3 można podstawić dowolny z dokumentów 8/8/4.
+
+Zwykłe wyjazdy zamawiają ilości kolorów (`requirements`), nie identyfikatory. Dowolna gotowa paleta właściwego koloru realizuje zamówienie. Dodatkowe wymagania temperatury, jeśli skonfigurowane, są jawnie opisane na karcie. Towary muszą wcześniej przejść potrzebne sortowanie, serwis i przechowanie w odpowiedniej temperaturze. Limity uwzględniają również zlecenia innych pracowników.
+
+`src/shipments.ts` wylicza wygląd i dopasowanie. Kafelki i licznik wynikają z faktycznego ładunku po odłożeniu palety; wyładunek cofa postęp. Po wysyłce `shippedPalletIds` przechowuje wyłącznie dowód faktycznie wysłanych palet. Pola `color`/`dueRound` pozostają zgodnymi aliasami starszego silnika; właściwe dane kampanii to `destinationColor`/`dispatchRound`.
+
+Testy akceptacyjne A–H i rezerwacje współbieżne: `tests/cmr.test.ts`. Test produkcyjnej strony, pionowych kart, telefonu, fizycznego załadunku i zapisu: `python scripts/cmr_browser_test.py` (serwer pod `PIXELHUB_URL`). Scenariusze laboratoryjne v3 pochodzą z pełnego fizycznego przejścia 30 rund; można odtworzyć je poleceniem `node --experimental-strip-types scripts/campaign-playthrough.ts --fixtures`.

@@ -18,7 +18,7 @@ export async function loadScenario(
         : await new Response(
             response.body.pipeThrough(new DecompressionStream("gzip")),
           ).json();
-      if (json.version !== 2 || json.campaign !== JSON.stringify(campaign))
+      if (json.version !== 3 || json.campaign !== JSON.stringify(campaign))
         throw Error("Scenariusze wymagają odtworzenia");
       return json.scenarios as Record<number, string>;
     })();

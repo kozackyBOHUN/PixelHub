@@ -133,14 +133,18 @@ export async function solveRound(
             !game.accessible({ kind: "outbound", lane, depth })
           )
             continue;
-          const candidates = out.palletIds
-            .map((id) => game.crates.find((c) => c.id === id))
-            .filter(
-              (c): c is Crate =>
-                !!c &&
-                ["floor", "inbound"].includes(c.loc.kind) &&
-                game.accessible(c.loc),
-            );
+          const candidates = game.crates.filter(
+            (c): c is Crate =>
+              !!c &&
+              game.canLoad(out, {
+                ...c,
+                mix: undefined,
+                condition: "standard",
+                climateStored: true,
+              }) &&
+              ["floor", "inbound"].includes(c.loc.kind) &&
+              game.accessible(c.loc),
+          );
           for (const c of candidates) {
             if (
               c.condition !== "standard" ||
