@@ -308,7 +308,12 @@ export class Renderer {
     // Floor cargo occludes the forks both before lifting and after lowering.
     for (const cr of g.crates) {
       const p = locationPoint(cr.loc);
-      if (p && !(cr.loc.kind === "inbound" && g.inbound !== "docked")) {
+      const inboundReady =
+        cr.loc.kind !== "inbound" ||
+        (hub
+          ? hub.cmrAt("inbound", cr.loc.bay ?? 0)?.state === "docked"
+          : g.inbound === "docked");
+      if (p && inboundReady) {
         this.crate(
           cr,
           p,

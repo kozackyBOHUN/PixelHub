@@ -43,6 +43,26 @@ with sync_playwright() as p:
     page.reload()
     page.wait_for_function('() => window.pixelhub')
     assert page.evaluate(snapshot) == before
+    # Cargo at the second ramp stays visible when the first ramp is empty.
+    page.select_option('#dev-round', '19')
+    page.click('#dev-jump')
+    page.wait_for_function('() => window.pixelhub.game.round === 19', timeout=20000)
+    page.evaluate('''() => {
+        const {game:g,renderer:r}=window.pixelhub;
+        if(!g.buy('ramps')) throw Error('Second ramp unavailable');
+        const m=g.config.arrivals[0];
+        if(!g.dockCMR(m.id,1)) throw Error('Docking at second ramp failed');
+        g.advance(1.2);
+        window.drawnCargo=new Set();
+        window.originalCrate=r.crate;
+        r.crate=function(c,...args){window.drawnCargo.add(c.id);return window.originalCrate.call(this,c,...args)};
+    }''')
+    page.wait_for_timeout(200)
+    assert page.evaluate('''() => {
+        const g=window.pixelhub.game;
+        return g.inbound !== 'docked' && g.config.arrivals[0].palletIds.every(id=>window.drawnCargo.has(id));
+    }''')
+    page.evaluate('() => window.pixelhub.renderer.crate=window.originalCrate')
     for n, stock in [(18,32),(30,18)]:
         page.select_option('#dev-round', str(n))
         page.click('#dev-jump')
@@ -61,6 +81,6 @@ with sync_playwright() as p:
     page.wait_for_timeout(300)
     assert not page.locator('#dev-panel').is_visible()
     assert not errors, errors
-    (OUT/'results.json').write_text(json.dumps({'mouse_round1':True,'save_load':True,'scenarios':[18,30],'final_stock':0,'delivered':696,'javascript_errors':errors}, indent=2), encoding='utf8')
+    (OUT/'results.json').write_text(json.dumps({'mouse_round1':True,'save_load':True,'scenarios':[18,19,30],'second_ramp_visible':True,'final_stock':0,'delivered':696,'javascript_errors':errors}, indent=2), encoding='utf8')
     browser.close()
 print('PixelHub 0.2: browser acceptance passed.')
