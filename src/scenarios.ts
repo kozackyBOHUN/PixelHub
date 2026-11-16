@@ -18,7 +18,12 @@ export async function loadScenario(
         : await new Response(
             response.body.pipeThrough(new DecompressionStream("gzip")),
           ).json();
-      if (json.version !== 3 || json.campaign !== JSON.stringify(campaign))
+      const comparable = JSON.stringify(
+        JSON.parse(json.campaign).map(
+          ({ departures, ...round }: Record<string, unknown>) => round,
+        ),
+      );
+      if (json.version !== 9 || comparable !== JSON.stringify(campaign))
         throw Error("Scenariusze wymagają odtworzenia");
       return json.scenarios as Record<number, string>;
     })();

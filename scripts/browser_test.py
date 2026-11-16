@@ -21,7 +21,7 @@ with sync_playwright() as p:
     page.wait_for_function('() => window.pixelhub')
     page.get_by_role('button', name='Kamera −', exact=True).click()
     page.wait_for_timeout(100)
-    page.get_by_role('button', name='Podstaw · rampa 1', exact=True).click()
+    page.locator('.cmr-card.inbound').first.click()
     page.evaluate('() => window.pixelhub.game.advance(1.2)')
     def click_cell(x, y):
         box = page.locator('#world').bounding_box()
@@ -32,14 +32,15 @@ with sync_playwright() as p:
         pose = page.evaluate('() => window.pixelhub.game.pose')
         click_cell(pose['x'], pose['y'])
         c = page.evaluate('(i) => window.pixelhub.game.crates.find(c => c.id === `R01-P00${i+1}`)', i)
-        click_cell(-1-c['loc']['depth'], 2+c['loc']['lane'])
+        click_cell(-1-c['loc']['depth'], c['loc']['row']+c['loc']['lane'])
         click_cell(*target)
         assert page.evaluate('() => !!window.pixelhub.game.task'), page.locator('#message').inner_text()
         # Advance time only: cargo is moved exclusively by the physical transport engine.
         page.evaluate('() => window.pixelhub.game.advance(200)')
     page.wait_for_function("() => window.pixelhub.game.status === 'summary'")
     page.screenshot(path=str(OUT/'round1.png'), full_page=True)
-    page.get_by_role('button', name='Runda 2 →', exact=True).click()
+    page.click('#development')
+    page.click('#continue')
     page.get_by_role('button', name='Zapisz', exact=True).click()
     snapshot = '() => JSON.stringify({round:window.pixelhub.game.round,crates:window.pixelhub.game.crates,cash:window.pixelhub.game.cash})'
     before = page.evaluate(snapshot)
@@ -47,12 +48,14 @@ with sync_playwright() as p:
     page.wait_for_function('() => window.pixelhub')
     assert page.evaluate(snapshot) == before
     # Cargo at the second ramp stays visible when the first ramp is empty.
+    page.locator('#lab').evaluate('(d)=>d.open=true')
     page.select_option('#dev-round', '19')
     page.click('#dev-jump')
     page.wait_for_function('() => window.pixelhub.game.round === 19', timeout=20000)
     page.evaluate('''() => {
         const {game:g,renderer:r}=window.pixelhub;
-        if(!g.buy('ramps')) throw Error('Second ramp unavailable');
+        g.status='development';g.developmentRound=19;
+        if(!g.buy('ramps')) throw Error('Second ramp unavailable');g.nextRound();
         const m=g.config.arrivals[0];
         if(!g.dockCMR(m.id,1)) throw Error('Docking at second ramp failed');
         g.advance(1.2);

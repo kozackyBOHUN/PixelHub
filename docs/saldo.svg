@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="300" viewBox="0 0 620 300">
+<rect width="620" height="300" rx="8" fill="#111a25"/>
+<g font-family="sans-serif" fill="#e7eef7"><text x="38" y="31" font-size="17">Saldo po rundzie · kampania bez kontraktów</text><text x="39" y="276" font-size="12">Runda 1</text><text x="518" y="276" font-size="12">Runda 30</text></g>
+<path d="M40 255 H562 M40 175 H562 M40 95 H562" fill="none" stroke="#405166"/>
+<g fill="#a6b7cb" font-family="sans-serif" font-size="10"><text x="22" y="253">0</text><text x="10" y="173">500</text><text x="6" y="93">1000</text></g>
+<polyline points="40,162 58,165 76,155 94,142 112,157 130,136 148,180 166,215 184,197 202,177 220,207 238,187 256,189 274,177 292,157 310,175 328,173 346,158 364,153 382,126 400,117 418,145 436,159 454,150 472,143 490,145 508,132 526,112 544,93 562,48" fill="none" stroke="#65ddaa" stroke-width="3"/>
+<text x="570" y="52" fill="#65ddaa" font-family="sans-serif" font-size="12">1294</text>
+</svg>

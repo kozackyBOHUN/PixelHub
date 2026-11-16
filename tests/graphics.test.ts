@@ -417,7 +417,7 @@ test("graphics: illegal dependency cycles are diagnosed", () => {
   q.asset(r, "b", "cargo/pallet", { x: 0, y: 0 }, { after: ["a"] });
   assert.throws(() => q.ordered(), /Cykl/);
 });
-test("graphics: modular vehicles of 4/6/8/10 pallets use identical modules and four wheels", () => {
+test("graphics: modular vehicles of 4/6/8/10 pallets use identical modules and two front mirrors", () => {
   const r = createRegistry();
   for (const [capacity, total] of [
     [4, 80],
@@ -457,7 +457,7 @@ test("graphics: modular vehicles of 4/6/8/10 pallets use identical modules and f
     );
     assert.equal(
       assets.filter((c) => c.assetId === "vehicle/default/wheel").length,
-      4,
+      2,
     );
     assert.equal(
       assets.filter((c) => c.assetId === "vehicle/default/end").length,

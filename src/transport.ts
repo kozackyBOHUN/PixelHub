@@ -18,6 +18,7 @@ export type Phase =
   | "PUSH"
   | "SWITCH_DIRECTION"
   | "MANEUVER"
+  | "YIELD"
   | "PUSH_TO_TARGET"
   | "LOWER"
   | "WITHDRAW_FORKS"

@@ -12,7 +12,7 @@ import { planTransport, pointAt, offset, travel } from "./transport.ts";
 import type { TransportStep, Phase } from "./transport.ts";
 export type Location =
   | { kind: "floor"; x: number; y: number }
-  | { kind: "inbound" | "outbound"; lane: number; depth: number; bay?: number }
+  | { kind: "inbound" | "outbound"; lane: number; depth: number; bay?: number; row?: number }
   | { kind: "worker" | "delivery" | "delivered" | "processing" | "consumed" };
 export type Crate = {
   id: string;
@@ -43,7 +43,7 @@ export type Crate = {
   carriedAngleOffset?: number;
 };
 export type Task = {
-  crate: string;
+  crate: string | null;
   dest: Location;
   phase: Phase;
   steps: TransportStep[];
@@ -55,12 +55,14 @@ export type Task = {
   deposited: boolean;
   cancelRequested?: boolean;
   recovery?: boolean;
+  yielded?: boolean;
+  trafficReroutes?: number;
 };
 export function locationPoint(l: Location): Point | null {
   return l.kind === "floor"
     ? l
     : "lane" in l
-      ? { ...pointAt(l.kind, l.lane, l.depth), y: (l.bay ? -4 : 2) + l.lane }
+      ? { ...pointAt(l.kind, l.lane, l.depth), y: (l.row ?? (l.bay ? -4 : 2)) + l.lane }
       : null;
 }
 export class Game {
@@ -68,7 +70,7 @@ export class Game {
   round = 1;
   time = 0;
   speed = 1;
-  status: "playing" | "summary" | "won" | "lost" = "playing";
+  status: "playing" | "summary" | "development" | "won" | "lost" = "playing";
   pose: Pose = { ...cfg.worker.startPose.head, d: 0 };
   crates: Crate[] = [];
   task: Task | null = null;
@@ -84,7 +86,7 @@ export class Game {
   highlight: string | null = null;
   accumulator = 0;
   reservations = new Set<string>();
-  ledger = [
+  ledger: {time:number;amount:number;label:string;priorityDelta?:number;tripId?:string;investment?:boolean}[] = [
     { time: 0, amount: cfg.economy.initialCash, label: "Kapitał początkowy" },
   ];
   get cash() {
@@ -197,6 +199,9 @@ export class Game {
       : l.kind === "outbound"
         ? d === 4
         : true;
+  }
+  get coordinatedMovement() {
+    return false;
   }
   get transportGeometry() {
     const t = this.task,
@@ -331,6 +336,41 @@ export class Game {
     this.message = "Zadanie przyjęte.";
     return true;
   }
+  moveTo(target: Point) {
+    if (this.task || this.carried || this.status !== "playing") {
+      this.message =
+        "Pracownik zajęty. Zakończ zadanie lub bezpiecznie je anuluj.";
+      return false;
+    }
+    const free = this.planningFree();
+    if (!this.contains(target) || !free(target)) {
+      this.message = "Cel jest zajęty lub niedostępny.";
+      return false;
+    }
+    const route = findPath(this.pose, (p) => same(p, target), free);
+    if (!route) {
+      this.message = "Brak bezpiecznego dojazdu do celu.";
+      return false;
+    }
+    const steps = route.slice(1).map((p, i) => travel(route[i], p, false));
+    if (steps.length) {
+      this.task = {
+        crate: null,
+        dest: { kind: "floor", ...target },
+        steps,
+        phase: steps[0].phase,
+        route,
+        elapsed: 0,
+        blocked: false,
+        cost: steps.reduce((sum, step) => sum + step.duration, 0),
+        inserted: false,
+        deposited: false,
+      };
+      this.source = null;
+      this.message = "Przemieszcza się.";
+    } else this.message = "Pracownik jest już na miejscu.";
+    return true;
+  }
   updateRoute() {
     const t = this.task;
     if (!t) return;
@@ -444,7 +484,7 @@ export class Game {
         s = t.steps[0];
       const ignore =
         this.carried || t.inserted || t.deposited || s.phase === "INSERT_FORKS"
-          ? c.id
+          ? c?.id
           : undefined;
       const free = this.free(ignore);
       let safe =
@@ -469,6 +509,7 @@ export class Game {
         this.message =
           "Trasa zablokowana. Usuń przeszkodę lub anuluj polecenie.";
       } else {
+        if (t.blocked) this.message = "Przejazd wolny. Wznawiam zadanie.";
         t.blocked = false;
         if (t.cancelRequested) {
           t.elapsed = Math.max(0, t.elapsed - dt);
@@ -491,19 +532,23 @@ export class Game {
         } else {
           t.elapsed += dt;
           if (t.elapsed + 1e-8 >= s.duration) {
-            t.elapsed = Math.max(0, t.elapsed - s.duration);
+            t.elapsed = this.coordinatedMovement
+              ? 0
+              : Math.max(0, t.elapsed - s.duration);
             this.pose = { ...s.b };
             t.steps.shift();
             if (s.phase === "INSERT_FORKS") t.inserted = true;
-            if (s.phase === "LIFT") {
+            if (c && s.phase === "LIFT") {
               const v = geometry(s.b).heading;
               c.carriedAngleOffset =
                 (c.orientation ?? 0) - Math.atan2(v.y, v.x);
               c.loc = { kind: "worker" };
               this.carried = c.id;
+              t.yielded = false;
+              t.trafficReroutes = 0;
               t.inserted = false;
             }
-            if (s.phase === "LOWER") {
+            if (c && s.phase === "LOWER") {
               const v = geometry(s.b).heading;
               c.orientation =
                 (c.carriedAngleOffset ?? 0) + Math.atan2(v.y, v.x);
@@ -512,14 +557,15 @@ export class Game {
               t.deposited = true;
             }
             if (!t.steps.length) {
-              if (t.deposited && c.loc.kind === "floor" && !c.paid) {
+              if (c && t.deposited && c.loc.kind === "floor" && !c.paid) {
                 c.paid = true;
                 this.money(cfg.economy.unloadRewardPerCrate, "Rozładunek");
               }
               this.clearTask();
               if (!t.recovery)
-                this.message =
-                  "Odłożono skrzynię i wycofano widły. Kliknij pracownika.";
+                this.message = c
+                  ? "Odłożono skrzynię i wycofano widły."
+                  : "Pracownik dotarł do celu.";
             } else this.updateRoute();
           }
         }
@@ -599,7 +645,7 @@ export class Game {
       (this.task?.inserted ||
       this.task?.deposited ||
       this.task?.phase === "INSERT_FORKS"
-        ? this.task.crate
+        ? (this.task.crate ?? undefined)
         : undefined);
     if (
       !geometryFree(this.transportGeometry, this.free(ignore), !!this.carried)

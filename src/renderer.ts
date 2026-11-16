@@ -96,6 +96,16 @@ export class Renderer {
   hitCargo(point: Point) {
     for (let i = this.lastCommands.length - 1; i >= 0; i--) {
       const c = this.lastCommands[i];
+      if (c.kind === "fill" && c.cargoId) {
+        const p = this.camera.worldToScreen(c.point);
+        if (
+          point.x >= p.x &&
+          point.x <= p.x + (c.width ?? 0) * this.camera.tile &&
+          point.y >= p.y &&
+          point.y <= p.y + (c.height ?? 0) * this.camera.tile
+        )
+          return c.cargoId;
+      }
       if (c.kind !== "asset" || !c.assetId.startsWith("cargo/box/")) continue;
       const b = commandBounds(c, this.registry, this.camera);
       if (

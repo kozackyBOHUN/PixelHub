@@ -349,27 +349,6 @@ dialog p {
     font-size: 16px;
   }
 }
-.cmrs {
-  display: flex;
-  gap: 8px;
-  overflow: auto;
-  padding: 12px 0;
-  max-height: 130px;
-}
-.cmrs button {
-  min-width: 165px;
-  max-width: 240px;
-  flex-shrink: 0;
-  font-size: 11px;
-  line-height: 1.6;
-  white-space: normal;
-}
-.cmrs .inbound {
-  border-top: 4px solid #bd8a7b;
-}
-.cmrs .outbound {
-  border-top: 4px solid #88aba4;
-}
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -461,41 +440,43 @@ canvas {
 }
 .cmrs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  overflow: visible;
-  padding: 8px 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  padding: 4px 0;
 }
 .cmrs section {
-  min-width: 0;
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+}
+.cmrs section:has(.cmr-list:empty) {
+  display: none;
 }
 .cmrs h3 {
-  margin: 0 0 5px;
+  margin: 0;
   font-size: 12px;
   letter-spacing: 0.08em;
 }
 .cmr-list {
   display: flex;
-  flex-direction: column;
-  gap: 7px;
-  overflow-y: auto;
-  max-height: 216px;
-  padding: 3px 7px 3px 2px;
-  scrollbar-gutter: stable;
+  overflow-x: auto;
+  gap: 5px;
+  padding: 2px;
 }
 .cmrs .cmr-card {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  width: 100%;
-  flex: none;
+  flex: 1 0 105px;
+  min-width: 105px;
+  gap: 3px;
+  padding: 4px 6px;
   text-align: left;
   white-space: normal;
   border: 1px solid #b4b9ae;
   border-left: 4px solid #829c9b;
   background: #f6f2df;
   color: #29433e;
-  padding: 9px;
   box-shadow: 1px 2px 0 #bbc6bc;
 }
 .cmrs .cmr-card.active {
@@ -510,17 +491,17 @@ canvas {
 .cmr-tiles {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 2px;
 }
 .cmr-tile {
   display: grid;
   place-items: center;
   position: relative;
-  width: 23px;
-  height: 23px;
-  border: 2px solid #ffffffaa;
+  width: 13px;
+  height: 13px;
+  border: 1px solid #ffffffaa;
   box-shadow: inset 0 -4px #0002;
-  font: bold 12px monospace;
+  font: bold 9px monospace;
   color: #152c29;
 }
 .cmr-tile.retained:after {
@@ -536,31 +517,328 @@ canvas {
 .cmr-tile.loaded {
   outline: 1px solid #28604c;
 }
-@media (max-width: 700px), (max-height: 750px) {
-  .cmr-list {
-    max-height: 136px;
-  }
-  .cmrs {
-    gap: 7px;
-  }
-  .cmrs .cmr-card {
-    padding: 6px;
-    gap: 4px;
-  }
-  .cmr-tile {
-    width: 18px;
-    height: 18px;
-    font-size: 10px;
-  }
-}
-.cmrs {
-  max-height: none;
-}
-.cmrs .cmr-card {
-  min-width: 0;
-  max-width: none;
-}
 .cmr-special {
   font-size: 11px;
   font-weight: 700;
 }
+.cmr-card > * {
+  pointer-events: none;
+}
+.actions:empty {
+  display: none;
+}
+button[aria-disabled="true"] {
+  opacity: 0.65;
+}
+@media (max-width: 650px) {
+  .cmrs section {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}
+
+body {
+  margin: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+body > header {
+  flex: none;
+  padding-block: 0.4rem;
+}
+main {
+  width: 100%;
+  max-width: none;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  gap: 4px;
+  padding: 0 clamp(6px, 2vw, 32px) 6px;
+}
+main > .scene {
+  grid-row: 3;
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  overflow: hidden;
+  margin: 0;
+  position: relative;
+}
+#world {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  min-width: 0;
+}
+.controls {
+  grid-row: 4;
+  max-height: 32dvh;
+  overflow: auto;
+}
+.controls .actions,
+.controls .toolbar {
+  gap: 4px;
+  padding-block: 2px;
+  margin: 0;
+}
+.controls button {
+  padding: 4px 7px;
+  font-size: 0.72rem;
+  min-height: 26px;
+}
+.controls p,
+#cmr-scroll {
+  margin: 0;
+  font-size: 0.72rem;
+}
+.controls .status-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.controls .inspection {
+  padding: 0;
+}
+#message {
+  flex: 1 1 230px;
+}
+#lab {
+  grid-row: 5;
+  max-height: 26dvh;
+  overflow: auto;
+  padding-block: 0;
+}
+#end {
+  width: min(800px, calc(100vw - 24px));
+  max-width: none;
+  padding: clamp(16px, 3vw, 36px);
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+}
+#end h1 {
+  font-size: clamp(1.15rem, 3vw, 2rem);
+}
+#end #totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  gap: 8px;
+  margin-block: 12px;
+}
+#end #totals section {
+  background: #e2ebe3;
+  border-radius: 8px;
+  padding: 12px;
+}
+#end #totals h2 {
+  font-size: 1rem;
+  margin: 0 0 8px;
+}
+#end dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 5px;
+}
+#end dd {
+  margin: 0;
+  font-weight: bold;
+}
+#end #upgrades {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+}
+[hidden] {
+  display: none !important;
+}
+@media (max-width: 650px) {
+  .brand small,
+  #round-name {
+    display: none;
+  }
+  body > header {
+    gap: 5px;
+  }
+  .controls {
+    max-height: 39dvh;
+  }
+}
+
+.cmr-tile.mix-tile {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 1px;
+  background: #20384b !important;
+  box-shadow: none;
+}
+.cmr-tile.mix-tile i {
+  width: 100%;
+  height: 100%;
+}
+#sorter-status:empty {
+  display: none;
+}
+#trip-clock:empty {
+  display: none;
+}
+#end:not(.investments) #totals section {
+  background: #fbf6e8;
+  border: 1px dashed #a2997f;
+  border-radius: 2px;
+}
+#end #totals dd {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+#end #development,
+#end #continue {
+  font-weight: 800;
+  min-height: 44px;
+}
+#end.investments #upgrades {
+  gap: 12px;
+  margin-block: 16px;
+}
+#upgrades section {
+  background: #e2ebe3;
+  border-radius: 8px;
+  padding: 12px;
+}
+#upgrades h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+.expansion-preview {
+  display: flex;
+  margin-block: 8px;
+  text-align: center;
+}
+.expansion-preview span {
+  padding: 8px;
+  flex: 1;
+  background: #c8d2d7;
+  border: 1px solid #899da9;
+}
+.expansion-preview span + span {
+  background: #f6e5aa;
+  border-style: dashed;
+}
+#end #totals .receipt-total {
+  border-top: 1px solid #b5aa8b;
+  font-weight: 800;
+  padding-top: 4px;
+}
+
+.investment-track {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.investment-track span {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+.investment-track .owned {
+  opacity: 1;
+  filter: none;
+}
+.investment-track.crates span {
+  background: url("/assets/cargo/box/orange.png") center / contain no-repeat;
+}
+.investment-track.mixers span {
+  background: url("/assets/equipment/sorter.png") center / contain no-repeat;
+}
+.investment-track.workers span {
+  background: url("/assets/workers/default/idle.png") left top no-repeat;
+}
+
+#end.investments #upgrades {
+  display: block;
+}
+#investment-balance {
+  font-weight: bold;
+  margin: 0 0 12px;
+  color: #315b50;
+}
+#investment-cards {
+  display: grid;
+  gap: 8px;
+}
+#upgrades .investment-card {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(90px, 1fr) minmax(
+      160px,
+      auto
+    );
+  gap: 4px 12px;
+  align-items: center;
+  border: 2px solid #597480;
+  background: #243941;
+  color: #f3eedb;
+  border-radius: 0;
+  padding: 12px;
+}
+#upgrades .investment-card h2,
+#upgrades .investment-card p {
+  margin: 0;
+  grid-column: 1;
+}
+#upgrades .investment-card > div {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+#upgrades .investment-card button {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  min-height: 42px;
+}
+.investment-extras {
+  margin-top: 12px;
+}
+@media (max-width: 610px) {
+  #upgrades .investment-card {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  #upgrades .investment-card > div {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  #upgrades .investment-card button {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+}
+
+#investment-cards > div { display: grid; gap: 8px; }
+#investment-cards > div > h2 { margin: 14px 0 2px; color: #315b50; }
+.investment-track.cold span { background: url("/assets/cargo/overlay/chilled.png") center / contain no-repeat; }
+.investment-track.piesek span { background: url("/assets/pallet-jacks/piesek/icon.png") center / contain no-repeat; }
+#upgrades .investment-card .cold-resume { grid-column: 1 / -1; grid-row: auto; }
+#upgrades .investment-card .equipment-resume { grid-column: 1 / -1; grid-row: auto; }
+
+#truck-controls { position: absolute; inset: 0; pointer-events: none; }
+#truck-controls button { position: absolute; transform: translateX(-50%); pointer-events: auto; white-space: nowrap; padding: 4px 7px; font-size: .75rem; }
+#end.briefing #totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 10px; }
+#end.briefing #totals section { background: #dfe9e2; border: 2px solid #78948d; padding: 12px; }
+#end.briefing #totals img { width: 24px; height: 24px; image-rendering: pixelated; vertical-align: middle; }
+#end.briefing #totals section span { display: block; }
+
+body > header { padding-block: 4px; }
+body > header .brand { line-height: 1.1; }
+#worker-queues { display: flex; gap: 6px; overflow-x: auto; font-size: .68rem; }
+#worker-queues section { flex: none; min-width: 145px; background: #dce8e2; border: 1px solid #9db0aa; padding: 3px 5px; }
+#worker-queues section.selected { border-color: #39816e; }
+#worker-queues button { min-height: 21px; padding: 1px 4px; }
+#worker-queues section > button { display: flex; align-items: center; gap: 2px; }
+#worker-queues section div { display: flex; align-items: center; gap: 3px; min-height: 16px; }
+.queue-avatar,.queue-pallet { display: inline-block; width: 20px; height: 20px; image-rendering: pixelated; }
+.queue-avatar { background: url("/assets/workers/default/idle.png") left top; }
+.queue-pallet { background: url("/assets/cargo/box/orange.png") center / contain; }

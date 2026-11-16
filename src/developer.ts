@@ -1,5 +1,5 @@
-import { CampaignGame, station, sorterOutputs } from "./campaign-game.ts";
-import type { Upgrade } from "./campaign.ts";
+import { CampaignGame, station, sorterPorts } from "./campaign-game.ts";
+import { requiredUpgrades, upgrades } from "./campaign.ts";
 import type { Crate, Location } from "./simulation.ts";
 import type { Point } from "./config.ts";
 // Developer-only operator. Uses the same choose/order/step path as the mouse UI.
@@ -30,69 +30,140 @@ function move(game: CampaignGame, c: Crate, dest: Location) {
 export function storageCandidates(game: CampaignGame, crate: Crate): Point[] {
   const list: Point[] = [];
   if (crate.temperature && crate.temperature !== "standard") {
-    for (const y of [-4, -7])
+    if (crate.temperature === "chilled") return game.coldCells;
+    for (const y of [-4, -1, -8, -5])
       for (let x = 1; x < 19; x++)
         if (game.zoneAt({ x, y }) === crate.temperature) list.push({ x, y });
     return list;
   }
-  // Three-row gaps and wide side passages preserve axial approach and turning space.
-  for (const y of [5, 2, ...(game.minY === 0 ? [0] : []), -2, -9]) {
-    if (y < game.minY) continue;
-    const xs =
-      y === 5
-        ? [3, 2, 1, 16, 17, 18]
-        : y === 2
-          ? Array.from({ length: 12 }, (_, i) => i + 4)
-          : y === 0
-            ? [2, 3, 16, 17]
-            : y === -2
-              ? [2, 3, 7, 8, 9, 10, 14, 15, 16, 17]
-              : Array.from({ length: 16 }, (_, i) => i + 2);
-    for (const x of xs) list.push({ x, y });
-  }
+  const rows = [
+    3,
+    game.minY,
+    ...Array.from({ length: -game.minY }, (_, i) => -i),
+  ];
+  for (const y of new Set(rows))
+    for (let x = 1; x < 19; x++)
+      if (
+        game.contains({ x, y }) &&
+        game.zoneAt({ x, y }) === "standard" &&
+        (y === 3 || (x >= 4 && x <= 15)) &&
+        !(y === 0 && x >= 6 && x <= 10 && game.levels.storage > 1) &&
+        !game.sorters.some((site) =>
+          [site, ...Object.values(sorterPorts(site))].some(
+            (p) => Math.abs(p.x - x) + Math.abs(p.y - y) <= 2,
+          ),
+        )
+      )
+        list.push({ x, y });
   return list;
 }
 function store(game: CampaignGame, c: Crate) {
   for (const p of storageCandidates(game, c))
-    if (game.storage(p) && move(game, c, { kind: "floor", ...p })) return true;
+    if (
+      !game.sorters.some((site) =>
+        Object.values(sorterPorts(site)).some(
+          (q) => q.x === p.x && q.y === p.y,
+        ),
+      ) &&
+      game.storage(p) &&
+      move(game, c, { kind: "floor", ...p })
+    )
+      return true;
   return false;
 }
 function special(game: CampaignGame, c: Crate) {
   if (c.condition && c.condition !== "standard")
     return move(game, c, { kind: "floor", ...station.service });
-  if (c.mix) return move(game, c, { kind: "floor", ...station.sorter });
+  if (c.mix)
+    return (
+      !!game.sorter &&
+      !(
+        c.loc.kind === "floor" &&
+        [sorterPorts(game.sorter).input, sorterPorts(game.sorter).input2].some(
+          (p) => p.x === (c.loc as Point).x && p.y === (c.loc as Point).y,
+        )
+      ) &&
+      [sorterPorts(game.sorter).input2, sorterPorts(game.sorter).input].some(
+        (p) => move(game, c, { kind: "floor", ...p }),
+      )
+    );
   if (c.temperature !== "standard" && !c.climateStored) return store(game, c);
   return false;
 }
-const mandatory: Upgrade[] = [
-  "expansion",
-  "sorter",
-  "chiller",
-  "service",
-  "freezer",
-  "expansion2",
-  "climate",
-];
+function installTrainingSorter(game: CampaignGame) {
+  const site = game.findSorterSite();
+  return !!site && game.installSorter(site);
+}
+export function prepareRound(game: CampaignGame) {
+  if (game.status === "playing" && !game.missingEquipment.length) return;
+  if (!game.beginDevelopment() && game.status !== "development") return;
+  if (game.developmentRound >= 5 && game.levels.storage < 2)
+    game.buyModule("storage");
+  if (game.developmentRound >= 7 && game.levels.storage < 3)
+    game.buyModule("storage");
+  if (
+    game.developmentRound >= 22 &&
+    game.cash >= 1040 &&
+    game.levels.storage < 4
+  )
+    game.buyModule("storage");
+  for (const id of requiredUpgrades)
+    if (
+      upgrades[id].round <= game.developmentRound &&
+      !game.purchased.includes(id) &&
+      !(id === "sorter" ? installTrainingSorter(game) : game.buy(id))
+    )
+      throw Error(
+        `R${game.developmentRound}: nie można kupić ${id}, saldo ${game.cash}`,
+      );
+  if (game.developmentRound >= upgrades.chiller.round) {
+    while (game.coldCells.length + game.coldStock < 8 && game.buyColdPack()) {}
+    for (const y of [-4, -1, -8, -5])
+      for (const x of [4, 5, 6, 7])
+        if (game.coldStock) game.placeColdCell({ x, y });
+  }
+  game.nextRound();
+}
+function loadTruck(game: CampaignGame, bay: number) {
+  const truck = game.shippingAt(bay);
+  if (truck?.state !== "docked") return false;
+  const candidates = game.stock.filter(
+    (c) =>
+      game.canLoad(truck, c) &&
+      ["floor", "inbound"].includes(c.loc.kind) &&
+      game.accessible(c.loc),
+  );
+  const loaded = new Set(
+    game.cargoFor(bay).map((c) => c.destinationColor ?? c.color),
+  );
+  const sizes = new Map<string, number>();
+  for (const c of candidates) {
+    const color = c.destinationColor ?? c.color;
+    sizes.set(color, (sizes.get(color) ?? 0) + 1);
+  }
+  const score = (c: Crate) => {
+    const color = c.destinationColor ?? c.color;
+    return (loaded.has(color) ? 100 : 0) + (sizes.get(color) ?? 0);
+  };
+  candidates.sort((a, b) => score(b) - score(a));
+  for (let depth = truck.capacity / 2 - 1; depth >= 0; depth--)
+    for (let lane = 0; lane < 2; lane++) {
+      const dest = { kind: "outbound", lane, depth, bay } as const;
+      if (game.slot("outbound", lane, depth, bay) || !game.accessible(dest))
+        continue;
+      for (const c of candidates) if (move(game, c, dest)) return true;
+    }
+  return false;
+}
 export async function solveRound(
   game: CampaignGame,
   report: (text: string) => void = () => {},
 ) {
   if (game.status !== "playing") return;
+  prepareRound(game);
   const round = game.round;
-  for (const id of mandatory) {
-    const from = {
-      expansion: 5,
-      sorter: 8,
-      chiller: 11,
-      service: 13,
-      freezer: 16,
-      expansion2: 18,
-      climate: 22,
-    }[id as "expansion"];
-    if (game.round >= from && !game.purchased.includes(id) && !game.buy(id))
-      throw Error(`R${round}: nie można kupić ${id}, saldo ${game.cash}`);
-  }
   let actions = 0;
+  const relocated = new Set<string>();
   for (let guard = 0; guard < 1500 && game.status === "playing"; guard++) {
     report(
       `Runda ${round}: ${actions} operacji, stan ${game.stock.length}, saldo ${game.cash.toFixed(0)} $`,
@@ -104,15 +175,6 @@ export async function solveRound(
     game.assertInvariant();
     if (game.status !== "playing") break;
     let changed = false;
-    if (!game.cmrAt("outbound")) {
-      const m = game.cmrs.find(
-        (m) => m.kind === "outbound" && m.state === "waiting",
-      );
-      if (m) {
-        changed = game.dockCMR(m.id) || changed;
-        game.step(1.1);
-      }
-    }
     if (!game.cmrAt("inbound")) {
       const order =
         game.config.testArrivalOrder ?? game.config.arrivals.map((m) => m.id);
@@ -124,50 +186,13 @@ export async function solveRound(
         game.step(1.1);
       }
     }
-    const out = game.cmrAt("outbound");
-    if (out?.state === "docked") {
-      for (let depth = out.capacity / 2 - 1; depth >= 0 && !changed; depth--)
-        for (let lane = 0; lane < 2 && !changed; lane++) {
-          if (
-            game.slot("outbound", lane, depth) ||
-            !game.accessible({ kind: "outbound", lane, depth })
-          )
-            continue;
-          const candidates = game.crates.filter(
-            (c): c is Crate =>
-              !!c &&
-              game.canLoad(out, {
-                ...c,
-                mix: undefined,
-                condition: "standard",
-                climateStored: true,
-              }) &&
-              ["floor", "inbound"].includes(c.loc.kind) &&
-              game.accessible(c.loc),
-          );
-          for (const c of candidates) {
-            if (
-              c.condition !== "standard" ||
-              c.mix ||
-              (c.temperature !== "standard" && !c.climateStored)
-            ) {
-              if (special(game, c)) {
-                changed = true;
-                break;
-              }
-              continue;
-            }
-            if (move(game, c, { kind: "outbound", lane, depth, bay: 0 })) {
-              changed = true;
-              break;
-            }
-          }
-        }
-      if (game.dispatch()) {
-        changed = true;
-        game.step(1.1);
-      }
+    if (!changed && loadTruck(game, 0)) {
+      relocated.clear();
+      changed = true;
     }
+    const truck = game.shippingAt();
+    if (!changed && truck && game.cargoFor(0).length === truck.capacity)
+      changed = game.dispatch();
     if (!changed) {
       // Service and sort floor cargo before unloading more trucks.
       for (const c of game.crates.filter((c) => c.loc.kind === "floor"))
@@ -186,9 +211,15 @@ export async function solveRound(
       for (const c of game.crates.filter(
         (c) =>
           c.loc.kind === "floor" &&
-          [station.service, ...sorterOutputs].some(
-            (p) => "x" in c.loc && p.x === c.loc.x && p.y === c.loc.y,
-          ),
+          [
+            station.service,
+            ...(game.sorter
+              ? [
+                  sorterPorts(game.sorter).output,
+                  sorterPorts(game.sorter).output2,
+                ]
+              : []),
+          ].some((p) => "x" in c.loc && p.x === c.loc.x && p.y === c.loc.y),
       ))
         if (!c.mix && c.condition === "standard" && store(game, c)) {
           changed = true;
@@ -208,6 +239,59 @@ export async function solveRound(
           changed = true;
           break;
         }
+      }
+    }
+    if (!changed && game.dispatch()) changed = true;
+    if (!changed && truck?.trip) {
+      game.step(Math.max(0.05, truck.trip.returnAt - game.time));
+      changed = true;
+    }
+    const job = game.sorterJobs[0];
+    if (!changed && job && job.readyAt > game.time) {
+      game.step(job.readyAt - game.time + 0.05);
+      changed = true;
+    }
+    if (!changed && game.sorter) {
+      const ports = sorterPorts(game.sorter);
+      const nearby = game.stock.filter(
+        (c) =>
+          !c.mix &&
+          c.loc.kind === "floor" &&
+          Object.values(ports).some(
+            (p) =>
+              Math.abs(p.x - (c.loc as Point).x) +
+                Math.abs(p.y - (c.loc as Point).y) <=
+              2,
+          ),
+      );
+      for (const c of nearby)
+        if (store(game, c)) {
+          changed = true;
+          break;
+        }
+    }
+    if (!changed) {
+      for (const crate of game.stock) {
+        if (
+          crate.loc.kind !== "floor" ||
+          crate.mix ||
+          crate.temperature !== "standard" ||
+          relocated.has(crate.id)
+        )
+          continue;
+        const from = crate.loc;
+        for (const cell of storageCandidates(game, crate)) {
+          if (
+            Math.abs(from.x - cell.x) + Math.abs(from.y - cell.y) < 3 ||
+            !game.storage(cell) ||
+            !move(game, crate, { kind: "floor", ...cell })
+          )
+            continue;
+          relocated.add(crate.id);
+          changed = true;
+          break;
+        }
+        if (changed) break;
       }
     }
     if (!changed) {
@@ -238,7 +322,7 @@ export async function replayToRound(
   game.dev = true;
   while (game.round < round) {
     await solveRound(game, report);
-    game.nextRound();
+    prepareRound(game);
   }
   return game;
 }

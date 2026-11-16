@@ -13,8 +13,13 @@ test("0.2 all 30 developer fixtures are real versioned entry states matching man
       ),
     ).toString(),
   );
-  assert.equal(data.version, 3);
-  assert.equal(data.campaign, JSON.stringify(campaign));
+  assert.equal(data.version, 9);
+  assert.deepEqual(
+    JSON.parse(data.campaign).map(
+      ({ departures, ...round }: Record<string, unknown>) => round,
+    ),
+    campaign,
+  );
   for (let n = 1; n <= 30; n++) {
     const g = restore(data.scenarios[n]);
     assert.equal(g.round, n);
@@ -34,7 +39,7 @@ test("0.2 two employees cost exactly 40 USD once on settlement, never per minute
   worker.pose = { x: 17, y: 1, d: 4 };
   g.workers.push(worker);
   g.advance(200);
-  assert.equal(g.cash, 50);
+  assert.equal(g.cash, 585);
   for (let i = 0; i < 4; i++)
     g.crates.push({
       id: `fixture-${i}`,
@@ -44,11 +49,11 @@ test("0.2 two employees cost exactly 40 USD once on settlement, never per minute
       dueRound: 2,
       temperature: "standard",
       condition: "standard",
-      loc: { kind: "floor", x: [3, 2, 1, 16][i], y: 5 },
+      loc: { kind: "floor", x: [3, 2, 1, 16][i], y: 3 },
     });
   g.cmrs.forEach((m) => (m.state = "done"));
   assert.ok(g.completeRound());
-  assert.equal(g.cash, 30);
+  assert.equal(g.cash, 539);
   assert.equal(
     g.ledger
       .filter((e) => e.label === "Pensja — runda 1")
@@ -56,5 +61,5 @@ test("0.2 two employees cost exactly 40 USD once on settlement, never per minute
     -40,
   );
   assert.equal(g.completeRound(), false);
-  assert.equal(g.cash, 30);
+  assert.equal(g.cash, 539);
 });

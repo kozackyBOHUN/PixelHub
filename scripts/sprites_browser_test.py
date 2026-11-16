@@ -47,6 +47,7 @@ with sync_playwright() as p:
     }''')
     for name,data in {'game':page.evaluate('()=>window.productionScene'),**page.evaluate('()=>window.productionShots')}.items():
         (OUT/(name+'.png')).write_bytes(base64.b64decode(data.split(',')[1]))
+    page.locator('#lab').evaluate('(d)=>d.open=true')
     page.locator('#graphics-panel').evaluate('(d)=>d.open=true')
     page.select_option('#asset-select','demo/vehicle10');page.wait_for_timeout(100)
     page.locator('#asset-preview').screenshot(path=str(OUT/'vehicle10.png'))

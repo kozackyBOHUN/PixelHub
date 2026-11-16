@@ -1,6 +1,12 @@
-import { destinationColor, remainingRounds } from "../shipments.ts";
+import { rampAt } from "../warehouse.ts";
+import { COLORS } from "../campaign.ts";
+import {
+  displayColor,
+  destinationColor,
+  remainingRounds,
+} from "../shipments.ts";
 import { priorityMultiplier } from "../campaign.ts";
-import { CampaignGame, station, sorterOutputs } from "../campaign-game.ts";
+import { CampaignGame, station, sorterPorts } from "../campaign-game.ts";
 import cfg, { dock } from "../config.ts";
 import type { Point } from "../config.ts";
 import { locationPoint } from "../simulation.ts";
@@ -24,6 +30,7 @@ export type VehicleView = {
   id: string;
   kind: "inbound" | "outbound";
   bay: number;
+  row?: number;
   capacity: number;
   state: string;
   timer: number;
@@ -58,7 +65,7 @@ export function composeVehicle(
 ) {
   const n = vehicle.capacity / 2,
     length = vehicleLengthSource(vehicle.capacity) / GRAPHICS.sourceTile,
-    y = vehicle.bay ? -4 : 2,
+    y = vehicle.row ?? (vehicle.bay ? -4 : 2),
     inbound = vehicle.kind === "inbound",
     sign = inbound ? -1 : 1;
   const shift = ["arriving", "departing"].includes(vehicle.state)
@@ -108,19 +115,15 @@ export function composeVehicle(
   const cabinX = inbound ? rear - n : rear + n;
   component("cab", "vehicle/default/cab", cabinX, inbound, -9);
   component("end", "vehicle/default/end", inbound ? rear : rear, !inbound, -7);
-  // Axles depend on vehicle length, not on the number of cargo segments.
-  const axleXs = inbound
-    ? [rear - n - 0.5, rear - 0.55]
-    : [rear + n + 0.5, rear + 0.55];
-  for (const [a, x] of axleXs.entries())
-    for (const [side, wy] of [y - 0.08, y + 2.08].entries())
-      q.asset(
-        r,
-        `${base}/wheel/${a}/${side}`,
-        "vehicle/default/wheel",
-        { x, y: wy },
-        { floorY: y + 1.8, order: -6 },
-      );
+  const mirrorX = inbound ? rear - n - 0.5 : rear + n + 0.5;
+  for (const [side, wy] of [y - 0.08, y + 2.08].entries())
+    q.asset(
+      r,
+      "vehicle/" + vehicle.id + "/wheel/0/" + side,
+      "vehicle/default/wheel",
+      { x: mirrorX, y: wy },
+      { floorY: y + 1.8, order: -6 },
+    );
   q.add({
     kind: "text",
     id: `${base}/label`,
@@ -163,6 +166,9 @@ export class SceneBuilder {
   registry: AssetRegistry;
   animations: AnimationController;
   queue = new RenderQueue();
+  selectedCmr = "";
+  coldPreview: (Point & { valid: boolean }) | null = null;
+  sorterPreview: import("../campaign-game.ts").SorterSite | null = null;
   connections: RigConnection[] = [];
   game: Game | null = null;
   constructor(registry: AssetRegistry, animations = new AnimationController()) {
@@ -179,12 +185,13 @@ export class SceneBuilder {
   }
   vehicles(g: Game): VehicleView[] {
     if (g instanceof CampaignGame)
-      return g.cmrs
+      return g.vehicles
         .filter((m) => ["arriving", "docked", "departing"].includes(m.state))
         .map((m) => ({
           id: m.vehicle + "-" + m.id,
           kind: m.kind,
           bay: m.bay,
+          row: g.rampRow(m.bay),
           capacity: m.capacity,
           state: m.state,
           timer: m.timer,
@@ -217,9 +224,11 @@ export class SceneBuilder {
       maxCapacity = Math.max(
         4,
         ...(hub
-          ? [...hub.config.arrivals, ...hub.config.departures].map(
-              (m) => m.capacity,
-            )
+          ? [
+              ...hub.config.arrivals.map((m) => m.capacity),
+              ...hub.fleetCapacity,
+              10,
+            ]
           : []),
       ),
       extent =
@@ -231,7 +240,7 @@ export class SceneBuilder {
       minX: -extent - 0.5,
       minY: (hub?.minY ?? 0) - 1.5,
       maxX: cfg.map.columns + extent + 0.5,
-      maxY: cfg.map.rows + 1,
+      maxY: (hub ? 4 : cfg.map.rows) + 1,
     };
   }
   build(
@@ -246,7 +255,7 @@ export class SceneBuilder {
       hub = g instanceof CampaignGame ? g : null,
       minY = hub?.minY ?? 0,
       cols = cfg.map.columns,
-      rows = cfg.map.rows;
+      rows = hub ? 4 : cfg.map.rows;
     const bounds = this.bounds(g);
     this.asset(
       "exterior",
@@ -261,6 +270,7 @@ export class SceneBuilder {
     );
     for (let x = 0; x < cols; x++)
       for (let y = minY; y < rows; y++) {
+        if (hub && !hub.contains({ x, y })) continue;
         const variant = ((Math.imul(x, 73) ^ Math.imul(y, 193)) >>> 0) % 11;
         this.asset(
           `floor/${x}/${y}`,
@@ -271,10 +281,26 @@ export class SceneBuilder {
               : "floor/base",
           { x, y },
         );
-        if (dock({ x, y }))
+        if (hub && (x < 4 || x >= 16))
+          q.add({
+            kind: "fill",
+            id: "zone-tone/" + x + "/" + y,
+            point: { x, y },
+            width: 1,
+            height: 1,
+            color: x < 4 ? "#3d92701a" : "#b786421a",
+            floorY: y,
+            layer: LAYERS.markings,
+            order: -10,
+          });
+        const ramp = hub
+          ? (x === 0 || x === cols - 1) &&
+            hub.isRampRow(x === 0 ? "inbound" : "outbound", y)
+          : dock({ x, y });
+        if (ramp) {
           this.asset(`ramp/${x}/${y}`, "floor/ramp", { x, y });
-        if (dock({ x, y }))
           this.asset(`mark/${x}/${y}`, "floor/marking", { x, y });
+        }
         const zone = hub?.zoneAt({ x, y });
         if (zone && zone !== "standard")
           this.asset(
@@ -284,66 +310,207 @@ export class SceneBuilder {
             { layer: LAYERS.markings, alpha: 0.6, scaleX: 3, scaleY: 3 },
           );
       }
-    for (let x = 0; x < cols; x++)
-      this.wall(
-        `north/${x}`,
-        { x: x + 0.5, y: minY },
-        x === 0 || x === cols - 1 ? "corner" : "segment",
-      );
-    for (let x = 0; x < cols; x++)
-      this.wall(
-        `south/${x}`,
-        { x: x + 0.5, y: rows },
-        x === 0 || x === cols - 1 ? "corner" : "segment",
-      );
-    for (let y = minY; y < rows; y++)
-      for (const x of [0, cols]) {
-        const gate =
-          y === 2 ||
-          y === 3 ||
-          (hub?.purchased.includes("ramps") && (y === -4 || y === -3));
-        if (!gate) this.wall(`side/${x}/${y}`, { x, y: y + 0.5 }, "column");
-        else
-          this.asset(`gate-mark/${x}/${y}`, "floor/marking", {
-            x: x === 0 ? 0 : cols - 1,
-            y,
-          });
-      }
-    this.rooms();
-    for (const v of this.vehicles(g)) composeVehicle(q, r, v, cols);
-    if (hub)
-      for (const [name, p] of Object.entries(station))
-        if (hub.purchased.includes(name as "sorter" | "service")) {
-          this.asset(
-            `machine/${name}/shadow`,
-            "shadow/furniture",
-            pointAdd(tileCenter(p), 0, 0.2),
-            { alpha: 0.2 },
-          );
-          this.asset(`machine/${name}`, `machine/${name}`, tileCenter(p));
-          q.add({
-            kind: "text",
-            id: `machine/${name}/label`,
-            point: pointAdd(p, 0, -0.15),
-            text: name === "sorter" ? "MIX" : "SERWIS",
-            color: "#4e6777",
-            floorY: p.y,
-            layer: LAYERS.effects,
-            order: 0,
-          });
+    if (hub) {
+      for (let x = 0; x < cols; x++)
+        for (let y = minY; y < rows; y++) {
+          if (!hub.contains({ x, y })) continue;
+          const ramp = rampAt(hub.levels, { x, y });
+          if (!hub.contains({ x, y: y - 1 }))
+            this.wall("north/" + x + "/" + y, { x: x + 0.5, y });
+          if (!hub.contains({ x, y: y + 1 }))
+            this.wall("south/" + x + "/" + y, { x: x + 0.5, y: y + 1 });
+          if (!ramp && !hub.contains({ x: x - 1, y }))
+            this.wall("west/" + x + "/" + y, { x, y: y + 0.5 }, "column");
+          if (!ramp && !hub.contains({ x: x + 1, y }))
+            this.wall(
+              "east/" + x + "/" + y,
+              { x: x + 1, y: y + 0.5 },
+              "column",
+            );
         }
-    if (hub?.purchased.includes("sorter"))
-      for (const [i, p] of sorterOutputs.entries())
+    } else {
+      for (let x = 0; x < cols; x++)
+        this.wall(
+          `north/${x}`,
+          { x: x + 0.5, y: minY },
+          x === 0 || x === cols - 1 ? "corner" : "segment",
+        );
+      for (let x = 0; x < cols; x++)
+        this.wall(
+          `south/${x}`,
+          { x: x + 0.5, y: rows },
+          x === 0 || x === cols - 1 ? "corner" : "segment",
+        );
+      for (let y = minY; y < rows; y++)
+        for (const x of [0, cols]) {
+          const gate = y === 2 || y === 3;
+          if (!gate) this.wall(`side/${x}/${y}`, { x, y: y + 0.5 }, "column");
+          else
+            this.asset(`gate-mark/${x}/${y}`, "floor/marking", {
+              x: x === 0 ? 0 : cols - 1,
+              y,
+            });
+        }
+      this.rooms();
+    }
+
+    if (hub)
+      for (const [i, w] of hub.workers.entries()) {
+        const orders = [
+          ...hub.queue(i),
+          ...(w.task && !w.task.deposited
+            ? [{ pallet: w.task.crate, dest: w.task.dest }]
+            : []),
+        ];
+        for (const [j, order] of orders.entries()) {
+          const cargo = hub.crates.find((c) => c.id === order.pallet);
+          const source = cargo && locationPoint(cargo.loc);
+          if (source)
+            q.add({
+              kind: "outline",
+              id: "reserved/" + i + "/" + j,
+              point: source,
+              width: 1,
+              height: 1,
+              color: "#df3d38",
+              floorY: source.y,
+              layer: LAYERS.effects,
+              order: 12,
+            });
+          const dest = locationPoint(order.dest);
+          if (dest)
+            for (const side of [-1, 1])
+              q.add({
+                kind: "line",
+                id: "target/" + i + "/" + j + "/" + side,
+                point: { x: dest.x + 0.28, y: dest.y + 0.5 - 0.22 * side },
+                end: { x: dest.x + 0.72, y: dest.y + 0.5 + 0.22 * side },
+                color: "#239b4e",
+                lineWidthSource: 2,
+                floorY: dest.y,
+                layer: LAYERS.effects,
+                order: 13,
+              });
+        }
+      }
+    for (const v of this.vehicles(g)) composeVehicle(q, r, v, cols);
+    if (g instanceof CampaignGame) {
+      const selected = g.cmrs.find(
+        (m) => m.id === this.selectedCmr && m.state === "docked",
+      );
+      if (selected) {
+        const width = selected.capacity / 2;
+        const y = g.rampRow(selected.bay);
         q.add({
-          kind: "text",
-          id: `sorter/output/${i}`,
-          point: pointAdd(p, 0.15, 0.5),
-          text: "WY",
-          color: "#928958",
-          floorY: p.y,
-          layer: LAYERS.markings,
+          kind: "outline",
+          id: "selected-vehicle",
+          point: { x: selected.kind === "inbound" ? -width : cols, y },
+          width,
+          height: 2,
+          color: "#f5c863",
+          floorY: y,
+          layer: LAYERS.effects,
           order: 0,
         });
+      }
+    }
+    if (hub?.purchased.includes("service")) {
+      const p = station.service;
+      this.asset(
+        "machine/service/shadow",
+        "shadow/furniture",
+        pointAdd(tileCenter(p), 0, 0.2),
+        { alpha: 0.2 },
+      );
+      this.asset("machine/service", "machine/service", tileCenter(p));
+      q.add({
+        kind: "text",
+        id: "machine/service/label",
+        point: pointAdd(p, 0, -0.15),
+        text: "SERWIS",
+        color: "#4e6777",
+        floorY: p.y,
+        layer: LAYERS.effects,
+        order: 0,
+      });
+    }
+    if (this.coldPreview)
+      q.add({
+        kind: "outline",
+        id: "cold-preview",
+        point: this.coldPreview,
+        width: 1,
+        height: 1,
+        color: this.coldPreview.valid ? "#38a269" : "#d84444",
+        floorY: this.coldPreview.y,
+        layer: LAYERS.effects,
+        order: 20,
+      });
+    const machines = [
+      ...(hub?.sorters ?? []),
+      ...(this.sorterPreview ? [this.sorterPreview] : []),
+    ];
+    for (const [index, sorter] of machines.entries()) {
+      this.asset(
+        "sorter/machine/" + index,
+        "machine/sorter",
+        tileCenter(sorter),
+        {
+          alpha: sorter === this.sorterPreview ? 0.6 : 1,
+        },
+      );
+      const ports = sorterPorts(sorter);
+      for (const [name, p, color] of [
+        ["input", ports.input, "#ba4240"],
+        ["input2", ports.input2, "#ba4240"],
+        ["output2", ports.output2, "#34784f"],
+        ["output", ports.output, "#34784f"],
+      ] as const) {
+        q.add({
+          kind: "outline",
+          id: `sorter/${index}/${name}`,
+          point: p,
+          width: 1,
+          height: 1,
+          color,
+          floorY: p.y,
+          layer: LAYERS.markings,
+          order: 1,
+        });
+        const direction = [
+          { x: 1, y: 0 },
+          { x: 0, y: 1 },
+          { x: -1, y: 0 },
+          { x: 0, y: -1 },
+        ][sorter.d / 2];
+        const center = tileCenter(p);
+        const tip = pointAdd(center, direction.x * 0.25, direction.y * 0.25);
+        const shaft = pointAdd(
+          center,
+          -direction.x * 0.25,
+          -direction.y * 0.25,
+        );
+        const arms = [-1, 1].map((side) =>
+          pointAdd(
+            tip,
+            -direction.x * 0.18 - direction.y * 0.16 * side,
+            -direction.y * 0.18 + direction.x * 0.16 * side,
+          ),
+        );
+        for (const [index, start] of [shaft, ...arms].entries())
+          q.add({
+            kind: "line",
+            id: `sorter/${index}/${name}/${index ? `arrowhead-${index}` : "arrow"}`,
+            point: start,
+            end: tip,
+            color,
+            lineWidthSource: 2,
+            floorY: p.y,
+            layer: LAYERS.markings,
+            order: 2,
+          });
+      }
+    }
     const workers = hub?.workers ?? [g];
     for (const [i, w] of workers.entries()) this.rig(w, i);
     const addCargo =
@@ -360,6 +527,11 @@ export class SceneBuilder {
           : g.inbound !== "docked")
       )
         continue;
+      if (c.loc.kind === "outbound" && hub) {
+        const truck = hub.shippingAt(c.loc.bay ?? 0);
+        if (truck?.state === "departing")
+          p = { ...p, x: p.x + GRAPHICS.vehicleTravel * (1 - truck.timer) };
+      }
       let height = 0;
       if (
         c.loc.kind === "worker" ||
@@ -473,10 +645,17 @@ export class SceneBuilder {
     this.asset(`${base}/jack-shadow`, "shadow/jack", pointAdd(back, 0, 0.12), {
       alpha: 0.18,
     });
-    const body = this.asset(`${base}/body`, "jack/default/body", back, {
-      direction: sample.bodyDirection,
-      order: 10,
-    });
+    const body = this.asset(
+      `${base}/body`,
+      this.game instanceof CampaignGame && this.game.usesPiesek
+        ? "jack/piesek/body"
+        : "jack/default/body",
+      back,
+      {
+        direction: sample.bodyDirection,
+        order: 10,
+      },
+    );
     const assetId = `worker/default/${sample.state}`,
       d = r.get(assetId),
       f = r.frame(assetId, sample.direction, sample.frame),
@@ -519,6 +698,19 @@ export class SceneBuilder {
         height: 1,
         color: "#f5c863",
         floorY: head.y,
+        layer: LAYERS.effects,
+        order: 0,
+      });
+    }
+    if (w.task?.crate === null && w.task.dest.kind === "floor") {
+      this.queue.add({
+        kind: "outline",
+        id: `${base}/move-target`,
+        point: w.task.dest,
+        width: 1,
+        height: 1,
+        color: "#60bbec",
+        floorY: w.task.dest.y,
         layer: LAYERS.effects,
         order: 0,
       });
@@ -572,16 +764,88 @@ export class SceneBuilder {
     });
     // A 2.5D box has a fixed vertical face; rotating the bitmap tilts that face.
     // Orientation and collision of the load still belong to the simulation.
-    this.asset(`${base}/box`, `cargo/box/${destinationColor(c)}`, point, {
-      angle: 0,
-      liftSource: height * GRAPHICS.liftSource,
-      order: 30,
-      after: [`${base}/pallet`, ...after],
-    });
-    if (c.mix)
-      this.asset(`${base}/mix`, "cargo/overlay/mix", point, {
-        liftSource: height * GRAPHICS.liftSource,
+    const boxDependencies = [`${base}/pallet`, ...after];
+    const pixel = (
+      id: string,
+      x: number,
+      y: number,
+      width: number,
+      heightPx: number,
+      color: string,
+      order: number,
+    ) =>
+      this.queue.add({
+        kind: "fill",
+        cargoId: c.id,
+        id: `${base}/${id}`,
+        point: pointAdd(
+          point,
+          (x - 12) / 24,
+          (y - 12 - height * GRAPHICS.liftSource) / 24,
+        ),
+        width: width / 24,
+        height: heightPx / 24,
+        color,
+        floorY: point.y,
+        layer: LAYERS.objects,
+        order,
+        after: boxDependencies,
       });
+    if (c.mix) {
+      const cartons = c.mix.flatMap((part) =>
+        Array.from({ length: part.cartons }, () => part.color),
+      );
+      const cols = Math.ceil(Math.sqrt(cartons.length));
+      const size = Math.floor(20 / cols);
+      cartons.forEach((color, i) => {
+        const x = 2 + (i % cols) * size,
+          y = 2 + Math.floor(i / cols) * size;
+        pixel(`carton/${i}/edge`, x, y, size, size, "#20384b", 30);
+        pixel(
+          `carton/${i}/face`,
+          x + 1,
+          y + 1,
+          size - 2,
+          size - 2,
+          COLORS[color],
+          31,
+        );
+        pixel(
+          `carton/${i}/highlight`,
+          x + 1,
+          y + 1,
+          size - 2,
+          1,
+          "#ffffff66",
+          32,
+        );
+      });
+    } else {
+      this.asset(
+        `${base}/box`,
+        `cargo/box/${displayColor(c, g.round)}`,
+        point,
+        {
+          angle: 0,
+          liftSource: height * GRAPHICS.liftSource,
+          order: 30,
+          after: boxDependencies,
+        },
+      );
+      if (remainingRounds(c, g.round)) {
+        // Source rectangle of the existing label in the gray crate sprite.
+        const label = pixel(
+          "recipient-label",
+          14,
+          18,
+          4,
+          2,
+          COLORS[destinationColor(c)],
+          35,
+        );
+        label.after = [`${base}/box`];
+      }
+    }
     const marker = (name: string, asset: string, dx: number, dy: number) =>
       this.asset(
         `${base}/${name}`,

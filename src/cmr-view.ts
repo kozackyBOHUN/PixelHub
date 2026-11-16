@@ -5,96 +5,82 @@ import {
   destinationColor,
   remainingRounds,
 } from "./shipments.ts";
+
 const states = {
   waiting: "oczekuje",
-  arriving: "podjeżdża",
-  docked: "podstawiony",
+  arriving: "zlecono podstawienie",
+  docked: "przy rampie",
   departing: "odjeżdża",
   done: "zakończony",
 };
+
 export function renderCMRs(
   host: HTMLElement,
   game: CampaignGame,
   selected: string,
   select: (id: string) => void,
 ) {
-  const scroll = [...host.querySelectorAll<HTMLElement>(".cmr-list")].map(
-    (list) => list.scrollTop,
-  );
-  host.replaceChildren();
-  for (const kind of ["inbound", "outbound"] as const) {
-    const section = document.createElement("section"),
-      title = document.createElement("h3"),
-      list = document.createElement("div");
-    title.textContent = kind === "inbound" ? "↓ Przyjazdy" : "↑ Wyjazdy";
+  let list = host.querySelector<HTMLElement>(".cmr-list");
+  if (!list) {
+    list = document.createElement("div");
     list.className = "cmr-list";
-    list.setAttribute("aria-label", title.textContent);
-    section.append(title, list);
-    host.append(section);
-    for (const m of game.cmrs.filter((m) => m.kind === kind)) {
-      const card = document.createElement("button"),
-        header = document.createElement("span"),
-        tiles = document.createElement("span");
-      card.className = `cmr-card ${kind}${m.id === selected ? " active" : ""}`;
-      card.dataset.cmr = m.id;
-      card.setAttribute("aria-pressed", String(m.id === selected));
-      card.onclick = () => select(m.id);
-      const progress = game.progress(m);
-      header.className = "cmr-heading";
-      header.textContent = `${m.id} · ${kind === "outbound" && progress.complete && m.state === "docked" ? "pełny załadunek" : states[m.state]} · ${kind === "outbound" ? `${progress.loaded}/${progress.total}` : `${m.palletIds.length} palet`}`;
-      tiles.className = "cmr-tiles";
-      const items =
-        kind === "inbound"
-          ? m.palletIds.map((id) => {
-              const c =
-                game.crates.find((c) => c.id === id) ??
-                game.config.pallets.find((c) => c.id === id)!;
-              return {
-                color: displayColor(c, game.round),
-                destination: destinationColor(c),
-                remaining: remainingRounds(c, game.round),
-                loaded: false,
-                detail: `${c.id} · ${c.temperature}`,
-              };
-            })
-          : (m.requirements ?? []).flatMap((r, i) =>
-              Array.from({ length: r.quantity }, (_, n) => ({
-                color: r.color,
-                destination: r.color,
-                remaining: 0,
-                loaded: n < progress.counts[i],
-                detail: r.temperature ?? "dowolna gotowa paleta tego koloru",
-              })),
-            );
-      for (const item of items) {
-        const tile = document.createElement("span");
-        tile.className = `cmr-tile${item.loaded ? " loaded" : ""}`;
-        tile.style.backgroundColor = COLORS[item.color];
-        tile.style.setProperty("--destination", COLORS[item.destination]);
-        tile.textContent = item.loaded
-          ? "✓"
-          : item.remaining
-            ? String(item.remaining)
-            : "";
-        tile.title = `${item.destination} · ${item.remaining ? `za ${item.remaining} rund` : "gotowa"} · ${item.detail}${item.loaded ? " · załadowano" : ""}`;
-        tile.setAttribute("aria-label", tile.title);
-        if (item.remaining) tile.classList.add("retained");
-        tiles.append(tile);
+    list.tabIndex = 0;
+    list.setAttribute("aria-label", "CMR przyjazdowe");
+    host.append(list);
+  }
+  for (const card of list.querySelectorAll<HTMLButtonElement>("button"))
+    if (!game.cmrs.some((m) => m.id === card.dataset.cmr)) card.remove();
+  for (const m of game.cmrs) {
+    const existing = list.querySelector<HTMLButtonElement>(
+      `[data-cmr="${m.id}"]`,
+    );
+    const card = existing ?? document.createElement("button");
+    card.className = `cmr-card inbound${m.id === selected ? " active" : ""}`;
+    card.dataset.cmr = m.id;
+    card.setAttribute("aria-pressed", String(m.id === selected));
+    card.onclick = () => select(m.id);
+    const tiles = document.createElement("span");
+    tiles.className = "cmr-tiles";
+    let unloaded = 0;
+    for (const id of m.palletIds) {
+      const actual = game.crates.find((c) => c.id === id);
+      const c =
+        actual ??
+        (game.contractOffer(m.id)?.pallets ?? game.config.pallets).find(
+          (p) => p.id === id,
+        )!;
+      const complete = !!actual && actual.loc.kind !== "inbound";
+      if (complete) unloaded++;
+      const remaining = remainingRounds(c, game.round);
+      const tile = document.createElement("span");
+      tile.className = `cmr-tile${complete ? " loaded" : ""}${remaining ? " retained" : ""}`;
+      tile.style.backgroundColor = COLORS[displayColor(c, game.round)];
+      tile.style.setProperty("--destination", COLORS[destinationColor(c)]);
+      tile.textContent = complete ? "✓" : remaining ? String(remaining) : "";
+      tile.setAttribute(
+        "aria-label",
+        `${id} · ${destinationColor(c)}${complete ? " · rozładowano" : ""}`,
+      );
+      if (c.mix) {
+        const colors = c.mix.flatMap((part) =>
+          Array.from({ length: part.cartons }, () => part.color),
+        );
+        tile.classList.remove("retained");
+        tile.classList.add("mix-tile");
+        tile.textContent = "";
+        tile.setAttribute("aria-label", `${id} · MIX · ${colors.join(", ")}`);
+        for (const color of colors) {
+          const carton = document.createElement("i");
+          carton.style.backgroundColor = COLORS[color];
+          tile.append(carton);
+        }
       }
-      card.append(header, tiles);
-      const special = (m.requirements ?? []).filter((r) => r.temperature);
-      if (special.length) {
-        const label = document.createElement("span");
-        label.className = "cmr-special";
-        label.textContent = special
-          .map((r) => `${r.quantity} × ${r.color}: ${r.temperature}`)
-          .join(" · ");
-        card.append(label);
-      }
-      list.append(card);
+      tiles.append(tile);
     }
-    list.scrollTop = scroll[kind === "inbound" ? 0 : 1] ?? 0;
-    if (!list.childElementCount)
-      list.textContent = "Brak dokumentów w tej rundzie";
+    const header = document.createElement("span");
+    header.className = "cmr-heading";
+    header.textContent = `${m.id} · ${m.vehicle} · ${unloaded}/${m.palletIds.length} · ${states[m.state]}`;
+    card.replaceChildren(header, tiles);
+    if (!existing) list.append(card);
   }
 }

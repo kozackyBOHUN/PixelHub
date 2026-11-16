@@ -115,7 +115,7 @@ export type AssetCommand = {
   space?: "world" | "screen";
 };
 export type ShapeCommand = {
-  kind: "line" | "text" | "outline" | "badge" | "room";
+  kind: "line" | "text" | "outline" | "badge" | "room" | "fill";
   id: string;
   point: Point;
   end?: Point;
@@ -128,6 +128,7 @@ export type ShapeCommand = {
   height?: number;
   after?: string[];
   lineWidthSource?: number;
+  cargoId?: string;
 };
 export type DrawCommand = AssetCommand | ShapeCommand;
 export class RenderQueue {
@@ -267,7 +268,17 @@ export class AssetPainter {
       ctx.strokeStyle = command.color;
       ctx.fillStyle = command.color;
       ctx.lineWidth = 1;
-      if (command.kind === "badge") {
+      if (command.kind === "fill") {
+        const tile = this.camera.tile;
+        const x = Math.round(p.x),
+          y = Math.round(p.y);
+        ctx.fillRect(
+          x,
+          y,
+          Math.round(p.x + (command.width ?? 0) * tile) - x,
+          Math.round(p.y + (command.height ?? 0) * tile) - y,
+        );
+      } else if (command.kind === "badge") {
         const size = Math.max(12, Math.round(8 * this.camera.scale));
         const padding = Math.max(2, Math.round(1.5 * this.camera.scale));
         ctx.font = `bold ${size}px monospace`;

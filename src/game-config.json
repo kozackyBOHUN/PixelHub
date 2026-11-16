@@ -29,7 +29,7 @@
       },
       {
         "id": "canteen",
-        "label": "Stołówka",
+        "label": "Sto\u0142\u00f3wka",
         "x": 13,
         "y": 3,
         "width": 3,
@@ -128,13 +128,17 @@
   "economy": {
     "currency": "USD",
     "initialCash": 50,
-    "unloadRewardPerCrate": 10,
-    "storageRewardPerCratePerCompletedRound": 5,
-    "deliveryRewardPerCrate": 20,
+    "campaignInitialCash": 585,
+    "unloadRewardPerCrate": 5,
+    "storageRewardPerCratePerCompletedRound": 1,
+    "deliveryRewardPerCrate": 14,
     "workerWagePerRound": 20,
     "wageMode": "per_completed_round",
     "wageEmployeeCount": 1,
-    "gameOverWhenBalanceAtOrBelow": 0
+    "gameOverWhenBalanceAtOrBelow": 0,
+    "rampCostPerRound": 10,
+    "deliveryBillingIntervalSeconds": 15,
+    "deliveryCostPerInterval": 15
   },
   "time": {
     "speedMultipliers": [
@@ -149,7 +153,7 @@
   "rounds": [
     {
       "number": 1,
-      "name": "Rozładunek i magazynowanie",
+      "name": "Roz\u0142adunek i magazynowanie",
       "inboundCrates": [
         {
           "color": "red",

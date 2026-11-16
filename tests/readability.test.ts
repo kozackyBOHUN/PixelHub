@@ -34,12 +34,12 @@ function fixture() {
   scene.build(g);
   return { g, crate, registry, scene };
 }
-test("readability: future cargo retains destination colour and a two-round badge without becoming eligible", () => {
+test("readability: future cargo uses gray and a two-round badge without becoming eligible", () => {
   const { g, crate, scene } = fixture();
   const commands = scene.queue.commands;
   const box = commands.find((c) => c.id === "cargo/READABILITY/box");
   assert.ok(box?.kind === "asset");
-  assert.equal(box.assetId, "cargo/box/red");
+  assert.equal(box.assetId, "cargo/box/gray");
   const due = commands.find((c) => c.id === "cargo/READABILITY/due");
   assert.ok(due?.kind === "badge");
   assert.equal(due.text, "2");
@@ -68,49 +68,12 @@ test("readability: spinning a transported pose never tilts the 2.5D box or palle
   }
   assert.equal(snapshot(), before);
 });
-test("readability: room boundaries are confined to reserved rooms and no tall wall covers the storage aisle", () => {
+test("modular floors use the original low boundary and omit social rooms", () => {
   const { scene } = fixture();
   const commands = scene.queue.commands;
-  assert.equal(commands.filter((c) => c.kind === "room").length, 4);
-  assert.ok(
-    !commands.some((c) => c.kind === "asset" && c.assetId.startsWith("wall/")),
-  );
-  for (const room of cfg.map.rooms) {
-    const panel = commands.find((c) => c.id === `room/${room.id}/interior`);
-    assert.ok(panel?.kind === "room");
-    assert.deepEqual(panel.point, { x: room.x, y: room.y });
-    assert.equal(panel.width, room.width);
-    assert.equal(panel.height, room.height);
-  }
-});
-test("readability: every furniture frame fits inside its room, including the bottom row", () => {
-  const { scene, registry } = fixture();
-  const camera = new Camera();
-  for (const room of cfg.map.rooms) {
-    const min = camera.worldToScreen({ x: room.x, y: room.y });
-    const max = camera.worldToScreen({
-      x: room.x + room.width,
-      y: room.y + room.height,
-    });
-    const furniture = scene.queue.commands.filter(
-      (c) =>
-        c.kind === "asset" &&
-        c.id.startsWith(`room/${room.id}/`) &&
-        c.assetId.startsWith("furniture/"),
-    );
-    assert.ok(furniture.length >= 2);
-    for (const c of furniture) {
-      assert.ok(c.kind === "asset");
-      const b = commandBounds(c, registry, camera);
-      assert.ok(
-        b.x >= min.x &&
-          b.y >= min.y &&
-          b.x + b.width <= max.x &&
-          b.y + b.height <= max.y,
-        c.id,
-      );
-    }
-  }
+  assert.equal(commands.filter((c) => c.kind === "room").length, 0);
+  assert.ok(!commands.some((c) => c.kind === "asset" && c.assetId.startsWith("wall/")));
+  assert.ok(commands.some((c) => c.kind === "line" && c.id.endsWith("/sill")));
 });
 test("readability: round badge paints an opaque background and centred readable text even when zoomed out", () => {
   const { registry, scene } = fixture();

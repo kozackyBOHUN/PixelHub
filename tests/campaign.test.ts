@@ -3,14 +3,14 @@ import { gzipSync } from "node:zlib";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import cfg, { room } from "../src/config.ts";
-import { CampaignGame, station, sorterOutputs } from "../src/campaign-game.ts";
+import { CampaignGame, station } from "../src/campaign-game.ts";
 import {
   campaign,
   validateCampaign,
   priorityMultiplier,
 } from "../src/campaign.ts";
 import { serialize, restore } from "../src/save.ts";
-import { drain, solveRound } from "../src/developer.ts";
+import { drain, solveRound, prepareRound } from "../src/developer.ts";
 import type { Crate } from "../src/simulation.ts";
 function crate(id: string, loc: Crate["loc"]): Crate {
   return {
@@ -24,11 +24,11 @@ function crate(id: string, loc: Crate["loc"]): Crate {
     loc,
   };
 }
-test("0.2 concrete manifests: 30 rounds, 696 receipts / 696 shipments, carton and ID conservation", () =>
+test("0.3 concrete manifests: 30 rounds, 1010 receipts / 1010 shipments, carton and ID conservation", () =>
   assert.deepEqual(validateCampaign(), {
     rounds: 30,
-    incoming: 696,
-    outgoing: 696,
+    incoming: 1010,
+    outgoing: 1010,
     stock: 0,
   }));
 test("0.2 rooms are centered 12×3 inside 20×6; 84 non-social cells", () => {
@@ -61,7 +61,7 @@ test("0.2 CMR docking is player-selected, capacity respected, no repeat acceptan
 test("0.2 four independent markers and configured priority thresholds survive serialization", () => {
   const g = new CampaignGame();
   const c = {
-    ...crate("markers", { kind: "floor", x: 3, y: 5 }),
+    ...crate("markers", { kind: "floor", x: 3, y: 3 }),
     dueRound: 5,
     temperature: "frozen" as const,
     condition: "damaged" as const,
@@ -88,7 +88,7 @@ test("0.2 save mid-lift restores exact route, progress and one-time payments", (
   g.step(1.1);
   g.selectWorker();
   assert.ok(g.choose(g.crates[0].id));
-  assert.ok(g.order({ kind: "floor", x: 3, y: 5 }));
+  assert.ok(g.order({ kind: "floor", x: 3, y: 3 }));
   for (let i = 0; i < 3000 && g.task?.phase !== "LIFT"; i++) g.step(0.05);
   assert.equal(g.task?.phase, "LIFT");
   g.step(0.2);
@@ -111,24 +111,28 @@ test("0.2 damaged/unknown-version save reports an error", () => {
 test("0.2 upgrades change traversable area and are charged once", () => {
   const g = new CampaignGame();
   assert.equal(g.free()({ x: 8, y: -3 }), false);
-  assert.equal(g.buy("expansion"), false);
-  g.round = 5;
+  assert.equal(g.buyModule("storage"), false);
+  g.status = "summary";
   g.money(300, "fixture");
+  assert.ok(g.beginDevelopment());
   const before = g.cash;
-  assert.ok(g.buy("expansion"));
+  assert.ok(g.buyModule("storage"));
   assert.equal(g.cash, before - 200);
   assert.equal(g.free()({ x: 8, y: -3 }), true);
-  assert.equal(g.buy("expansion"), false);
-  assert.equal(g.cash, before - 200);
-  assert.equal(g.free()({ x: 4, y: 3 }), false);
+  assert.ok(g.buyModule("storage"));
+  assert.equal(g.cash, before - 600);
+  assert.equal(g.free()({ x: 4, y: 3 }), true);
 });
 test("0.2 independent workers reserve pallets and paths; both physically finish", () => {
   const g = new CampaignGame();
-  g.round = 6;
+  g.round = 5;
   g.startRound();
+  g.status = "summary";
   g.money(1000, "fixture");
-  assert.ok(g.buy("expansion"));
+  assert.ok(g.beginDevelopment());
+  assert.ok(g.buyModule("storage"));
   assert.ok(g.buy("worker"));
+  g.nextRound();
   g.accept();
   g.step(1.1);
   const a = g.workers[0],
@@ -138,60 +142,26 @@ test("0.2 independent workers reserve pallets and paths; both physically finish"
   assert.equal(g.freeFor(b)(a.pose), false);
   a.selectWorker();
   assert.ok(a.choose(g.crates[0].id));
-  assert.ok(a.order({ kind: "floor", x: 3, y: 5 }));
+  assert.ok(a.order({ kind: "floor", x: 3, y: 3 }));
   b.selectWorker();
   assert.equal(b.choose(g.crates[0].id), false);
-  const other = crate("parallel", { kind: "floor", x: 16, y: 5 });
+  const other = crate("parallel", { kind: "floor", x: 16, y: 3 });
   g.crates.push(other);
   assert.ok(b.choose(other.id));
-  assert.ok(b.order({ kind: "floor", x: 16, y: -1 }), b.message);
+  assert.ok(b.order({ kind: "floor", x: 15, y: -1 }), b.message);
   assert.ok(a.task && b.task);
   drain(g);
   assert.equal(a.task, null);
   assert.equal(b.task, null);
-  assert.deepEqual(other.loc, { kind: "floor", x: 16, y: -1 });
+  assert.deepEqual(other.loc, { kind: "floor", x: 15, y: -1 });
   assert.equal(new Set(g.crates.map((c) => c.id)).size, g.crates.length);
-});
-test("0.2 MIX buffers retain goods until both inputs and free output cells exist", () => {
-  const g = new CampaignGame();
-  g.round = 8;
-  g.startRound();
-  g.purchased = ["expansion", "sorter"];
-  const r = g.config.recipes[0];
-  const a = g.createPallet(
-    g.config.pallets.find((p) => p.id === r.inputs[0])!,
-    { kind: "floor", ...station.sorter },
-  );
-  g.crates.push(a);
-  g.processStations();
-  assert.equal(a.loc.kind, "processing");
-  assert.equal(g.crates.length, 1);
-  const b = g.createPallet(
-    g.config.pallets.find((p) => p.id === r.inputs[1])!,
-    { kind: "floor", ...station.sorter },
-  );
-  const blocker = crate("blocker", { kind: "floor", ...sorterOutputs[0] });
-  g.crates.push(b, blocker);
-  g.processStations();
-  assert.equal(g.completedRecipes.length, 0);
-  assert.equal(b.loc.kind, "processing");
-  blocker.loc = { kind: "floor", x: 3, y: 5 };
-  g.processStations();
-  assert.equal(g.completedRecipes.length, 1);
-  assert.equal(g.stock.length, 3);
-  const count = g.crates.length;
-  g.processStations();
-  assert.equal(g.crates.length, count);
-  assert.deepEqual(
-    r.outputs.map((o) => g.crates.find((c) => c.id === o.id)?.color),
-    r.outputs.map((o) => o.color),
-  );
 });
 test("0.2 frozen/damaged and chilled/return statuses require separate service and temperature steps", () => {
   const g = new CampaignGame();
   g.round = 17;
   g.startRound();
-  g.purchased = ["expansion", "chiller", "freezer", "service"];
+  g.levels.storage = 2;
+  g.purchased = ["chiller", "freezer", "service"];
   const c = {
     ...crate("special", { kind: "floor", ...station.service }),
     condition: "damaged" as const,
@@ -201,9 +171,10 @@ test("0.2 frozen/damaged and chilled/return statuses require separate service an
   g.processStations();
   assert.equal(c.condition, "standard");
   assert.equal(c.climateStored, false);
-  assert.equal(g.zoneAt({ x: 1, y: -4 }), "chilled");
-  assert.equal(g.zoneAt({ x: 11, y: -4 }), "frozen");
-  c.loc = { kind: "floor", x: 11, y: -4 };
+  g.coldCells = [{ x: 4, y: -4 }];
+  assert.equal(g.zoneAt({ x: 4, y: -4 }), "chilled");
+  assert.equal(g.zoneAt({ x: 12, y: -4 }), "frozen");
+  c.loc = { kind: "floor", x: 12, y: -4 };
   g.processStations();
   assert.equal(c.climateStored, true);
 });
@@ -211,28 +182,30 @@ test("0.2 shipping rejects nonexistent, wrong, unsorted, untreated or warm cargo
   const g = new CampaignGame();
   g.round = 2;
   g.startRound();
-  g.dockCMR(g.config.departures[0].id);
-  g.step(1.1);
-  const c = crate("wrong", { kind: "floor", x: 16, y: 5 });
+  const red = crate("red", { kind: "floor", x: 3, y: 3 });
+  red.color = "red";
+  g.crates.push(red);
+  const c = crate("wrong", { kind: "floor", x: 16, y: 3 });
   c.color = "pink";
+  c.dispatchRound = 4;
   g.crates.push(c);
   g.selectWorker();
   g.source = c.id;
   assert.equal(g.order({ kind: "outbound", lane: 0, depth: 1 }), false);
   assert.equal(g.dispatch(), false);
-  assert.equal(g.crates.length, 1);
+  assert.equal(g.crates.length, 2);
 });
 test("0.2 settlement cannot be forced by a button or elapsed time", () => {
   const g = new CampaignGame();
   g.step(10000);
-  assert.equal(g.cash, 50);
+  assert.equal(g.cash, cfg.economy.campaignInitialCash);
   assert.equal(g.completeRound(), false);
   assert.equal(g.round, 1);
   assert.equal(g.status, "playing");
 });
 test(
-  "0.2 complete physical campaign 1–30, inventory continuity, save/load and settlement idempotence",
-  { timeout: process.env.CI ? 900000 : 600000 },
+  "0.3 complete physical campaign 1–30, inventory continuity, save/load and settlement idempotence",
+  { timeout: 1800000 },
   async () => {
     let g = new CampaignGame();
     let prevStock = 0;
@@ -268,7 +241,7 @@ test(
         id: c.id,
         loc: structuredClone(c.loc),
       }));
-      g.nextRound();
+      if (g.status !== "won") prepareRound(g);
       assert.deepEqual(
         g.stock.map((c) => ({ id: c.id, loc: c.loc })),
         positions,
@@ -279,7 +252,7 @@ test(
         "public/campaign-scenarios.json.gz",
         gzipSync(
           JSON.stringify({
-            version: 3,
+            version: 9,
             campaign: JSON.stringify(campaign),
             scenarios,
           }),
@@ -290,7 +263,7 @@ test(
     assert.equal(g.stock.length, 0);
     assert.equal(
       g.crates.filter((c) => c.loc.kind === "delivered").length,
-      696,
+      1010,
     );
   },
 );
@@ -298,7 +271,9 @@ test("0.2 second ramp has independent cargo slots and supports real unloading", 
   const g = new CampaignGame();
   g.round = 19;
   g.startRound();
-  g.purchased = ["expansion", "ramps"];
+  g.levels.receiving = 2;
+  g.money(3000, "Test");
+  prepareRound(g);
   assert.ok(g.dockCMR(g.config.arrivals[0].id, 0));
   assert.ok(g.dockCMR(g.config.arrivals[1].id, 1));
   g.step(1.1);

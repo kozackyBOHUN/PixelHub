@@ -31,6 +31,8 @@ jobs:
         run: npm test
       - name: Build game and check types
         run: npm run build
+        env:
+          VITE_BUILD_COMMIT: ${{ github.sha }}
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload game

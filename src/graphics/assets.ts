@@ -262,6 +262,11 @@ export function createRegistry() {
     ...asset("jack/default/handle", 16, 8, 0, 4, "handle", "#b38a39"),
     attachmentPoints: { start: { x: 0, y: 4 }, end: { x: 14, y: 4 } },
   });
+  r.register({
+    ...r.get("jack/default/body"),
+    id: "jack/piesek/body",
+    path: "assets/pallet-jacks/piesek/body.png",
+  });
   const colors = {
     gray: "#99aaa9",
     red: "#cc7774",

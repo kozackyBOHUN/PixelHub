@@ -34,7 +34,7 @@ with sync_playwright() as p:
       const commands=r.lastCommands;
       const boxes=commands.filter(c=>c.kind==='asset'&&c.id.endsWith('/box'));
       assert(boxes.every(c=>!c.angle),'tilted box');
-      assert(boxes.every(c=>c.assetId!=='cargo/box/gray'),'future pallet loses destination colour');
+      assert(boxes.filter(c=>c.assetId==='cargo/box/gray').length===23,'retained cargo must be gray');
       const due=commands.filter(c=>c.kind==='badge');assert(due.length>=20,'missing round badges');
       const roomPanels=commands.filter(c=>c.kind==='room');assert(roomPanels.length===4,'missing room partitions');
       assert(!commands.some(c=>c.kind==='asset'&&c.assetId.startsWith('wall/')),'tall wall over usable tiles');

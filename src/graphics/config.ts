@@ -35,6 +35,14 @@ export class Camera {
   zoom = 1;
   pan: Point = { x: 0, y: 0 };
   bounds: Bounds = { minX: -4, minY: -1, maxX: 24, maxY: 7 };
+  viewport: Point | null = null;
+  private get origin() {
+    if (!this.viewport) return { x: GRAPHICS.margin, y: GRAPHICS.margin };
+    return {
+      x: (this.width - (this.bounds.maxX - this.bounds.minX) * this.tile) / 2,
+      y: (this.height - (this.bounds.maxY - this.bounds.minY) * this.tile) / 2,
+    };
+  }
   get scale() {
     return GRAPHICS.baseScale * this.zoom;
   }
@@ -42,11 +50,13 @@ export class Camera {
     return GRAPHICS.sourceTile * this.scale;
   }
   get width() {
+    if (this.viewport) return this.viewport.x;
     return Math.ceil(
       (this.bounds.maxX - this.bounds.minX) * this.tile + 2 * GRAPHICS.margin,
     );
   }
   get height() {
+    if (this.viewport) return this.viewport.y;
     return Math.ceil(
       (this.bounds.maxY - this.bounds.minY) * this.tile + 2 * GRAPHICS.margin,
     );
@@ -64,14 +74,14 @@ export class Camera {
   }
   worldToScreen(p: Point): Point {
     return {
-      x: GRAPHICS.margin + (p.x - this.bounds.minX) * this.tile + this.pan.x,
-      y: GRAPHICS.margin + (p.y - this.bounds.minY) * this.tile + this.pan.y,
+      x: this.origin.x + (p.x - this.bounds.minX) * this.tile + this.pan.x,
+      y: this.origin.y + (p.y - this.bounds.minY) * this.tile + this.pan.y,
     };
   }
   screenToWorld(p: Point): Point {
     return {
-      x: (p.x - GRAPHICS.margin - this.pan.x) / this.tile + this.bounds.minX,
-      y: (p.y - GRAPHICS.margin - this.pan.y) / this.tile + this.bounds.minY,
+      x: (p.x - this.origin.x - this.pan.x) / this.tile + this.bounds.minX,
+      y: (p.y - this.origin.y - this.pan.y) / this.tile + this.bounds.minY,
     };
   }
   screenToGrid(p: Point): Point {
@@ -99,8 +109,8 @@ export class Camera {
     const point = this.screenToWorld(pivot);
     this.zoom = zoom;
     this.pan = {
-      x: pivot.x - GRAPHICS.margin - (point.x - this.bounds.minX) * this.tile,
-      y: pivot.y - GRAPHICS.margin - (point.y - this.bounds.minY) * this.tile,
+      x: pivot.x - this.origin.x - (point.x - this.bounds.minX) * this.tile,
+      y: pivot.y - this.origin.y - (point.y - this.bounds.minY) * this.tile,
     };
   }
   reset() {

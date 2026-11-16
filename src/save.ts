@@ -1,4 +1,3 @@
-import { campaign } from "./campaign.ts";
 import { CampaignGame, WarehouseWorker } from "./campaign-game.ts";
 import type { Game } from "./simulation.ts";
 const workerKeys = [
@@ -18,7 +17,28 @@ const gameKeys = [
   "crates",
   "ledger",
   "purchased",
+  "levels",
+  "queues",
+  "contracts",
+  "thermalBonuses",
+  "contractLoads",
+  "coldStock",
+  "coldCells",
   "cmrs",
+  "trucks",
+  "tripHistory",
+  "tripSequence",
+  "fleetCapacity",
+  "pendingFleet",
+  "sorter",
+  "extraSorters",
+  "sorterJobs",
+  "shipped",
+  "pendingWorkers",
+  "developmentRound",
+  "ledgerStart",
+  "roundMetrics",
+  "settlement",
   "settled",
   "completedRecipes",
   "roundStarted",
@@ -37,20 +57,20 @@ function checksum(text: string) {
     h = Math.imul(h ^ text.charCodeAt(i), 16777619);
   return (h >>> 0).toString(16);
 }
-export const SAVE_KEY = "pixelhub-0.2-campaign";
+export const SAVE_KEY = "pixelhub-0.3-balance-campaign";
 export function serialize(game: CampaignGame) {
   game.assertInvariant();
   const payload = JSON.stringify({
     game: fields(game, gameKeys),
     workers: game.workers.map((w) => fields(w, workerKeys)),
   });
-  return JSON.stringify({ version: 3, checksum: checksum(payload), payload });
+  return JSON.stringify({ version: 9, checksum: checksum(payload), payload });
 }
 export function restore(raw: string): CampaignGame {
   try {
     const envelope = JSON.parse(raw);
     if (
-      ![2, 3].includes(envelope.version) ||
+      ![8, 9].includes(envelope.version) ||
       typeof envelope.payload !== "string" ||
       checksum(envelope.payload) !== envelope.checksum
     )
@@ -67,7 +87,9 @@ export function restore(raw: string): CampaignGame {
       saved.round > 30 ||
       !Number.isFinite(saved.time) ||
       saved.time < 0 ||
-      !["playing", "summary", "won", "lost"].includes(saved.status) ||
+      !["playing", "summary", "development", "won", "lost"].includes(
+        saved.status,
+      ) ||
       !Array.isArray(saved.crates) ||
       !Array.isArray(saved.ledger) ||
       !Array.isArray(saved.purchased) ||
@@ -76,37 +98,37 @@ export function restore(raw: string): CampaignGame {
       !Array.isArray(saved.completedRecipes)
     )
       throw Error("schemat");
-    if (envelope.version === 2) {
-      const specs = campaign.flatMap((r) => [
-        ...r.pallets,
-        ...r.recipes.flatMap((x) => x.outputs),
-      ]);
-      for (const c of saved.crates) {
-        const spec = specs.find((p) => p.id === c.id);
-        c.destinationColor =
-          c.destinationColor ??
-          (c.color === "gray" ? (spec?.destinationColor ?? "red") : c.color);
-        c.color = c.destinationColor;
-        c.dispatchRound =
-          c.dispatchRound ?? c.dueRound ?? spec?.dispatchRound ?? saved.round;
-        c.active = c.dispatchRound <= saved.round;
-      }
-      for (const m of saved.cmrs)
-        if (m.kind === "outbound") {
-          const config = campaign[saved.round - 1].departures.find(
-            (x) => x.id === m.id,
-          );
-          if (!config) throw Error("CMR migracja");
-          m.requirements = structuredClone(config.requirements);
-          if (["done", "departing"].includes(m.state))
-            m.shippedPalletIds = m.palletIds;
-          m.palletIds = [];
-        }
-    }
+    if (
+      !saved.levels ||
+      !["receiving", "storage", "shipping"].every(
+        (zone) =>
+          Number.isSafeInteger(saved.levels[zone]) &&
+          saved.levels[zone] >= 1 &&
+          saved.levels[zone] <= 47,
+      )
+    )
+      throw Error("Poziomy magazynu");
+    if (saved.roundMetrics && !Array.isArray(saved.roundMetrics.priorityIds))
+      saved.roundMetrics.priorityIds = [];
+    if (
+      !Array.isArray(saved.trucks) ||
+      !Array.isArray(saved.shipped) ||
+      !Array.isArray(saved.pendingWorkers) ||
+      saved.pendingWorkers.length + parsed.workers.length > 4 ||
+      (saved.status === "development" &&
+        ![saved.round, saved.round + 1].includes(saved.developmentRound))
+    )
+      throw Error("stan wysyłek lub rozwoju");
     const game = new CampaignGame();
     for (const k of gameKeys)
       if (k in saved)
         (game as unknown as Record<string, unknown>)[k] = saved[k];
+    if (envelope.version === 8 && game.purchased.includes("chiller"))
+      game.coldCells = (
+        game.purchased.includes("climate") ? [-4, -1, -8, -5] : [-4, -1]
+      )
+        .flatMap((y) => [4, 5, 6, 7].map((x) => ({ x, y })))
+        .filter((p) => game.contains(p));
     game.workers = [
       game,
       ...parsed.workers.slice(1).map(() => new WarehouseWorker(game)),
@@ -140,7 +162,7 @@ export function restore(raw: string): CampaignGame {
     return game;
   } catch (error) {
     throw Error(
-      `Nie można wczytać zapisu PixelHub 0.2: ${error instanceof Error ? error.message : "uszkodzone dane"}. Zapis nie został nadpisany.`,
+      `Nie można wczytać zapisu PixelHub 0.3: ${error instanceof Error ? error.message : "uszkodzone dane"}. Zapis nie został nadpisany.`,
     );
   }
 }

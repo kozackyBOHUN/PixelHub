@@ -2,128 +2,136 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CampaignGame, WarehouseWorker } from "../src/campaign-game.ts";
 import type { Crate } from "../src/simulation.ts";
-import { displayColor, matchCargo } from "../src/shipments.ts";
-import { campaign, validateCampaign } from "../src/campaign.ts";
+import { displayColor, remainingRounds } from "../src/shipments.ts";
+import type { DestinationColor } from "../src/shipments.ts";
+import { campaign, validateCampaign, upgrades } from "../src/campaign.ts";
 import { serialize, restore } from "../src/save.ts";
-function pallet(id: string, color: Crate["color"] = "red", due = 2): Crate {
+
+function pallet(
+  id: string,
+  color: DestinationColor = "red",
+  due = 2,
+  x = 3,
+): Crate {
   return {
     id,
     color,
-    destinationColor: color as "red",
+    destinationColor: color,
     dispatchRound: due,
     temperature: "standard",
     condition: "standard",
     active: due <= 2,
-    paid: false,
-    loc: { kind: "floor", x: 0, y: 0 },
+    paid: true,
+    loc: { kind: "floor", x, y: 3 },
   };
 }
 function fixture() {
   const g = new CampaignGame();
   g.round = 2;
   g.startRound();
-  const m = g.cmrs.find((m) => m.kind === "outbound")!;
-  m.requirements = [{ color: "red", quantity: 2 }];
-  g.dockCMR(m.id);
-  g.step(1.1);
-  return { g, m };
+  const red = pallet("red");
+  g.crates.push(red);
+  return { g, red, truck: g.shippingAt()! };
 }
-function load(c: Crate, lane: number, depth = 0) {
-  c.loc = { kind: "outbound", lane, depth, bay: 0 };
-}
-test("A any pair of three different ready red physical IDs satisfies the same CMR", () => {
-  for (const pair of [
-    [0, 1],
-    [0, 2],
-    [1, 2],
-  ]) {
-    const { g, m } = fixture();
-    const cs = ["a", "b", "c"].map((id) => pallet(id));
-    g.crates.push(...cs);
-    pair.forEach((i, n) => {
-      assert.ok(g.canLoad(m, cs[i]));
-      load(cs[i], n);
-    });
-    assert.ok(g.progress(m).complete);
-    assert.ok(g.dispatchBay());
-    assert.deepEqual(
-      new Set(m.shippedPalletIds),
-      new Set(pair.map((i) => cs[i].id)),
-    );
-  }
-});
-test("B future red remains gray and cannot satisfy or reserve a present red order", () => {
-  const { g, m } = fixture();
-  const now = pallet("now"),
-    future = pallet("future", "red", 4);
-  g.crates.push(now, future);
-  assert.equal(displayColor(future, 2), "gray");
-  assert.ok(g.canLoad(m, now));
-  assert.equal(g.canLoad(m, future), false);
-  g.source = future.id;
-  assert.equal(g.validOrder(g, { kind: "outbound", lane: 0, depth: 0 }), false);
-});
-test("C date automatically exposes destination color and permits shipping at the due round", () => {
-  const { g, m } = fixture();
-  const c = pallet("later", "red", 4);
-  g.crates.push(c);
-  g.round = 4;
-  assert.equal(displayColor(c, g.round), "red");
-  assert.ok(g.canLoad(m, c));
-});
-test("D/E color ticks reflect physical cargo, unloading reverses progress, fourth red rejected", () => {
-  const { g, m } = fixture();
-  m.requirements = [
-    { color: "red", quantity: 3 },
-    { color: "blue", quantity: 2 },
-  ];
-  const cs = [
-    pallet("b", "blue"),
-    pallet("r1"),
-    pallet("r2"),
-    pallet("r3"),
-    pallet("b2", "blue"),
-    pallet("r4"),
-  ];
-  g.crates.push(...cs);
-  for (let i = 0; i < 5; i++) {
-    assert.ok(g.canLoad(m, cs[i]));
-    load(cs[i], i % 2, Math.floor(i / 2));
-    assert.equal(g.progress(m).loaded, i + 1);
-  }
-  assert.deepEqual(g.progress(m).counts, [3, 2]);
-  assert.equal(g.canLoad(m, cs[5]), false);
-  cs[1].loc = { kind: "floor", x: 0, y: 0 };
-  assert.deepEqual(g.progress(m).counts, [2, 2]);
-  assert.ok(g.canLoad(m, cs[5]));
-});
-test("F save/load preserves physical load, colors, dates and derived CMR progress", () => {
-  const { g, m } = fixture();
-  const a = pallet("actual"),
-    b = pallet("held", "blue", 4);
-  load(a, 0);
-  b.loc = { kind: "floor", x: 1, y: 5 };
-  g.crates.push(a, b);
-  const restored = restore(serialize(g));
-  assert.deepEqual(restored.crates, g.crates);
-  assert.deepEqual(
-    restored.progress(restored.cmrs.find((x) => x.id === m.id)!),
-    g.progress(m),
-  );
-  assert.equal(displayColor(restored.crates[1], 2), "gray");
+const slot = { kind: "outbound", lane: 0, depth: 1, bay: 0 } as const;
+test("A/E ready red cargo can use the owned truck regardless of physical identifier", () => {
+  const { g, red, truck } = fixture();
+  const second = pallet("independent-id", "red", 2, 2);
+  g.crates.push(second);
+  assert.ok(g.canLoad(truck, red));
+  assert.ok(g.canLoad(truck, second));
+  g.selectWorker();
+  assert.ok(g.choose(red.id), g.message);
+  assert.ok(g.order(slot), g.message);
+  g.advance(200);
+  assert.deepEqual(red.loc, g.locateSlot(slot));
+  assert.ok(g.dispatchBay());
+  assert.equal(g.shipped.length, 0, "departure animation has not finished");
+  const loaded = restore(serialize(g));
+  loaded.step(45.1);
+  assert.deepEqual(loaded.shipped, [red.id]);
   assert.equal(
-    restored.canLoad(
-      restored.cmrs.find((x) => x.id === m.id)!,
-      restored.crates[1],
-    ),
+    loaded.crates.find((c) => c.id === red.id)?.loc.kind,
+    "delivered",
+  );
+  assert.ok(loaded.stock.some((c) => c.id === second.id));
+  assert.equal(loaded.dispatchBay(), false);
+});
+test("B/C mixed colors are accepted and gray cargo is refused", () => {
+  const { g, truck } = fixture();
+  const blue = pallet("blue", "blue");
+  const held = pallet("held", "red", 4);
+  assert.equal(displayColor(held, 2), "gray");
+  assert.equal(remainingRounds(held, 2), 2);
+  assert.equal(g.canLoad(truck, blue), true);
+  assert.equal(g.canLoad(truck, held), false);
+  assert.equal(
+    g.canLoad(truck, {
+      ...held,
+      dispatchRound: 2,
+      mix: [{ color: "red", cartons: 4 }],
+    }),
+    false,
+  );
+  assert.equal(
+    g.canLoad(truck, { ...held, dispatchRound: 2, condition: "damaged" }),
+    false,
+  );
+  assert.equal(
+    g.canLoad(truck, { ...held, dispatchRound: 2, temperature: "frozen" }),
     false,
   );
 });
-test("G round 3 has independently selectable arrival cargo 8/8/4", () => {
+test("D two phase transitions reveal the destination and permit shipping", () => {
+  const { g } = fixture();
+  const held = pallet("later", "red", 4, 2);
+  g.crates.push(held);
+  for (let round = 3; round <= 4; round++) {
+    g.status = "summary";
+    assert.ok(g.beginDevelopment());
+    g.nextRound();
+    assert.equal(g.round, round);
+    assert.equal(remainingRounds(held, round), 4 - round);
+  }
+  assert.equal(displayColor(held, 4), "red");
+  assert.ok(g.canLoad(g.shippingAt()!, held));
+});
+test("F finishing round 2 depends on arrivals and dispatched pallets, without outgoing CMR", () => {
+  const { g, red } = fixture();
+  const blue = pallet("blue", "blue", 2, 2);
+  g.crates.push(blue);
+  for (let i = 0; i < 8; i++)
+    g.crates.push(pallet(`stock-${i}`, "red", 4, [1, 2, 3, 4, 12, 16, 17, 18][i]));
+  g.cmrs.forEach((m) => (m.state = "done"));
+  assert.equal(g.roundReady, false);
+  red.loc = { ...slot };
+  assert.ok(g.dispatchBay());
+  g.step(31.2);
+  g.step(1.1);
+  assert.equal(g.roundReady, false);
+  blue.loc = { ...slot };
+  assert.ok(g.dispatchBay());
+  g.step(31.2);
+  g.step(1.1);
+  assert.equal(g.roundReady, false);
+  assert.equal(
+    g.cmrs.some((m) => String(m.kind) === "outbound"),
+    false,
+  );
+  assert.equal(g.status, "summary");
+  assert.equal(g.completeRound(), false);
+  assert.equal(g.settlement?.sent, 2);
+  assert.equal(g.settlement?.wages, 20);
+  const cash = g.cash;
+  assert.equal(restore(serialize(g)).completeRound(), false);
+  assert.equal(g.cash, cash);
+});
+test("round 3 has selectable arrival cargo 8/8/4; all 30 dispatch schedules balance", () => {
   assert.deepEqual(
     campaign[2].arrivals.map((m) => m.palletIds.length),
     [8, 8, 4],
   );
+  assert.equal(validateCampaign().outgoing, 1010);
   for (const index of [2, 0, 1]) {
     const g = new CampaignGame();
     g.round = 3;
@@ -132,66 +140,107 @@ test("G round 3 has independently selectable arrival cargo 8/8/4", () => {
     assert.equal(g.crates.length, [8, 8, 4][index]);
   }
 });
-test("H all30 color manifests balance, no gray destination or ID based outgoing orders", () => {
-  assert.equal(validateCampaign().outgoing, 696);
-  for (const r of campaign) {
-    for (const m of r.departures) {
-      assert.equal(m.palletIds.length, 0);
-      assert.ok(m.requirements?.length);
-    }
-    for (const c of [...r.pallets, ...r.recipes.flatMap((x) => x.outputs)]) {
-      assert.notEqual(c.destinationColor, "gray");
-      assert.equal(c.dispatchRound, c.dueRound);
-    }
-  }
-});
-test("concurrent workers reserve the remaining color quota before physical loading", () => {
-  const { g, m } = fixture();
-  m.requirements = [{ color: "red", quantity: 1 }];
-  const a = pallet("a"),
-    b = pallet("b");
-  g.crates.push(a, b);
+test("concurrent workers cannot reserve the same physical slot", () => {
+  const { g, red } = fixture();
   const other = new WarehouseWorker(g);
+  other.pose = { x: 17, y: 1, d: 4 };
   g.workers.push(other);
-  other.task = {
-    crate: a.id,
-    dest: { kind: "outbound", lane: 0, depth: 0 },
-  } as typeof other.task;
-  assert.equal(g.canLoad(m, b, g), false);
-  other.task = null;
-  assert.ok(g.canLoad(m, b, g));
+  other.task = { crate: "other", dest: slot } as typeof other.task;
+  g.source = red.id;
+  assert.equal(g.validOrder(g, slot), false);
+  assert.match(g.message, /zarezerwowany/);
 });
-test("explicit thermal requirements are matched separately and duplicate physical cargo is rejected", () => {
-  const req = [
-    { color: "red" as const, quantity: 1 },
-    { color: "red" as const, quantity: 1, temperature: "chilled" as const },
-  ];
-  const a = pallet("cold"),
-    b = pallet("normal");
-  a.temperature = "chilled";
-  a.climateStored = true;
-  assert.ok(matchCargo(req, [a, b], 2).complete);
-  assert.equal(matchCargo(req, [b, b], 2).complete, false);
-});
-test("legacy v2 saves migrate gray destination and dispatched evidence without moving cargo", () => {
-  const { g, m } = fixture();
-  const c = pallet("R01-P001");
-  c.color = "gray";
-  delete c.destinationColor;
-  delete c.dispatchRound;
-  c.dueRound = 2;
-  load(c, 0);
-  g.crates.push(c);
-  m.palletIds = [c.id];
-  delete m.requirements;
-  const env = JSON.parse(serialize(g));
-  env.version = 2;
-  const loaded = restore(JSON.stringify(env));
+function legacySave(game: CampaignGame, version: 2 | 3, outgoing: object[]) {
+  const envelope = JSON.parse(serialize(game));
+  const payload = JSON.parse(envelope.payload);
+  payload.game.cmrs.push(...outgoing);
+  for (const field of [
+    "trucks",
+    "shipped",
+    "pendingWorkers",
+    "developmentRound",
+    "ledgerStart",
+    "roundMetrics",
+    "settlement",
+  ])
+    delete payload.game[field];
+  const text = JSON.stringify(payload);
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i++)
+    hash = Math.imul(hash ^ text.charCodeAt(i), 16777619);
+  return JSON.stringify({
+    version,
+    payload: text,
+    checksum: (hash >>> 0).toString(16),
+  });
+}
+for (const version of [2, 3] as const) {
+  test("legacy geometry is not silently loaded as modular geometry", () => {
+    assert.throws(() => restore(JSON.stringify({ version })), /wersja/);
+  });
+}
+test("development is exclusive, purchases persist and hiring starts next round", () => {
+  const g = new CampaignGame();
+  g.round = 5;
+  g.startRound();
+  assert.equal(g.buyModule("storage"), false);
+  g.status = "summary";
+  assert.ok(g.beginDevelopment());
+  assert.equal(g.cash, 585);
+  g.money(1000, "fixture");
+  assert.ok(g.buyModule("storage"));
+  assert.ok(g.buy("worker"));
+  assert.equal(g.workers.length, 1);
+  assert.equal(g.levels.storage, 2);
+  const saved = restore(serialize(g));
+  assert.equal(saved.status, "development");
   assert.equal(
-    loaded.crates[0].destinationColor,
-    campaign[0].pallets[0].destinationColor,
+    saved.cash,
+    1585 - 200 - upgrades.worker.cost,
   );
-  assert.deepEqual(loaded.crates[0].loc, c.loc);
-  assert.ok(loaded.cmrs.find((x) => x.id === m.id)!.requirements?.length);
-  assert.equal(loaded.crates[0].dispatchRound, 2);
+  assert.equal(saved.pendingWorkers.length, 1);
+  saved.nextRound();
+  assert.equal(saved.round, 6);
+  assert.equal(saved.workers.length, 2);
+  assert.equal(saved.minY, -4);
+  assert.equal(saved.buy("worker"), false);
+  saved.nextRound();
+  assert.equal(saved.round, 6);
+});
+test("skip a development phase and recover missing equipment before accepting cargo", () => {
+  const g = new CampaignGame();
+  g.round = 7;
+  g.startRound();
+  g.status = "summary";
+  g.money(1000, "fixture");
+  g.levels.storage = 2;
+  assert.ok(g.beginDevelopment());
+  g.nextRound();
+  assert.equal(g.round, 8);
+  const id = g.cmrs[0].id;
+  assert.equal(g.dockCMR(id), false);
+  assert.ok(g.beginDevelopment());
+  assert.ok(g.installSorter(g.findSorterSite()!), g.message);
+  g.nextRound();
+  assert.equal(g.round, 8);
+  assert.ok(g.purchased.includes("sorter"));
+  assert.ok(g.dockCMR(id));
+});
+
+test("bankruptcy at settlement excludes the shop and next round", () => {
+  const g = new CampaignGame();
+  g.money(10 - g.cash, "fixture");
+  const other = new WarehouseWorker(g);
+  other.pose = { x: 17, y: 1, d: 4 };
+  g.workers.push(other);
+  for (const [i, x] of [1, 2, 3, 16].entries())
+    g.crates.push(pallet(`stock-${i}`, "red", 2, x));
+  g.cmrs.forEach((m) => (m.state = "done"));
+  assert.ok(g.completeRound());
+  assert.equal(g.status, "lost");
+  assert.equal(g.settlement?.wages, 40);
+  assert.equal(g.beginDevelopment(), false);
+  assert.equal(g.buy("worker"), false);
+  g.nextRound();
+  assert.equal(g.round, 1);
 });

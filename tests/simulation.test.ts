@@ -85,7 +85,7 @@ test("E01,E02,E06,E07: idle time and speed do not charge wages; explicit bankrup
 test("D01–D10,E03–E05,E08: play both rounds with normal movement and economy", () => {
   const g = new Game();
   roundOne(g);
-  assert.equal(g.cash, 90);
+  assert.equal(g.cash, 54);
   assert.deepEqual(g.ledger.filter((e) => e.label.startsWith("Pensja")).map((e) => e.amount), [-20]);
   console.log("R1", g.time, g.cash);
   assert.equal(g.ledger.filter((e) => e.label === "Rozładunek").length, 4);
@@ -93,7 +93,7 @@ test("D01–D10,E03–E05,E08: play both rounds with normal movement and economy
     g.ledger
       .filter((e) => e.label === "Przechowanie")
       .reduce((s, e) => s + e.amount, 0),
-    20,
+    4,
   );
   const positions = g.crates.map((c) => JSON.stringify(c.loc)),
     t = g.time;
@@ -134,10 +134,10 @@ test("D01–D10,E03–E05,E08: play both rounds with normal movement and economy
     g.ledger
       .filter((e) => e.label === "Dostawa")
       .reduce((s, e) => s + e.amount, 0),
-    160,
+    112,
   );
   assert.equal(g.ledger.filter((e) => e.label === "Rozładunek").length, 8);
-  assert.equal(g.cash, 270);
+  assert.equal(g.cash, 166);
   assert.deepEqual(g.ledger.filter((e) => e.label.startsWith("Pensja")).map((e) => e.amount), [-20, -20]);
   console.log("R2", g.time, g.cash);
   g.assertInvariant();
@@ -161,7 +161,7 @@ test("B07,D07,D09: own-vehicle unload, single-color partial course and one-time 
   );
   g.advance(0.1);
   assert.equal(g.crates.filter((c) => c.loc.kind === "delivered").length, 1);
-  assert.equal(g.ledger.at(-1)?.amount, 20);
+  assert.equal(g.ledger.at(-1)?.amount, 14);
   assert.equal(g.dispatch(), false);
 });
 test("C06: retain blocked task, resume original route; cancel preserves carried crate", () => {

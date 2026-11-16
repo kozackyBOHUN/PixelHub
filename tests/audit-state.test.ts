@@ -198,7 +198,7 @@ test("mixed-color delivery returns after 45 game seconds across speed changes", 
     game.ledger
       .filter((entry) => entry.label === "Dostawa")
       .map((entry) => entry.amount),
-    [40],
+    [28],
   );
   assert.equal(game.dispatch(), false);
   game.assertInvariant();

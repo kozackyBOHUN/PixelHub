@@ -1,5 +1,3 @@
-import { requirementCount } from "./shipments.ts";
-import type { Requirement } from "./shipments.ts";
 import data from "./campaign-data.json" with { type: "json" };
 import type { Crate } from "./simulation.ts";
 export type PalletSpec = Pick<Crate, "id" | "color"> & {
@@ -16,7 +14,6 @@ export type Manifest = {
   vehicle: string;
   capacity: number;
   palletIds: string[];
-  requirements?: Requirement[];
 };
 export type Recipe = {
   id: string;
@@ -30,7 +27,6 @@ export type RoundConfig = {
   name: string;
   description: string;
   arrivals: Manifest[];
-  departures: Manifest[];
   pallets: PalletSpec[];
   recipes: Recipe[];
   unlocks: string[];
@@ -69,19 +65,43 @@ export function priorityMultiplier(crate: Crate, time: number) {
   ];
 }
 export const upgrades = {
-  expansion: { name: "Rozbudowa hali +120 pól", round: 5, cost: 200 },
-  worker: { name: "Pracownik + paleciak", round: 6, cost: 120 },
-  sorter: { name: "Sorter MIX", round: 8, cost: 160 },
-  chiller: { name: "Chłodnia · 8 miejsc", round: 11, cost: 120 },
+  expansion: { name: "Rozbudowa hali +120 pól", round: 5, cost: 300 },
+  worker: { name: "Pracownik + paleciak", round: 6, cost: 180 },
+  sorter: { name: "Sorter MIX", round: 8, cost: 300 },
+  chiller: { name: "Chłodnia · 4 pola", round: 11, cost: 140 },
   service: { name: "Serwis i kontrola zwrotów", round: 13, cost: 100 },
-  freezer: { name: "Mroźnia · 8 miejsc", round: 16, cost: 160 },
-  expansion2: { name: "Druga rozbudowa +120 pól", round: 18, cost: 240 },
+  freezer: { name: "Mroźnia · 8 miejsc", round: 16, cost: 190 },
+  expansion2: { name: "Druga rozbudowa +120 pól", round: 18, cost: 300 },
+  receivingRamp: { name: "Dodatkowa rampa przyjazdowa", round: 6, cost: 90 },
+  shippingRamp: { name: "Dodatkowa rampa wysyłkowa", cost: 90 },
+  receivingRamp3: { name: "Trzecia rampa przyjazdowa", cost: 90 },
+  shippingRamp3: { name: "Trzecia rampa wysyłkowa", cost: 90 },
   ramps: { name: "Druga para ramp", round: 19, cost: 180 },
   climate: { name: "Powiększenie stref temperatur", round: 22, cost: 140 },
-  equipment: { name: "Sprawniejsze paleciaki · +25%", round: 24, cost: 180 },
+  equipment: { name: "Piesek · elektryczny paleciak", round: 9, cost: 450 },
 } as const;
 export type Upgrade = keyof typeof upgrades;
+export const requiredUpgrades = [
+  "sorter",
+  "chiller",
+  "service",
+  "freezer",
+  "climate",
+] as const;
+export const recipientNames = {
+  red: "Czerwony",
+  blue: "Niebieski",
+  green: "Zielony",
+  yellow: "Żółty",
+  purple: "Fioletowy",
+  orange: "Pomarańczowy",
+  teal: "Turkusowy",
+  pink: "Różowy",
+} as const;
+const shipmentCounts = Array<number>(30).fill(0);
+export const scheduledShipments = (round: number) => shipmentCounts[round - 1];
 export function validateCampaign() {
+  shipmentCounts.fill(0);
   if (campaign.length !== 30) throw Error("Kampania musi mieć 30 rund");
   const all = new Map<string, PalletSpec>();
   const stock = new Set<string>();
@@ -95,16 +115,9 @@ export function validateCampaign() {
       received.length !== r.pallets.length
     )
       throw Error("Manifest przyjazdu");
-    for (const m of [...r.arrivals, ...r.departures])
-      if (
-        (m.requirements
-          ? requirementCount(m.requirements)
-          : m.palletIds.length) > m.capacity ||
-        !(m.requirements
-          ? requirementCount(m.requirements)
-          : m.palletIds.length)
-      )
-        throw Error("Pojemność CMR");
+    for (const m of r.arrivals)
+      if (!m.palletIds.length || m.palletIds.length > m.capacity)
+        throw Error("Pojemność CMR przyjazdowego");
     for (const p of r.pallets) {
       if (
         all.has(p.id) ||
@@ -149,34 +162,18 @@ export function validateCampaign() {
         stock.add(p.id);
       }
     }
-    for (const m of r.departures) {
-      if (!m.requirements?.length || m.palletIds.length)
-        throw Error("Zamówienie kolorów CMR");
-      for (const req of m.requirements) {
-        if (
-          !Number.isInteger(req.quantity) ||
-          req.quantity < 1 ||
-          req.color === ("gray" as string)
-        )
-          throw Error("Wymaganie CMR");
-        for (let n = 0; n < req.quantity; n++) {
-          const id = [...stock].find((id) => {
-            const c = all.get(id)!;
-            return (
-              c.destinationColor === req.color &&
-              c.dispatchRound <= r.number &&
-              (!req.temperature || req.temperature === c.temperature)
-            );
-          });
-          if (!id) throw Error(`Brak koloru ${req.color}, runda ${r.number}`);
-          stock.delete(id);
-          outgoing++;
-        }
-      }
+    for (const id of stock) {
+      const pallet = all.get(id)!;
+      if (pallet.dispatchRound > r.number) continue;
+      if (pallet.mix || pallet.dispatchRound !== r.number)
+        throw Error(`Niewykonalna wysyłka R${r.number}`);
+      stock.delete(id);
+      outgoing++;
+      shipmentCounts[i]++;
     }
     if (stock.size !== r.expectedStock) throw Error("Bilans rundy");
   }
-  if (stock.size || incoming !== 696 || outgoing !== 696)
+  if (stock.size || incoming !== 1010 || outgoing !== 1010)
     throw Error("Bilans finału");
   return { rounds: 30, incoming, outgoing, stock: stock.size };
 }
