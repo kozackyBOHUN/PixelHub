@@ -16,16 +16,22 @@ import {
   requiredUpgrades,
 } from "./campaign.ts";
 import type { Upgrade } from "./campaign.ts";
+import { portraitPath } from "./portraits.ts";
+import { clients, storyEvents } from "./story.ts";
+import type { ClientId } from "./story.ts";
+import { openingServiceFee, storyCampaign } from "./story-campaign.ts";
 import { SAVE_KEY, serialize, restore } from "./save.ts";
 const $ = (id: string) => document.getElementById(id)!;
 const params = new URLSearchParams(location.search),
   dev = params.has("dev") || params.has("test");
-const saveKey = dev ? `${SAVE_KEY}-developer` : SAVE_KEY;
-let game = new CampaignGame(),
+const saveKey = dev ? `${SAVE_KEY}-story-developer` : `${SAVE_KEY}-story`;
+let game = new CampaignGame(true),
   saveError = "",
   autosaveEnabled = true;
 try {
-  const raw = localStorage.getItem(saveKey);
+  const raw =
+    localStorage.getItem(saveKey) ??
+    (!dev ? localStorage.getItem(SAVE_KEY) : null);
   if (raw) game = restore(raw);
 } catch (error) {
   saveError = String(error);
@@ -138,6 +144,19 @@ function clickAt(p: { x: number; y: number }) {
   hudFeedbackUntil = 0;
   const cell = renderer.screenToGrid(p),
     w = game.activeWorker;
+  if (game.isClutter(cell) && !queuedSource && !w.source && !w.carried) {
+    if (game.clean(cell)) {
+      persistProgress();
+      feedback("Pracownik idzie posprzątać pole za 5 USD.");
+    } else
+      feedback(
+        game.cash < 5
+          ? "Sprzątanie kosztuje 5 USD."
+          : "Wybierz wolnego pracownika z dostępem do pola.",
+      );
+    hud();
+    return;
+  }
   if (
     (queuedSource && w.selected) ||
     (w.selected && (w.source || w.carried) && !w.task)
@@ -345,7 +364,7 @@ $("load").onclick = load;
 $("new-game").onclick = () => ($("restart") as HTMLButtonElement).click();
 $("restart").onclick = () => {
   if (confirm("Rozpocząć nową kampanię? Bieżący zapis zostanie zastąpiony.")) {
-    game = new CampaignGame();
+    game = new CampaignGame(true);
     game.dev = dev;
     autosaveEnabled = true;
     save();
@@ -376,6 +395,7 @@ $("development").onclick = () => {
   }
 };
 $("continue").onclick = () => {
+  if (game.storyMode && game.status === "won") game.beginDevelopment();
   game.nextRound();
   chosenCmr = "";
   inspection = "";
@@ -649,8 +669,31 @@ function renderInvestmentCards() {
   );
 }
 function hud() {
+  const note = $("story-note");
+  const tutorial =
+    game.storyMode && game.round === 1 && game.status === "playing";
+  const event =
+    game.storyMode && game.status === "playing"
+      ? storyEvents[game.round]
+      : undefined;
+  note.hidden = !tutorial && !event;
+  if (!tutorial && event && note.textContent !== event)
+    note.textContent = event;
+  if (tutorial) {
+    const cargo = game.cargoFor(0);
+    const quote = quoteDelivery(cargo);
+    const text = game.trucks[0]?.trip
+      ? "Auto wróci pod rampę. Przygotuj pozostałe palety."
+      : game.cmrs[0]?.state === "waiting"
+        ? `Pracownik: Paleciak działa. Kliknij CMR, żeby podstawić ciężarówkę. Wynagrodzenie za całe zlecenie: ${openingServiceFee} USD.`
+        : cargo.length === 4
+          ? `Pełne auto. Kurs: ${quote?.seconds} s, ${quote?.cost} USD. ${quote?.colors.length === 2 ? "Mieszany kurs kosztuje 15 USD więcej. Możesz wyładować paletę i zmienić skład." : "Kliknij Wyślij."}`
+          : "Wybierz pracownika i paletę. Odstaw ją na wolne pole lub załaduj do własnego auta po prawej. Grupuj kolory.";
+    if (note.textContent !== text) note.textContent = text;
+  }
   $("cash").textContent = `${game.cash.toFixed(0)} $`;
-  $("round").textContent = `Runda ${game.round}/30`;
+  $("round").textContent =
+    `Runda ${game.round}${game.round <= 30 ? "/30" : " · Tryb swobodny"}`;
   $("round-name").textContent = game.config.name;
   $("clock").textContent =
     `${Math.floor(game.time / 60)}:${String(Math.floor(game.time % 60)).padStart(2, "0")}`;
@@ -895,9 +938,12 @@ function statGroup(title: string, rows: [string, number, string?][]) {
   return section;
 }
 function renderBriefing(round: number) {
-  const plan = campaign[round - 1];
-  const demand = campaign
-    .slice(0, round)
+  const plan = game.plan(round);
+  const demand = (
+    round > 30
+      ? [plan]
+      : (game.storyMode ? storyCampaign : campaign).slice(0, round)
+  )
     .flatMap((r) => [
       ...r.pallets.filter((p) => !p.mix),
       ...r.recipes.flatMap((r) => r.outputs),
@@ -988,8 +1034,10 @@ function renderBriefing(round: number) {
   };
   for (const offer of game.offers(round)) {
     const count = offer.pallets.length;
+    const storyClient =
+      "client" in offer ? clients[offer.client as ClientId] : undefined;
     const panel = section(
-      names[offer.type],
+      storyClient ? storyClient.company : (names[offer.type] ?? "MIX"),
       count +
         " palet · wysyłka R" +
         round +
@@ -998,10 +1046,31 @@ function renderBriefing(round: number) {
         " pól · obsługa podstawowa " +
         count * 19 +
         " USD · premia " +
-        (count * 3 + 25) +
+        ("bonus" in offer ? offer.bonus : count * 3 + 25) +
         " USD · kara 60 USD",
       offer.pallets.map((p) => p.destinationColor),
     );
+    if (storyClient && "client" in offer) {
+      const details = document.createElement("details");
+      const toggle = document.createElement("summary");
+      toggle.textContent = "Zlecenie fabularne · " + storyClient.name;
+      const portrait = document.createElement("picture");
+      const image = document.createElement("img");
+      image.className = "client-portrait";
+      image.src = portraitPath(
+        String(offer.client),
+        "portrait",
+        game.contracts[offer.id] === "accepted" ? "happy" : "neutral",
+      );
+      image.width = 72;
+      image.height = 72;
+      image.alt = "Portret: " + storyClient.name;
+      portrait.append(image);
+      const line = document.createElement("p");
+      line.textContent = String("line" in offer ? offer.line : "");
+      details.append(toggle, portrait, line);
+      panel.append(details);
+    }
     const decision = game.contracts[offer.id];
     if (decision)
       panel.append(decision === "accepted" ? "Przyjęto" : "Odrzucono");
@@ -1031,6 +1100,10 @@ function renderTruckControls() {
         continue;
       const quote = quoteDelivery(game.cargoFor(truck.bay));
       const ready = truck.state === "docked";
+      const missing =
+        game.storyMode && game.round === 1
+          ? truck.capacity - game.cargoFor(truck.bay).length
+          : 0;
       actions.push({
         key: truck.id,
         label: ready
@@ -1045,7 +1118,13 @@ function renderTruckControls() {
                 Math.ceil((truck.trip?.returnAt ?? game.time) - game.time),
               ) +
               " s",
-        reason: ready ? (quote ? undefined : "Brak ładunku") : undefined,
+        reason: ready
+          ? missing > 0
+            ? `Do pełnego kursu: ${missing} palet`
+            : quote
+              ? undefined
+              : "Brak ładunku"
+          : undefined,
         run: () => {
           if (ready && game.dispatchBay(truck.bay)) {
             persistProgress();
@@ -1077,7 +1156,11 @@ function renderTruckControls() {
       point.x > canvas.width ||
       point.y < 0 ||
       point.y >= canvas.height;
-    button.disabled = truck.state !== "docked";
+    button.disabled =
+      truck.state !== "docked" ||
+      (game.storyMode &&
+        game.round === 1 &&
+        game.cargoFor(truck.bay).length < truck.capacity);
   }
 }
 function renderPhase() {
@@ -1087,7 +1170,10 @@ function renderPhase() {
     return;
   }
   const shop = game.status === "development";
-  const briefing = game.status === "summary" && game.round < campaign.length;
+  const finale = game.storyMode && game.status === "won";
+  const briefing =
+    game.status === "summary" &&
+    (game.storyMode || game.round < campaign.length);
   end.classList.toggle("briefing", briefing);
   const summary = game.settlement ?? game.roundReport();
   $("end-title").textContent = briefing
@@ -1095,7 +1181,9 @@ function renderPhase() {
     : shop
       ? "Inwestycje magazynu"
       : game.status === "won"
-        ? "Kampania ukończona"
+        ? finale
+          ? "Ostatni magazyn · koniec pierwszego sezonu"
+          : "Kampania ukończona"
         : game.status === "lost"
           ? "Bankructwo"
           : `Bilans rundy ${game.round}`;
@@ -1209,13 +1297,44 @@ function renderPhase() {
       !game.purchased.includes(id) &&
       upgrades[id].round <= game.developmentRound,
   );
+  if (
+    !shop &&
+    $("shop-message").textContent?.startsWith(
+      "Potrzebne w nadchodzącej rundzie:",
+    )
+  )
+    $("shop-message").textContent = "";
   if (shop && missing.length && !$("shop-message").textContent)
     $("shop-message").textContent =
       `Potrzebne w nadchodzącej rundzie: ${missing.map((id) => upgrades[id].name).join(", ")}`;
   $("development").textContent = "Przejdź do inwestycji";
   $("development").hidden = game.status !== "summary";
-  $("continue").hidden = !shop;
-  $("continue").textContent = `Rozpocznij rundę ${game.developmentRound}`;
+  if (finale) {
+    const recap = document.createElement("section");
+    const known = Object.entries(clients)
+      .filter(([id]) => game.storyHistory["client:" + id])
+      .map(([, client]) => client.company);
+    const milestones = Object.entries(storyEvents).filter(
+      ([round]) => game.storyHistory["round-" + round],
+    );
+    const summary = document.createElement("p");
+    summary.textContent = `Przyjęcie LV${game.levels.receiving}, magazyn LV${game.levels.storage}, wysyłka LV${game.levels.shipping} · ${game.tripHistory.length} wykonanych kursów · saldo ${game.cash} USD.`;
+    const partners = document.createElement("p");
+    partners.textContent = known.length
+      ? "Poznani klienci: " + known.join(", ")
+      : "Sezon rozegrany bez klientów fabularnych.";
+    const history = document.createElement("p");
+    history.textContent = milestones
+      .slice(-3)
+      .map(([, line]) => line)
+      .join(" ");
+    recap.append(summary, partners, history);
+    $("totals").prepend(recap);
+  }
+  $("continue").hidden = !shop && !finale;
+  $("continue").textContent = finale
+    ? "Kontynuuj prowadzenie magazynu"
+    : `Rozpocznij rundę ${game.developmentRound}`;
   if (!end.open) {
     end.showModal();
     if (
@@ -1246,12 +1365,14 @@ if (dev) {
     },
   });
   $("dev-round").replaceChildren(
-    ...campaign.map((r) => {
-      const o = document.createElement("option");
-      o.value = String(r.number);
-      o.textContent = `${r.number}. ${r.name}`;
-      return o;
-    }),
+    ...[...storyCampaign, { number: 31, name: "Prowadzenie magazynu" }].map(
+      (r) => {
+        const o = document.createElement("option");
+        o.value = String(r.number);
+        o.textContent = `${r.number}. ${r.name}`;
+        return o;
+      },
+    ),
   );
   $("dev-jump").onclick = async () => {
     busy = true;

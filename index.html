@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link rel="icon" href="data:," />
-    <title>PixelHub 0.3 — kampania 30 rund</title>
+    <title>PixelHub 0.3 — Ostatni magazyn</title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
@@ -24,9 +24,10 @@
         ><button data-speed="4">×4</button>
       </div>
       <time id="clock"></time>
-<small title="%VITE_BUILD_COMMIT%">Build %VITE_BUILD_COMMIT%</small>
+      <small title="%VITE_BUILD_COMMIT%">Build %VITE_BUILD_COMMIT%</small>
     </header>
     <main>
+      <p id="story-note" aria-live="polite" hidden></p>
       <div id="cmrs" class="cmrs" aria-label="Dokumenty przyjazdowe"></div>
       <p id="cmr-scroll" hidden>Przewiń pasek, aby zobaczyć dalsze dostawy →</p>
       <section class="scene">
@@ -47,7 +48,8 @@
           <p id="inspect" class="inspection"></p>
         </div>
         <p id="sorter-status" role="status"></p>
-        <div id="sorter-placement" class="actions" hidden><span id="cold-count"></span>
+        <div id="sorter-placement" class="actions" hidden>
+          <span id="cold-count"></span>
           <button id="sorter-rotate">Obróć sorter · R</button>
           <button id="sorter-cancel">Anuluj ustawianie</button>
         </div>

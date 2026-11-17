@@ -21,3 +21,7 @@ Brak propozycji przyjętych w ramach tej aktualizacji.
 ## Ograniczenia
 
 Zapisy sprzed kampanii balansowej mogą opisywać inne manifesty. Zwykła kampania, tryb deweloperski i różne hosty korzystają z odrębnych zapisów w przeglądarce. Gęste układy mogą wymagać przełożenia palet. Wczesny zakup LV4 może zablokować zakup obowiązkowego wyposażenia. Pełny przebieg symulacji może zająć kilkanaście minut.
+
+## Kandydat do odbioru
+
+Gałąź feature/ostatni-magazyn zawiera [Ostatni magazyn](docs/OSTATNI-MAGAZYN.md). Produkcyjny build i bieżąca dokumentacja publicznego wydania odpowiadają gałęzi main.

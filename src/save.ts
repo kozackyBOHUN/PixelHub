@@ -10,6 +10,10 @@ const workerKeys = [
   "message",
 ] as const;
 const gameKeys = [
+  "storyMode",
+  "storyHistory",
+  "clutter",
+  "cleaning",
   "round",
   "time",
   "speed",
@@ -64,13 +68,17 @@ export function serialize(game: CampaignGame) {
     game: fields(game, gameKeys),
     workers: game.workers.map((w) => fields(w, workerKeys)),
   });
-  return JSON.stringify({ version: 9, checksum: checksum(payload), payload });
+  return JSON.stringify({
+    version: game.storyMode ? 10 : 9,
+    checksum: checksum(payload),
+    payload,
+  });
 }
 export function restore(raw: string): CampaignGame {
   try {
     const envelope = JSON.parse(raw);
     if (
-      ![8, 9].includes(envelope.version) ||
+      ![8, 9, 10].includes(envelope.version) ||
       typeof envelope.payload !== "string" ||
       checksum(envelope.payload) !== envelope.checksum
     )
@@ -82,9 +90,10 @@ export function restore(raw: string): CampaignGame {
       !Array.isArray(parsed.workers) ||
       parsed.workers.length < 1 ||
       parsed.workers.length > 4 ||
-      !Number.isInteger(saved.round) ||
+      !Number.isSafeInteger(saved.round) ||
       saved.round < 1 ||
-      saved.round > 30 ||
+      (saved.round > 30 &&
+        !(envelope.version === 10 && saved.storyMode === true)) ||
       !Number.isFinite(saved.time) ||
       saved.time < 0 ||
       !["playing", "summary", "development", "won", "lost"].includes(

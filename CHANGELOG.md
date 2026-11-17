@@ -5,3 +5,7 @@
 - 2026-11-08 · dd0a092 · Czytelniejszy magazyn i pionowe palety.
 - 2026-11-08 · b4f5eb5 · Integracja produkcyjnego zestawu sprite’ów.
 - 2026-11-08 · 1aae4cb · Limity kolorów, widoczne terminy palet i CMR.
+
+## Kandydat · Ostatni magazyn
+
+- Nowe zlecenie otwierające, fizyczne sprzątanie, klienci i pamięć decyzji, finał sezonu oraz kontynuacja od rundy 31. Status i decyzje do odbioru opisuje [Ostatni magazyn](docs/OSTATNI-MAGAZYN.md).

@@ -161,6 +161,13 @@ export async function solveRound(
 ) {
   if (game.status !== "playing") return;
   prepareRound(game);
+  if (game.storyMode && game.round === 2) {
+    for (const cell of [...game.clutter])
+      if (game.clean(cell)) {
+        drain(game);
+        game.step(0.05);
+      }
+  }
   const round = game.round;
   let actions = 0;
   const relocated = new Set<string>();
@@ -316,9 +323,9 @@ export async function replayToRound(
   round: number,
   report: (text: string) => void = () => {},
 ) {
-  if (!Number.isInteger(round) || round < 1 || round > 30)
-    throw Error("Wybierz rundę 1–30");
-  const game = new CampaignGame();
+  if (!Number.isInteger(round) || round < 1 || round > 31)
+    throw Error("Wybierz rundę 1–31");
+  const game = new CampaignGame(true);
   game.dev = true;
   while (game.round < round) {
     await solveRound(game, report);

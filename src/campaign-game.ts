@@ -29,6 +29,13 @@ import {
   requiredUpgrades,
 } from "./campaign.ts";
 import type { Upgrade, Manifest, PalletSpec } from "./campaign.ts";
+import {
+  cleaningCost,
+  openingServiceFee,
+  storyCampaign,
+} from "./story-campaign.ts";
+import { storyEvents, storyOffers } from "./story.ts";
+import { freeRound } from "./free-campaign.ts";
 type Vehicle = {
   id: string;
   vehicle: string;
@@ -185,7 +192,8 @@ export class CampaignGame extends Game {
       : location;
   }
   get ownedVehicleCount() {
-    return this.round >= cfg.vehicles.freeFirstOwnedVehicleAtRound
+    return this.storyMode ||
+      this.round >= cfg.vehicles.freeFirstOwnedVehicleAtRound
       ? this.fleetCapacity.length
       : 0;
   }
@@ -235,13 +243,45 @@ export class CampaignGame extends Game {
   roundStartCash = cfg.economy.campaignInitialCash;
   operations = 0;
   dev = false;
-  constructor() {
+  storyMode: boolean;
+  storyHistory: Record<string, number> = {};
+  noteStory(id: string, round = this.round) {
+    if (this.storyMode) this.storyHistory[id] ??= round;
+  }
+  private freePlan: ReturnType<typeof freeRound> | undefined;
+  plan(round: number) {
+    if (round <= 30 || !this.storyMode)
+      return (this.storyMode ? storyCampaign : campaign)[round - 1];
+    if (round === this.round && this.freePlan?.number === round)
+      return this.freePlan;
+    const fleet = this.plannedFleet.reduce(
+      (sum, capacity) => sum + capacity,
+      0,
+    );
+    const capacity = Math.max(
+      Math.ceil(fleet / 4),
+      this.workers.length,
+      this.levels.storage - 1,
+    );
+    const plan = freeRound(round, capacity);
+    if (round === this.round) this.freePlan = plan;
+    return plan;
+  }
+  clutter: Point[] = [];
+  cleaning: { worker: number; target: Point; approach: Point } | null = null;
+  constructor(storyMode = false) {
     super();
-    this.ledger[0].amount = cfg.economy.campaignInitialCash;
+    this.storyMode = storyMode;
+    this.ledger[0].amount = storyMode ? 0 : cfg.economy.campaignInitialCash;
+    if (storyMode)
+      this.clutter = [
+        { x: 1, y: 3 },
+        { x: 18, y: 3 },
+      ];
     this.startRound();
   }
   get config() {
-    return campaign[this.round - 1];
+    return this.plan(this.round);
   }
   get minY() {
     return -4 * (Math.max(...Object.values(this.levels)) - 1);
@@ -255,6 +295,8 @@ export class CampaignGame extends Game {
     );
   }
   get requiredCount() {
+    if (this.storyMode && (this.round === 1 || this.round > 30))
+      return this.config.pallets.length;
     return scheduledShipments(this.round);
   }
   get vehicles() {
@@ -312,7 +354,8 @@ export class CampaignGame extends Game {
   ensureFleet() {
     if (
       this.status !== "playing" ||
-      this.round < cfg.vehicles.freeFirstOwnedVehicleAtRound
+      (!this.storyMode &&
+        this.round < cfg.vehicles.freeFirstOwnedVehicleAtRound)
     )
       return;
     for (
@@ -358,6 +401,7 @@ export class CampaignGame extends Game {
     }
   }
   startRound() {
+    if (storyEvents[this.round]) this.noteStory("round-" + this.round);
     this.cmrs = [
       ...this.config.arrivals,
       ...Object.values(this.contractLoads).filter(
@@ -545,6 +589,7 @@ export class CampaignGame extends Game {
       return (
         (this.contains(p) || vehicle) &&
         !this.sorters.some((sorter) => same(sorter, p)) &&
+        !this.isClutter(p) &&
         !blocked.has(key(p)) &&
         (!extra || !same(p, extra)) &&
         !this.crates.some(
@@ -592,6 +637,42 @@ export class CampaignGame extends Game {
       this.freeFor(w)(p)
     );
   }
+  isClutter(p: Point) {
+    return this.clutter.some((cell) => same(cell, p));
+  }
+  clean(p: Point) {
+    const worker = this.activeWorker;
+    if (
+      this.status !== "playing" ||
+      !this.isClutter(p) ||
+      this.cleaning ||
+      this.cash < cleaningCost ||
+      worker.task ||
+      worker.carried ||
+      this.queue(this.workerIndex).length
+    )
+      return false;
+    const approach = [
+      { x: p.x + 1, y: p.y },
+      { x: p.x - 1, y: p.y },
+      { x: p.x, y: p.y - 1 },
+      { x: p.x, y: p.y + 1 },
+    ].find((cell) => worker.moveTo(cell));
+    if (!approach) return false;
+    this.cleaning = { worker: this.workerIndex, target: { ...p }, approach };
+    return true;
+  }
+  private finishCleaning() {
+    const pending = this.cleaning;
+    if (!pending) return;
+    const worker = this.workers[pending.worker];
+    if (worker.task) return;
+    this.cleaning = null;
+    if (!same(worker.pose, pending.approach) || this.cash < cleaningCost)
+      return;
+    this.clutter = this.clutter.filter((cell) => !same(cell, pending.target));
+    this.money(-cleaningCost, "Sprzątanie magazynu");
+  }
   override storage(p: Point) {
     return this.storageFor(this, p);
   }
@@ -613,7 +694,10 @@ export class CampaignGame extends Game {
   contracts: Record<string, "accepted" | "rejected" | "fulfilled" | "failed"> =
     {};
   offers(round: number) {
-    if (round < 4 || round > 30) return [];
+    if (round < 4 || (round > 30 && !this.storyMode)) return [];
+    const narrative = this.storyMode
+      ? storyOffers(round, (id) => this.contracts[id] === "fulfilled")
+      : [];
     const baseCount = round < 11 ? 2 : round < 21 ? 3 : 4;
     const types = [
       "stock",
@@ -623,60 +707,73 @@ export class CampaignGame extends Game {
       ...(this.purchased.includes("freezer") ? ["frozen"] : []),
       ...(this.purchased.includes("service") ? ["service"] : []),
     ];
-    return Array.from(
-      { length: round < 11 ? 1 : round < 21 ? 2 : 3 },
-      (_, index) => {
-        const id = "CMR-" + round + "-SPEC-" + (index + 1);
-        const type = types[(round + index) % types.length];
-        const count =
-          type === "mix" && baseCount % 2 ? baseCount + 1 : baseCount;
-        const color = (["red", "blue", "green", "yellow"] as const)[
-          (round + index) % 4
-        ];
-        const pallets: PalletSpec[] = Array.from({ length: count }, (_, i) => ({
-          id: id + "-P" + (i + 1),
-          color,
-          destinationColor: color,
-          dispatchRound: round,
-          dueRound: round,
-          temperature:
-            type === "cold"
-              ? "chilled"
-              : type === "frozen"
-                ? "frozen"
-                : "standard",
-          condition:
-            type === "service" ? (i % 2 ? "return" : "damaged") : "standard",
-          ...(type === "express" ? { prioritySeconds: 1200 } : {}),
-        }));
-        const recipes =
-          type === "mix"
-            ? Array.from({ length: count / 2 }, (_, index) => {
-                const pair = pallets.slice(index * 2, index * 2 + 2);
-                const outputs = pair.map((p) => ({ ...p, id: p.id + "-SORT" }));
-                pair.forEach((p) => {
-                  p.mix = [{ color, cartons: 4 }];
-                });
-                return {
-                  id: id + "-M" + index,
-                  inputs: pair.map((p) => p.id),
-                  outputs,
-                  cartonsIn: 8,
-                  cartonsOut: 8,
-                };
-              })
-            : [];
-        return {
-          id,
-          type,
-          recipes,
-          pallets,
-          vehicle: "SPEC-" + (index + 1),
-          capacity: count + (count % 2),
-          palletIds: pallets.map((p) => p.id),
-        };
-      },
-    );
+    return [
+      ...narrative,
+      ...Array.from(
+        { length: round < 11 || round > 30 ? 1 : round < 21 ? 2 : 3 },
+        (_, index) => {
+          const id = "CMR-" + round + "-SPEC-" + (index + 1);
+          const type = types[(round + index) % types.length];
+          const count =
+            type === "mix" && baseCount % 2 ? baseCount + 1 : baseCount;
+          const color = (["red", "blue", "green", "yellow"] as const)[
+            (round + index) % 4
+          ];
+          const pallets: PalletSpec[] = Array.from(
+            { length: count },
+            (_, i) => ({
+              id: id + "-P" + (i + 1),
+              color,
+              destinationColor: color,
+              dispatchRound: round,
+              dueRound: round,
+              temperature:
+                type === "cold"
+                  ? "chilled"
+                  : type === "frozen"
+                    ? "frozen"
+                    : "standard",
+              condition:
+                type === "service"
+                  ? i % 2
+                    ? "return"
+                    : "damaged"
+                  : "standard",
+              ...(type === "express" ? { prioritySeconds: 1200 } : {}),
+            }),
+          );
+          const recipes =
+            type === "mix"
+              ? Array.from({ length: count / 2 }, (_, index) => {
+                  const pair = pallets.slice(index * 2, index * 2 + 2);
+                  const outputs = pair.map((p) => ({
+                    ...p,
+                    id: p.id + "-SORT",
+                  }));
+                  pair.forEach((p) => {
+                    p.mix = [{ color, cartons: 4 }];
+                  });
+                  return {
+                    id: id + "-M" + index,
+                    inputs: pair.map((p) => p.id),
+                    outputs,
+                    cartonsIn: 8,
+                    cartonsOut: 8,
+                  };
+                })
+              : [];
+          return {
+            id,
+            type,
+            recipes,
+            pallets,
+            vehicle: "SPEC-" + (index + 1),
+            capacity: count + (count % 2),
+            palletIds: pallets.map((p) => p.id),
+          };
+        },
+      ),
+    ];
   }
   get recipes() {
     return [
@@ -701,10 +798,13 @@ export class CampaignGame extends Game {
   contractLoads: Record<string, ReturnType<CampaignGame["offers"]>[number]> =
     {};
   decideContract(id: string, accept: boolean) {
-    if (this.status !== "summary" || this.contracts[id]) return false;
+    if (!["summary", "won"].includes(this.status) || this.contracts[id])
+      return false;
     const offer = this.offers(this.round + 1).find((o) => o.id === id);
     if (!offer) return false;
     this.contracts[id] = accept ? "accepted" : "rejected";
+    if ("client" in offer)
+      this.noteStory(id + (accept ? ":accepted" : ":rejected"));
     if (accept) this.contractLoads[id] = offer;
     return true;
   }
@@ -745,7 +845,13 @@ export class CampaignGame extends Game {
         for (let i = queue.length - 1; i >= 0; i--)
           if (this.contractCargoIds(offer).includes(queue[i].pallet))
             queue.splice(i, 1);
-    this.money(-60, "Kara kontraktowa");
+    this.noteStory(id + ":failed");
+    this.money(
+      -("penalty" in offer && typeof offer.penalty === "number"
+        ? offer.penalty
+        : 60),
+      "Kara kontraktowa",
+    );
     return true;
   }
   private settleContracts() {
@@ -762,7 +868,13 @@ export class CampaignGame extends Game {
       )
         continue;
       this.contracts[offer.id] = "fulfilled";
-      this.money(3 * offer.pallets.length + 25, "Kontrakt specjalny");
+      this.noteStory(offer.id + ":fulfilled");
+      this.money(
+        "bonus" in offer && typeof offer.bonus === "number"
+          ? offer.bonus
+          : 3 * offer.pallets.length + 25,
+        "client" in offer ? "Zlecenie fabularne" : "Kontrakt specjalny",
+      );
     }
   }
   queues: { pallet: string; dest: Location; blocked?: boolean }[][] = [];
@@ -925,7 +1037,10 @@ export class CampaignGame extends Game {
         this.crates.find((c) => c.id === this.task?.crate)!,
         amount,
       );
-    super.money(amount, label);
+    if (this.storyMode) {
+      this.ledger.push({ time: this.time, amount, label });
+      if (this.cash < 0) this.status = "lost";
+    } else super.money(amount, label);
     if (base !== amount) this.ledger.at(-1)!.priorityDelta = amount - base;
   }
   zoneAt(p: Point): "standard" | "chilled" | "frozen" {
@@ -1205,6 +1320,7 @@ export class CampaignGame extends Game {
       truck?.state !== "docked" ||
       !quote ||
       cargo.length > truck.capacity ||
+      (this.storyMode && this.round === 1 && cargo.length < truck.capacity) ||
       cargo.some((c) => !ready(c, this.round)) ||
       this.vehicleBusy("outbound", bay) ||
       this.workers.some(
@@ -1582,6 +1698,7 @@ export class CampaignGame extends Game {
     // Reuse the complete 0.1 transport execution, including collision checks and fork withdrawal.
     this.startQueuedOrders();
     this.moveWorkers(dt);
+    this.finishCleaning();
     this.time = Math.round((this.time + dt) * 1e6) / 1e6;
     for (const w of this.workers) w.time = this.time;
     for (const w of this.workers)
@@ -1741,6 +1858,8 @@ export class CampaignGame extends Game {
       this.stock.length * cfg.economy.storageRewardPerCratePerCompletedRound,
       "Przechowanie",
     );
+    if (this.storyMode && this.round === 1)
+      this.money(openingServiceFee, "Rozliczenie pierwszego zlecenia");
     this.money(
       -cfg.economy.workerWagePerRound * this.workers.length,
       `Pensja — runda ${this.round}`,
@@ -1769,6 +1888,14 @@ export class CampaignGame extends Game {
     ] as const;
     for (const [label, cost] of maintenance)
       if (cost) this.money(-cost, "Utrzymanie · " + label);
+    if (this.storyMode)
+      for (const offer of this.offers(this.round + 1)) {
+        if (!("client" in offer)) continue;
+        if (this.storyHistory["client:" + offer.client] !== undefined)
+          this.noteStory(offer.id + ":returned");
+        this.noteStory("client:" + offer.client);
+        this.noteStory(offer.id + ":offered");
+      }
     this.settlement = this.roundReport();
     if (this.status === "playing")
       this.status = this.round === 30 ? "won" : "summary";
@@ -1776,7 +1903,10 @@ export class CampaignGame extends Game {
     return true;
   }
   beginDevelopment() {
-    if (this.status === "summary" && this.round < 30) {
+    if (
+      (this.status === "summary" && (this.storyMode || this.round < 30)) ||
+      (this.storyMode && this.status === "won" && this.round === 30)
+    ) {
       this.developmentRound = this.round + 1;
     } else if (
       this.status === "playing" &&
@@ -1795,7 +1925,7 @@ export class CampaignGame extends Game {
     if (
       this.status !== "development" ||
       this.developmentRound < this.round ||
-      this.developmentRound > 30
+      (!this.storyMode && this.developmentRound > 30)
     )
       return;
     for (const pose of this.pendingWorkers) {
@@ -1821,7 +1951,8 @@ export class CampaignGame extends Game {
       !Number.isFinite(this.cash) ||
       !Number.isFinite(this.time) ||
       this.round < 1 ||
-      this.round > 30
+      !Number.isSafeInteger(this.round) ||
+      (!this.storyMode && this.round > 30)
     )
       throw Error("Stan kampanii");
     const ids = new Set<string>(),

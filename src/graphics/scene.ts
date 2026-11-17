@@ -257,6 +257,8 @@ export class SceneBuilder {
       cols = cfg.map.columns,
       rows = hub ? 4 : cfg.map.rows;
     const bounds = this.bounds(g);
+    for (const cell of hub?.clutter ?? [])
+      this.asset(`clutter/${cell.x}/${cell.y}`, "rack/standard/segment", cell);
     this.asset(
       "exterior",
       "exterior/base",

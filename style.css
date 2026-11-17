@@ -842,3 +842,5 @@ body > header .brand { line-height: 1.1; }
 .queue-avatar,.queue-pallet { display: inline-block; width: 20px; height: 20px; image-rendering: pixelated; }
 .queue-avatar { background: url("/assets/workers/default/idle.png") left top; }
 .queue-pallet { background: url("/assets/cargo/box/orange.png") center / contain; }
+#story-note { margin: .25rem 0; padding: .4rem .7rem; color: #f4e8cb; background: #263549; }
+#end.briefing #totals img.client-portrait { width: 72px; height: 72px; image-rendering: pixelated; display: block; }
