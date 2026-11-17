@@ -16,7 +16,7 @@ import {
   requiredUpgrades,
 } from "./campaign.ts";
 import type { Upgrade } from "./campaign.ts";
-import { portraitPath } from "./portraits.ts";
+import { clientArtPreview, clientDialog } from "./client-dialog.ts";
 import { clients, storyEvents } from "./story.ts";
 import type { ClientId } from "./story.ts";
 import { openingServiceFee, storyCampaign } from "./story-campaign.ts";
@@ -1036,8 +1036,48 @@ function renderBriefing(round: number) {
     const count = offer.pallets.length;
     const storyClient =
       "client" in offer ? clients[offer.client as ClientId] : undefined;
+    if (storyClient && "client" in offer) {
+      const panel = document.createElement("section");
+      panel.className = "client-offer";
+      const keepOpen = () => {
+        const current = document.getElementById(
+          offer.id,
+        ) as HTMLDetailsElement | null;
+        if (current) {
+          current.open = true;
+          current.querySelector("summary")?.focus();
+        }
+      };
+      const decision = game.contracts[offer.id];
+      const details = clientDialog({
+        client: String(offer.client),
+        name: storyClient.name,
+        company: storyClient.company,
+        line: String("line" in offer ? offer.line : ""),
+        expression:
+          decision === "accepted" || game.storyHistory[offer.id + ":returned"]
+            ? "happy"
+            : offer.id === "STORY-pieczywo"
+              ? "worried"
+              : "neutral",
+        round,
+        count,
+        bonus: Number("bonus" in offer ? offer.bonus : 0),
+        penalty: Number("penalty" in offer ? offer.penalty : 60),
+        decision,
+        decide: (accept) => {
+          if (game.decideContract(offer.id, accept)) persistProgress();
+          hud();
+          keepOpen();
+        },
+      });
+      details.id = offer.id;
+      panel.append(details);
+      $("totals").append(panel);
+      continue;
+    }
     const panel = section(
-      storyClient ? storyClient.company : (names[offer.type] ?? "MIX"),
+      names[offer.type] ?? "MIX",
       count +
         " palet · wysyłka R" +
         round +
@@ -1046,31 +1086,10 @@ function renderBriefing(round: number) {
         " pól · obsługa podstawowa " +
         count * 19 +
         " USD · premia " +
-        ("bonus" in offer ? offer.bonus : count * 3 + 25) +
+        (count * 3 + 25) +
         " USD · kara 60 USD",
       offer.pallets.map((p) => p.destinationColor),
     );
-    if (storyClient && "client" in offer) {
-      const details = document.createElement("details");
-      const toggle = document.createElement("summary");
-      toggle.textContent = "Zlecenie fabularne · " + storyClient.name;
-      const portrait = document.createElement("picture");
-      const image = document.createElement("img");
-      image.className = "client-portrait";
-      image.src = portraitPath(
-        String(offer.client),
-        "portrait",
-        game.contracts[offer.id] === "accepted" ? "happy" : "neutral",
-      );
-      image.width = 72;
-      image.height = 72;
-      image.alt = "Portret: " + storyClient.name;
-      portrait.append(image);
-      const line = document.createElement("p");
-      line.textContent = String("line" in offer ? offer.line : "");
-      details.append(toggle, portrait, line);
-      panel.append(details);
-    }
     const decision = game.contracts[offer.id];
     if (decision)
       panel.append(decision === "accepted" ? "Przyjęto" : "Odrzucono");
@@ -1346,6 +1365,7 @@ function renderPhase() {
   }
 }
 if (dev) {
+  $("dev-panel").append(clientArtPreview());
   $("lab").hidden = false;
   $("dev-panel").hidden = false;
   Object.assign(window, {

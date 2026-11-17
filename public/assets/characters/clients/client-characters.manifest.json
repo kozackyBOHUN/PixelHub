@@ -1,0 +1,81 @@
+{
+  "project": "PixelHub 0.3 - Ostatni magazyn",
+  "asset_pack": "characters_clients_v0_1",
+  "status": "ROBOCZY - technicznie przygotowany do integracji, wymaga kontroli artystycznej w grze",
+  "native_portrait": [
+    72,
+    72
+  ],
+  "native_avatar": [
+    48,
+    48
+  ],
+  "display_scale": 2,
+  "pixel_filter": "nearest-neighbor",
+  "characters": {
+    "henryk": {
+      "display_name": "Henryk",
+      "organization": "Piekarnia Henryka",
+      "portrait": {
+        "neutral": "assets/characters/clients/henryk/henryk_portrait_neutral.png",
+        "happy": "assets/characters/clients/henryk/henryk_portrait_happy.png",
+        "worried": "assets/characters/clients/henryk/henryk_portrait_worried.png"
+      },
+      "avatar": "assets/characters/clients/henryk/henryk_avatar.png"
+    },
+    "anna": {
+      "display_name": "Anna",
+      "organization": "Fundacja Anny",
+      "portrait": {
+        "neutral": "assets/characters/clients/anna/anna_portrait_neutral.png",
+        "happy": "assets/characters/clients/anna/anna_portrait_happy.png",
+        "worried": "assets/characters/clients/anna/anna_portrait_worried.png"
+      },
+      "avatar": "assets/characters/clients/anna/anna_avatar.png"
+    },
+    "robert": {
+      "display_name": "Robert",
+      "organization": "Sklepy Roberta",
+      "portrait": {
+        "neutral": "assets/characters/clients/robert/robert_portrait_neutral.png",
+        "happy": "assets/characters/clients/robert/robert_portrait_happy.png",
+        "worried": "assets/characters/clients/robert/robert_portrait_worried.png"
+      },
+      "avatar": "assets/characters/clients/robert/robert_avatar.png"
+    },
+    "kasia": {
+      "display_name": "Kasia",
+      "organization": "Zabawki Kasi",
+      "portrait": {
+        "neutral": "assets/characters/clients/kasia/kasia_portrait_neutral.png",
+        "happy": "assets/characters/clients/kasia/kasia_portrait_happy.png",
+        "worried": "assets/characters/clients/kasia/kasia_portrait_worried.png"
+      },
+      "avatar": "assets/characters/clients/kasia/kasia_avatar.png"
+    },
+    "marek": {
+      "display_name": "Marek",
+      "organization": "Warsztat Marka",
+      "portrait": {
+        "neutral": "assets/characters/clients/marek/marek_portrait_neutral.png",
+        "happy": "assets/characters/clients/marek/marek_portrait_happy.png",
+        "worried": "assets/characters/clients/marek/marek_portrait_worried.png"
+      },
+      "avatar": "assets/characters/clients/marek/marek_avatar.png"
+    },
+    "wiktor": {
+      "display_name": "Wiktor",
+      "organization": "Wiktor Trade",
+      "portrait": {
+        "neutral": "assets/characters/clients/wiktor/wiktor_portrait_neutral.png",
+        "happy": "assets/characters/clients/wiktor/wiktor_portrait_happy.png",
+        "worried": "assets/characters/clients/wiktor/wiktor_portrait_worried.png"
+      },
+      "avatar": "assets/characters/clients/wiktor/wiktor_avatar.png"
+    }
+  },
+  "ui": {
+    "nine_slice_margin_px": 8,
+    "dir": "assets/ui/dialogues"
+  }
+}

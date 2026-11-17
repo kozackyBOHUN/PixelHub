@@ -38,3 +38,5 @@ Stawka 520 USD za pierwszą usługę, robocze terminy i wynagrodzenia klientów,
 ## Wyniki kandydata
 
 150 krótszych testów przeszło. Osobny fizyczny przebieg rund 1–30 potwierdził 1018 przyjęć, 1018 dostarczonych palet, pusty magazyn i saldo 649 USD. Z kontynuacji po tym finale runda 31 obsłużyła cztery przyjazdy i 16 wysłanych palet. Rozliczenie zakończyło się saldem 644 USD. Chrome przeszedł scenariusz pierwszego rozładunku, sprzątania i odświeżenia, oferty i powrotu Henryka, finału oraz kontynuacji z tym samym saldem i poziomami stref.
+
+Aktualizacja graficzna z 2026-11-17 zastępuje placeholder Henryka roboczymi portretami z pakietu. Bieżące ścieżki i zakres działających ekranów opisuje [specyfikacja grafiki](../GRAPHICS_SPEC.md#klienci--roboczy-art-v01).

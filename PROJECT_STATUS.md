@@ -25,3 +25,7 @@ Zapisy sprzed kampanii balansowej mogą opisywać inne manifesty. Zwykła kampan
 ## Kandydat do odbioru
 
 Gałąź feature/ostatni-magazyn zawiera [Ostatni magazyn](docs/OSTATNI-MAGAZYN.md). Produkcyjny build i bieżąca dokumentacja publicznego wydania odpowiadają gałęzi main.
+
+## Portrety i dialogi klientów
+
+**INTEGRATED - ART DRAFT.** Henryk ma oprawę w realnej kampanii. Anna, Robert, Kasia, Marek i Wiktor są dostępni w podglądzie deweloperskim; ich kontrakty i powroty wymagają przyszłych decyzji fabularnych. [Specyfikacja i zrzuty](GRAPHICS_SPEC.md#klienci--roboczy-art-v01).

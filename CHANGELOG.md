@@ -9,3 +9,7 @@
 ## Kandydat · Ostatni magazyn
 
 - Nowe zlecenie otwierające, fizyczne sprzątanie, klienci i pamięć decyzji, finał sezonu oraz kontynuacja od rundy 31. Status i decyzje do odbioru opisuje [Ostatni magazyn](docs/OSTATNI-MAGAZYN.md).
+
+## 2026-11-17 · Grafiki klientów v0.1
+
+- Podłączono oprawę dialogu Henryka, trzy ekspresje oraz awatary i galerię sześciu postaci w trybie DEV. Dodano responsywne panele 9-slice. Commit wydania wskazuje nagłówek GitHub Pages i historia tego pliku.

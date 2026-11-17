@@ -843,4 +843,52 @@ body > header .brand { line-height: 1.1; }
 .queue-avatar { background: url("/assets/workers/default/idle.png") left top; }
 .queue-pallet { background: url("/assets/cargo/box/orange.png") center / contain; }
 #story-note { margin: .25rem 0; padding: .4rem .7rem; color: #f4e8cb; background: #263549; }
-#end.briefing #totals img.client-portrait { width: 72px; height: 72px; image-rendering: pixelated; display: block; }
+/* Native 8 px panel and 6 px button corners, scaled by two without stretching. */
+.client-skin {
+  border: 16px solid transparent;
+  border-image: var(--dialog-art) 8 fill stretch;
+  image-rendering: pixelated;
+  color: #182832;
+}
+.client-actions .client-skin {
+  border-width: 12px;
+  border-image-slice: 6 fill;
+  border-radius: 0;
+  background: transparent;
+}
+.client-actions button:focus-visible, .client-dialog summary:focus-visible {
+  outline: 2px solid #193c63;
+  outline-offset: 3px;
+}
+#end.briefing #totals .client-offer { grid-column: 1 / -1; }
+.client-dialog summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+}
+#end.briefing #totals .client-dialog summary img { width: 48px; height: 48px; }
+.client-dialog-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  margin-top: 8px;
+}
+.client-frame { width: fit-content; }
+#end.briefing #totals .client-frame img { display: block; width: 144px; height: 144px; }
+.client-dialog h3, .client-dialog-body p, .client-dialog-body ul { margin: 0 0 4px; }
+.client-dialog-body ul { list-style: none; padding: 0; }
+.client-dialog-body li { display: flex; align-items: center; gap: 6px; }
+.client-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.client-art-grid { display: grid; grid-template-columns: repeat(3, max-content); gap: 12px; overflow: auto; }
+.client-art-grid img { image-rendering: pixelated; margin-right: 4px; }
+.client-art-grid[data-scale="2"] .client-portrait { width: 144px; height: 144px; }
+.client-art-grid[data-scale="2"] .client-avatar { width: 96px; height: 96px; }
+@media (max-width: 700px) {
+  #end.briefing #totals .client-frame img { width: 72px; height: 72px; }
+  .client-dialog-body { grid-template-columns: minmax(0, 1fr); }
+  .client-skin { border-width: 8px; }
+  .client-actions .client-skin { border-width: 6px; }
+}

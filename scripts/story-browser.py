@@ -79,9 +79,9 @@ with sync_playwright() as p:
     page.get_by_text("Zlecenie fabularne · Henryk", exact=True).click()
     page.locator(".client-portrait").wait_for(state="visible")
     page.wait_for_function("document.querySelector('.client-portrait').naturalWidth === 72")
-    assert page.locator(".client-portrait").bounding_box()["width"] == 72
+    assert page.locator(".client-portrait").bounding_box()["width"] == 144
     page.screenshot(path=out / "03-henryk.png")
-    page.locator("#totals section").filter(has_text="Piekarnia pod Młynem").get_by_role("button",name="Przyjmij").click()
+    page.locator("#STORY-pieczywo").get_by_role("button", name="Przyjmij").click()
     advance()
     for number in range(4, 9):
         solve(number)
