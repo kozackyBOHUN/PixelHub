@@ -13,3 +13,10 @@
 ## 2026-11-17 · Grafiki klientów v0.1
 
 - Podłączono oprawę dialogu Henryka, trzy ekspresje oraz awatary i galerię sześciu postaci w trybie DEV. Dodano responsywne panele 9-slice. Commit wydania wskazuje nagłówek GitHub Pages i historia tego pliku.
+
+## 2026-11-17 · Stabilność i ekonomia
+
+- Usunięto premię 520 USD i poprawiono opłatę rozładunkową przy bezpośrednim załadunku własnego auta. Rampa wysyłkowa jest rozliczana od rundy 1.
+- Atlasy pracownika są wczytywane przed grą. Sprzątanie ma osobne grafiki, postęp i bezpieczne anulowanie. Dodano portrety Mai i Leny.
+- Standardowe oferty mają stałych klientów, a pierwsze oferty są dostępne od R2. Utrwalono plan rund swobodnych w zapisie i usunięto powtarzanie jednorazowej prośby Henryka.
+- Pełny raport i ograniczenia są w docs/STABILITY-AUDIT.md.

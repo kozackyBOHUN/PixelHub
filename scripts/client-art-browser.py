@@ -7,8 +7,9 @@ from pathlib import Path
 import threading
 
 from playwright.sync_api import sync_playwright
+from browser_options import browser_options
 
-out = Path("docs/screenshots/clients")
+out = Path(os.environ.get("PIXELHUB_SCREENSHOTS", "docs/screenshots/clients"))
 out.mkdir(parents=True, exist_ok=True)
 # Serve the build under a project path, matching GitHub Pages.
 class ProjectHandler(http.server.SimpleHTTPRequestHandler):
@@ -22,10 +23,11 @@ server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(Pro
 threading.Thread(target=server.serve_forever, daemon=True).start()
 url = os.environ.get("PIXELHUB_TEST_URL", f"http://127.0.0.1:{server.server_port}/PixelHub/") + "?dev=1"
 with gzip.open("public/story-scenarios.json.gz", "rt", encoding="utf8") as stream:
-    checkpoint = json.load(stream)["scenarios"]["3"]
+    checkpoints = json.load(stream)["scenarios"]
+    checkpoint = checkpoints["3"]
 errors = []
 with sync_playwright() as p:
-    browser = p.chromium.launch(channel=os.environ.get("PIXELHUB_BROWSER") or None)
+    browser = p.chromium.launch(**browser_options())
     def new_page(width, height, *, seeded=False):
         page = browser.new_page(viewport={"width": width, "height": height})
         page.on("pageerror", lambda error: errors.append(str(error)))
@@ -41,17 +43,18 @@ with sync_playwright() as p:
     tools = gallery.locator("details").filter(has=gallery.locator("#dev-panel"))
     tools.locator("summary").first.click()
     gallery.locator(".client-art-preview > summary").click()
+    gallery.add_style_tag(content="main, #lab { overflow: visible !important; max-height: none !important; height: auto !important; } .client-art-grid { overflow: visible !important; }")
     for scale in (1, 2):
         grid = gallery.locator(f'.client-art-grid[data-scale="{scale}"]')
         grid.wait_for(state="visible")
         images = grid.locator("img")
-        assert images.count() == 24
+        assert images.count() == 32
         for image in images.all():
             image.evaluate("img => img.decode()")
             assert image.evaluate("img => img.naturalWidth") in (48, 72)
             assert image.evaluate("img => getComputedStyle(img).imageRendering") == "pixelated"
             assert image.bounding_box()["width"] == scale * image.evaluate("img => img.naturalWidth")
-        grid.screenshot(path=out / f"szesc-postaci-x{scale}.png")
+        grid.screenshot(path=out / f"osiem-postaci-x{scale}.png")
     gallery.close()
 
     for width, height in [(1920, 1080), (1366, 768), (390, 844)]:
@@ -85,10 +88,22 @@ with sync_playwright() as p:
         dialog.get_by_role("button", name="Przyjmij" if accept else "Odmów").click()
         assert page.evaluate("window.pixelhub.game.contracts['STORY-pieczywo']") == ("accepted" if accept else "rejected")
         if accept:
-            assert image.get_attribute("src").endswith("henryk_portrait_happy.png")
+            assert image.get_attribute("src").endswith("henryk_portrait_worried.png")
             page.locator("#development").click()
             page.locator("#continue").click()
             assert page.evaluate("window.pixelhub.game.cmrs.some(cmr => cmr.id === 'STORY-pieczywo')")
         page.close()
+    for number, client, quest in [(11, "maja", "prezenty"), (16, "lena", "pomoc")]:
+        checkpoint = checkpoints[str(number)]
+        page = new_page(1366, 900, seeded=True)
+        page.evaluate("document.querySelector('#dev-finish').click()")
+        page.wait_for_function("window.pixelhub.game.status === 'summary'", timeout=120_000)
+        dialog = page.locator("#STORY-" + quest)
+        dialog.locator("summary").click()
+        portrait = dialog.locator(".client-portrait")
+        portrait.evaluate("img => img.decode()")
+        assert portrait.get_attribute("src").endswith(f"{client}_portrait_neutral.png")
+        dialog.screenshot(path=out / f"{client}-dialog.png")
+        page.close()
     assert not errors, errors
-    print("PASS: 24 graphics, two scales, three viewports, keyboard and real Henryk decisions")
+    print("PASS: 32 graphics, two scales, three viewports, keyboard and real Henryk decisions")

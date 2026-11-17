@@ -1,4 +1,5 @@
 import { CampaignGame, WarehouseWorker } from "./campaign-game.ts";
+import { standardClient } from "./story.ts";
 import type { Game } from "./simulation.ts";
 const workerKeys = [
   "pose",
@@ -12,6 +13,7 @@ const workerKeys = [
 const gameKeys = [
   "storyMode",
   "storyHistory",
+  "freePlans",
   "clutter",
   "cleaning",
   "round",
@@ -132,6 +134,17 @@ export function restore(raw: string): CampaignGame {
     for (const k of gameKeys)
       if (k in saved)
         (game as unknown as Record<string, unknown>)[k] = saved[k];
+    for (const offer of Object.values(game.contractLoads)) {
+      const data = offer as unknown as Record<string, unknown>;
+      if (typeof data.bonus !== "number")
+        data.bonus = 3 * offer.pallets.length + 25;
+      if (typeof data.penalty !== "number") data.penalty = 60;
+      if (!data.client) {
+        const match = /^CMR-(\d+)-SPEC-(\d+)$/.exec(offer.id);
+        if (match)
+          data.client = standardClient(Number(match[1]), Number(match[2]) - 1);
+      }
+    }
     if (envelope.version === 8 && game.purchased.includes("chiller"))
       game.coldCells = (
         game.purchased.includes("climate") ? [-4, -1, -8, -5] : [-4, -1]

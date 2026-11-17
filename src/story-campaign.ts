@@ -42,5 +42,4 @@ const second: RoundConfig = {
   pallets: [...campaign[1].pallets, ...previous.pallets],
 };
 export const storyCampaign = [opening, second, ...campaign.slice(2)];
-export const openingServiceFee = 520;
 export const cleaningCost = 5;

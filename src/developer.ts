@@ -55,20 +55,24 @@ export function storageCandidates(game: CampaignGame, crate: Crate): Point[] {
         )
       )
         list.push({ x, y });
+  for (const x of [1, 2, 3, 16, 17, 18]) {
+    const cell = { x, y: 0 };
+    if (game.storage(cell)) list.push(cell);
+  }
   return list;
 }
 function store(game: CampaignGame, c: Crate) {
-  for (const p of storageCandidates(game, c))
-    if (
-      !game.sorters.some((site) =>
-        Object.values(sorterPorts(site)).some(
-          (q) => q.x === p.x && q.y === p.y,
-        ),
-      ) &&
-      game.storage(p) &&
-      move(game, c, { kind: "floor", ...p })
-    )
-      return true;
+  const worker = game.workers[0];
+  worker.selectWorker();
+  if (!worker.choose(c.id)) return false;
+  for (const cell of storageCandidates(game, c)) {
+    if (!game.storage(cell) || !worker.order({ kind: "floor", ...cell }))
+      continue;
+    drain(game);
+    game.assertInvariant();
+    return true;
+  }
+  worker.source = null;
   return false;
 }
 function special(game: CampaignGame, c: Crate) {
@@ -99,12 +103,17 @@ export function prepareRound(game: CampaignGame) {
   if (!game.beginDevelopment() && game.status !== "development") return;
   if (game.developmentRound >= 5 && game.levels.storage < 2)
     game.buyModule("storage");
-  if (game.developmentRound >= 7 && game.levels.storage < 3)
-    game.buyModule("storage");
+  const equipmentReserve = requiredUpgrades
+    .filter(
+      (id) =>
+        upgrades[id].round <= game.developmentRound &&
+        !game.purchased.includes(id),
+    )
+    .reduce((sum, id) => sum + (id === "chiller" ? 280 : upgrades[id].cost), 0);
   if (
-    game.developmentRound >= 22 &&
-    game.cash >= 1040 &&
-    game.levels.storage < 4
+    game.developmentRound >= 7 &&
+    game.levels.storage < 3 &&
+    game.cash >= 400 + Math.max(50, equipmentReserve)
   )
     game.buyModule("storage");
   for (const id of requiredUpgrades)
@@ -165,7 +174,7 @@ export async function solveRound(
     for (const cell of [...game.clutter])
       if (game.clean(cell)) {
         drain(game);
-        game.step(0.05);
+        game.advance(2.1);
       }
   }
   const round = game.round;
@@ -279,12 +288,7 @@ export async function solveRound(
     }
     if (!changed) {
       for (const crate of game.stock) {
-        if (
-          crate.loc.kind !== "floor" ||
-          crate.mix ||
-          crate.temperature !== "standard" ||
-          relocated.has(crate.id)
-        )
+        if (crate.loc.kind !== "floor" || crate.mix || relocated.has(crate.id))
           continue;
         const from = crate.loc;
         for (const cell of storageCandidates(game, crate)) {

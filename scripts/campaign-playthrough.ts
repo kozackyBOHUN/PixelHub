@@ -9,6 +9,7 @@ const story = process.argv.includes("--story");
 const g = new CampaignGame(story);
 const scenarios: Record<number, string> = {};
 const expected = story ? 1018 : 1010;
+let contractPallets = 0;
 let received = 0;
 let sent = 0;
 let ledgerStart = g.ledger.length;
@@ -43,22 +44,35 @@ while (g.status !== "won") {
       seconds: (performance.now() - start) / 1000,
     }),
   );
-  if (g.status !== "won") prepareRound(g);
+  if (g.status !== "won") {
+    if (story)
+      for (const offer of g
+        .offers(g.round + 1)
+        .filter((offer) => offer.type !== "story")) {
+        if (g.decideContract(offer.id, true))
+          contractPallets += offer.pallets.length;
+      }
+    prepareRound(g);
+  }
 }
-if (received !== expected || sent !== expected || g.stock.length !== 0)
+if (
+  received !== expected + contractPallets ||
+  sent !== expected + contractPallets ||
+  g.stock.length !== 0
+)
   throw new Error(
     `Kampania musi zakończyć się fizycznym bilansem ${expected}/${expected} i pustym magazynem.`,
   );
 if (story) {
-  if (!g.beginDevelopment()) throw Error("Nie można kontynuować po finale");
-  g.nextRound();
-  scenarios[31] = serialize(g);
-  await solveRound(g);
-  if (g.round !== 31 || g.status !== "summary")
-    throw Error("Runda 31 nie została rozliczona");
-  console.log(
-    JSON.stringify({ round: 31, stock: g.stock.length, cash: g.cash }),
-  );
+  for (let round = 31; round <= 35; round++) {
+    if (!g.beginDevelopment()) throw Error("Nie można kontynuować po finale");
+    g.nextRound();
+    scenarios[round] = serialize(g);
+    await solveRound(g);
+    if (g.round !== round || g.status !== "summary")
+      throw Error("Nie rozliczono trybu swobodnego");
+    console.log(JSON.stringify({ round, cash: g.cash, stock: g.stock.length }));
+  }
 }
 if (process.argv.includes("--fixtures")) {
   mkdirSync("public", { recursive: true });

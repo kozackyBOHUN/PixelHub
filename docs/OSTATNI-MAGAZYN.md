@@ -1,42 +1,30 @@
-# Ostatni magazyn · kandydat do przeglądu
+# Ostatni magazyn — PixelHub 0.3
 
-Baza wydania: 840a383. Implementacja na gałęzi feature/ostatni-magazyn. Produkcja pozostaje na dotychczasowym buildzie do odbioru kandydata.
+## Pierwsza runda
 
-## Runda 1
-
-Start 0 USD, jeden pracownik, jeden ręczny paleciak i własne auto z czterema slotami. Jeden CMR przywozi osiem palet, po cztery czerwone i niebieskie. Gracz podstawia pojazd, przemieszcza towar i wysyła dwa pełne kursy. Kursy mieszane są dozwolone. Przed wyjazdem przycisk pokazuje koszt i czas. Niewysłaną paletę można zdjąć z auta.
-
-Zlecenie wypłaca jawne, robocze wynagrodzenie 520 USD po dostarczeniu wszystkich palet. Zwykłe stawki operacyjne 0.3 obowiązują również w samouczku. Saldo 0 USD jest poprawne. Ujemne saldo po rozliczeniu wciąż kończy działalność. Przeniesienie czterech dawnych palet z R1 do R2 zachowuje ich terminy i późniejszy stan magazynu. Nowy bilans 30 rund wynosi 1018/1018.
+Start 0 USD, jeden pracownik, ręczny paleciak i własne auto z czterema slotami. Jeden CMR: cztery czerwone i cztery niebieskie palety. Podstaw ciężarówkę, wybierz pracownika, wskaż paletę i miejsce odłożenia lub własne auto. Wykonaj dwa kursy. Przycisk pokazuje czas i koszt przed wysyłką. Jednokolorowe kursy dają końcowe 52 USD, mieszane 22 USD. Brak premii 520 USD. Obowiązują zwykłe stawki; ujemne saldo po rozliczeniu oznacza bankructwo.
 
 ## Sprzątanie
 
-Kliknięcie przeszkody zleca pracownikowi dojazd na sąsiednią kratkę. Po dotarciu gra usuwa blokadę siatki i rozlicza 5 USD. Bez gotówki ani wolnego pracownika zlecenie jest niedostępne. Zapis przechowuje blokady i aktywne zlecenie sprzątania.
+Kliknij przeszkodę, mając 5 USD i wolnego pracownika. Po fizycznym dojściu obok przeszkody pracownik wykonuje dwusekundowe sprzątanie z widocznym postępem. Opłata następuje raz przy usunięciu. Można anulować zadanie; zapis przechowuje stan i usunięte blokady.
 
 ## Klienci i sezon
 
-Dane trzech klientów, wydarzeń i warunków powrotu są w src/story.ts. Wykonanie pierwszej umowy Henryka uruchamia większą ofertę w R9. Analogiczne zależności mają fundacja i organizacja pomocowa. Akceptacja tworzy fizyczny CMR, a odmowa nie pobiera opłaty. Termin oznacza rundę realizacji. Szczegóły przedstawiają klienta, wymagania i wynagrodzenie w odprawie.
+Henryk — Piekarnia pod Młynem; Maja — Fundacja Dobre Jutro; Lena — Most Pomocy. Dane historii i warunków powrotu są w `src/story.ts`. Wykonanie pierwszej umowy Henryka odblokowuje większą ofertę. Przyjęcie tworzy fizyczny CMR; odmowa nie pobiera opłaty. Samo przyjęcie nie ustawia happy. Standardowi klienci Anna, Robert, Kasia, Marek i Wiktor zachowują tożsamość i historię.
 
-Na koniec R30 gra pokazuje stan firmy oraz kursy, klientów i wydarzenia. Przycisk kontynuacji uruchamia R31 z tą samą firmą. Kolejne rundy tworzą regularne przyjazdy i wysyłki ze stabilnym ziarnem zależnym od rundy. Zakres od dwóch do sześciu dostaw zależy od przestrzeni, floty i zespołu. Praca na następnych rundach nadal pozwala przyjmować dodatkowe oferty i inwestować.
+Po R30 można kontynuować z tą samą firmą. Plan rundy jest utrwalany przed zakupami oraz po zapisie i wczytaniu. Generator uwzględnia flotę, przestrzeń i wyposażenie. Powroty klientów są kolejnymi zamówieniami, bez ponownego odgrywania jednorazowych historii.
 
 ## Zapis i portrety
 
-V10 zapisuje nową kampanię. Zapis v8/v9 może być nadal wczytany na dotychczasowych manifestach i zostaje zachowany pod starym kluczem. Nowa gra uruchamia fabułę. Tryb deweloperski ma osobny zapis i odtwarza rundy 1–31.
+Zapis v10 przechowuje fabułę. Starsza kampania jest dostępna przez jawny przycisk w narzędziach i zachowuje oryginalny zapis. Tryb deweloperski ma osobny klucz.
 
-Dla grafika: umieść pliki w public/assets/clients/<id>/ i zarejestruj warianty w src/portraits.ts. Nazwy to portrait-neutral.png, portrait-happy.png, portrait-worried.png oraz odpowiedniki avatar-. Portrety 72 × 72 i awatary 48 × 48, PNG RGBA, filtrowanie pikselowe. Kandydat używa neutralnego, wspólnego placeholdera.
+Aktualne pliki grafika są w `public/assets/characters/clients/<id>/`: `<id>_portrait_neutral.png`, `<id>_portrait_happy.png`, `<id>_portrait_worried.png` i `<id>_avatar.png`. Portrety 72 × 72 i awatary 48 × 48, PNG RGBA, filtrowanie pikselowe. Rejestr: `src/portraits.ts`. Wszystkie trzy postacie fabularne mają własne portrety; nie nadpisujemy ich historycznymi materiałami.
 
 ## Weryfikacja
 
-- node --test tests/story.test.ts
-- node scripts/campaign-playthrough.ts --story --fixtures
-- python scripts/story-browser.py po buildzie i wygenerowaniu checkpointów z parametrem PIXELHUB_CHECKPOINTS=1
-- [Zrzuty z lokalnego buildu](screenshots/story/)
+[Aktualny audyt i rzeczywisty bilans](STABILITY-AUDIT.md) · [Specyfikacja grafiki](../GRAPHICS_SPEC.md).
 
-## Decyzje do odbioru
-
-Stawka 520 USD za pierwszą usługę, robocze terminy i wynagrodzenia klientów, finalne portrety i oprawa przeszkód.
-
-## Wyniki kandydata
-
-150 krótszych testów przeszło. Osobny fizyczny przebieg rund 1–30 potwierdził 1018 przyjęć, 1018 dostarczonych palet, pusty magazyn i saldo 649 USD. Z kontynuacji po tym finale runda 31 obsłużyła cztery przyjazdy i 16 wysłanych palet. Rozliczenie zakończyło się saldem 644 USD. Chrome przeszedł scenariusz pierwszego rozładunku, sprzątania i odświeżenia, oferty i powrotu Henryka, finału oraz kontynuacji z tym samym saldem i poziomami stref.
-
-Aktualizacja graficzna z 2026-11-17 zastępuje placeholder Henryka roboczymi portretami z pakietu. Bieżące ścieżki i zakres działających ekranów opisuje [specyfikacja grafiki](../GRAPHICS_SPEC.md#klienci--roboczy-art-v01).
+- `node --experimental-strip-types --test tests/story.test.ts tests/stability.test.ts`
+- `node --experimental-strip-types scripts/campaign-playthrough.ts --story --fixtures`
+- `python scripts/story-browser.py` po buildzie i wygenerowaniu checkpointów z `PIXELHUB_CHECKPOINTS=1`
+- `npm run test:browser`

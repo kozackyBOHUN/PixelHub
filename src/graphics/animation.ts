@@ -125,10 +125,16 @@ export class AnimationController {
         state = step?.a.mode === "push" ? "push" : "pull";
       else state = "walk";
     }
+    if (["LIFT", "LOWER", "BLOCKED"].includes(phase))
+      state = (step?.a.mode ?? worker.pose.mode) === "push" ? "push" : "pull";
     if (phase === "SWITCH_DIRECTION")
       state = step?.b.mode === "push" ? "push" : "pull";
     const workerAngle = Math.atan2(g.head.y - g.hitch.y, g.head.x - g.hitch.x);
-    const facing = state === "push" ? workerAngle + Math.PI : workerAngle;
+    const pushing =
+      state === "push" ||
+      ((state === "idle" || state === "walk") &&
+        (step?.a.mode ?? worker.pose.mode) === "push");
+    const facing = pushing ? workerAngle + Math.PI : workerAngle;
     const sample = {
       state,
       frame:

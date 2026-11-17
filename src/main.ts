@@ -17,9 +17,9 @@ import {
 } from "./campaign.ts";
 import type { Upgrade } from "./campaign.ts";
 import { clientArtPreview, clientDialog } from "./client-dialog.ts";
-import { clients, storyEvents } from "./story.ts";
+import { allClients, clients, storyEvents } from "./story.ts";
 import type { ClientId } from "./story.ts";
-import { openingServiceFee, storyCampaign } from "./story-campaign.ts";
+import { storyCampaign } from "./story-campaign.ts";
 import { SAVE_KEY, serialize, restore } from "./save.ts";
 const $ = (id: string) => document.getElementById(id)!;
 const params = new URLSearchParams(location.search),
@@ -29,9 +29,7 @@ let game = new CampaignGame(true),
   saveError = "",
   autosaveEnabled = true;
 try {
-  const raw =
-    localStorage.getItem(saveKey) ??
-    (!dev ? localStorage.getItem(SAVE_KEY) : null);
+  const raw = localStorage.getItem(saveKey);
   if (raw) game = restore(raw);
 } catch (error) {
   saveError = String(error);
@@ -39,12 +37,15 @@ try {
 }
 game.dev = dev;
 const renderer = new Renderer($("world") as HTMLCanvasElement);
+await renderer.ready;
 function resizeWorld() {
   const box = renderer.canvas.parentElement!.getBoundingClientRect();
   renderer.camera.viewport = {
     x: Math.max(1, Math.floor(box.width) - 2),
     y: Math.max(1, Math.floor(box.height) - 2),
   };
+  renderer.camera.frame(renderer.scene.bounds(game));
+  renderer.camera.fit();
   const strip = $("cmrs").querySelector(".cmr-list");
   $("cmr-scroll").hidden = !strip || strip.scrollWidth <= strip.clientWidth + 2;
 }
@@ -144,16 +145,16 @@ function clickAt(p: { x: number; y: number }) {
   hudFeedbackUntil = 0;
   const cell = renderer.screenToGrid(p),
     w = game.activeWorker;
+  if (game.cleaning?.worker === game.workerIndex) {
+    feedback("Sprzątanie trwa. Anuluj zadanie, aby zmienić polecenie.");
+    return;
+  }
   if (game.isClutter(cell) && !queuedSource && !w.source && !w.carried) {
     if (game.clean(cell)) {
       persistProgress();
-      feedback("Pracownik idzie posprzątać pole za 5 USD.");
+      feedback("Sprzątnij - 5 USD · pracownik idzie do przeszkody.");
     } else
-      feedback(
-        game.cash < 5
-          ? "Sprzątanie kosztuje 5 USD."
-          : "Wybierz wolnego pracownika z dostępem do pola.",
-      );
+      feedback(game.cash < 5 ? "Sprzątanie kosztuje 5 USD." : game.message);
     hud();
     return;
   }
@@ -241,6 +242,10 @@ $("world").addEventListener("pointerdown", (event) => {
   }
 });
 $("world").addEventListener("pointermove", (event) => {
+  if (!drag && !placingCold && !placingSorter) {
+    const cell = renderer.screenToGrid(renderer.point(event as PointerEvent));
+    renderer.canvas.title = game.isClutter(cell) ? "Sprzątnij - 5 USD" : "";
+  }
   if (!drag && placingCold) {
     const cell = renderer.screenToGrid(renderer.point(event as PointerEvent));
     renderer.scene.coldPreview = {
@@ -296,7 +301,7 @@ $("zoom-out").onclick = () =>
   renderer.camera.setZoom(Math.max(0.5, renderer.camera.zoom - 0.5));
 $("zoom-in").onclick = () =>
   renderer.camera.setZoom(Math.min(3, renderer.camera.zoom + 0.5));
-$("camera-reset").onclick = () => renderer.camera.reset();
+$("camera-reset").onclick = () => renderer.camera.fit();
 const assetSelect = $("asset-select") as HTMLSelectElement;
 for (const id of [
   ...renderer.registry.all().map((a) => a.id),
@@ -357,10 +362,32 @@ if (params.has("graphics")) {
   ($("lab") as HTMLDetailsElement).open = true;
   ($("graphics-panel") as HTMLDetailsElement).open = true;
 }
-$("cancel").onclick = () => game.activeWorker.cancel();
+$("cancel").onclick = () => {
+  game.cancelCleaning(game.workerIndex);
+  game.activeWorker.cancel();
+};
 $("debug").onclick = () => (renderer.debug = !renderer.debug);
 $("save").onclick = save;
 $("load").onclick = load;
+if (!dev && localStorage.getItem(SAVE_KEY)) {
+  const legacy = document.createElement("button");
+  legacy.textContent = "Wczytaj wcześniejszą kampanię 0.3";
+  legacy.onclick = () => {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (raw) {
+        game = restore(raw);
+        game.dev = dev;
+        autosaveEnabled = true;
+        persistProgress();
+        hud();
+      }
+    } catch (error) {
+      feedback(String(error));
+    }
+  };
+  $("load").parentElement!.append(legacy);
+}
 $("new-game").onclick = () => ($("restart") as HTMLButtonElement).click();
 $("restart").onclick = () => {
   if (confirm("Rozpocząć nową kampanię? Bieżący zapis zostanie zastąpiony.")) {
@@ -399,7 +426,8 @@ $("continue").onclick = () => {
   game.nextRound();
   chosenCmr = "";
   inspection = "";
-  renderer.camera.reset();
+  renderer.camera.frame(renderer.scene.bounds(game));
+  renderer.camera.fit();
   persistProgress();
   hud();
 };
@@ -416,7 +444,10 @@ $("end").addEventListener("cancel", (event) => event.preventDefault());
 window.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     if (placingSorter || placingCold) cancelSorterPlacement();
-    else game.activeWorker.cancel();
+    else {
+      game.cancelCleaning(game.workerIndex);
+      game.activeWorker.cancel();
+    }
   }
 
   if (e.key.toLowerCase() === "g") renderer.debug = !renderer.debug;
@@ -461,6 +492,7 @@ function feedback(message: string) {
   if (game.status === "development") $("shop-message").textContent = message;
 }
 const workerStatus = (w: typeof game.activeWorker) => {
+  if (game.cleaning?.worker === game.workers.indexOf(w)) return "Sprząta";
   if (w.task?.blocked)
     return w.message.startsWith("Przejazd zablokowany")
       ? "Brak przejazdu"
@@ -682,13 +714,15 @@ function hud() {
   if (tutorial) {
     const cargo = game.cargoFor(0);
     const quote = quoteDelivery(cargo);
-    const text = game.trucks[0]?.trip
-      ? "Auto wróci pod rampę. Przygotuj pozostałe palety."
-      : game.cmrs[0]?.state === "waiting"
-        ? `Pracownik: Paleciak działa. Kliknij CMR, żeby podstawić ciężarówkę. Wynagrodzenie za całe zlecenie: ${openingServiceFee} USD.`
-        : cargo.length === 4
-          ? `Pełne auto. Kurs: ${quote?.seconds} s, ${quote?.cost} USD. ${quote?.colors.length === 2 ? "Mieszany kurs kosztuje 15 USD więcej. Możesz wyładować paletę i zmienić skład." : "Kliknij Wyślij."}`
-          : "Wybierz pracownika i paletę. Odstaw ją na wolne pole lub załaduj do własnego auta po prawej. Grupuj kolory.";
+    const text = game.cleaning
+      ? "Pracownik sprząta przeszkodę. Po zakończeniu pole będzie dostępne."
+      : game.trucks[0]?.trip
+        ? "Auto wróci pod rampę. Przygotuj pozostałe palety."
+        : game.cmrs[0]?.state === "waiting"
+          ? `Pracownik: Paleciak działa. Kliknij CMR, żeby podstawić ciężarówkę. Rozładunek +5 USD/paletę, dostawa +14 USD/paletę.`
+          : cargo.length === 4
+            ? `Pełne auto. Kurs: ${quote?.seconds} s, ${quote?.cost} USD. ${quote?.colors.length === 2 ? "Mieszany kurs kosztuje 15 USD więcej. Możesz wyładować paletę i zmienić skład." : "Kliknij Wyślij."}`
+            : "Wybierz pracownika i paletę. Odstaw ją na wolne pole lub załaduj do własnego auta po prawej. Grupuj kolory. Sprzątnij - 5 USD: kliknij przeszkodę, gdy zarobisz środki.";
     if (note.textContent !== text) note.textContent = text;
   }
   $("cash").textContent = `${game.cash.toFixed(0)} $`;
@@ -1035,7 +1069,7 @@ function renderBriefing(round: number) {
   for (const offer of game.offers(round)) {
     const count = offer.pallets.length;
     const storyClient =
-      "client" in offer ? clients[offer.client as ClientId] : undefined;
+      "client" in offer ? allClients[offer.client as ClientId] : undefined;
     if (storyClient && "client" in offer) {
       const panel = document.createElement("section");
       panel.className = "client-offer";
@@ -1055,14 +1089,17 @@ function renderBriefing(round: number) {
         company: storyClient.company,
         line: String("line" in offer ? offer.line : ""),
         expression:
-          decision === "accepted" || game.storyHistory[offer.id + ":returned"]
+          decision === "fulfilled" ||
+          (game.storyHistory[offer.id + ":returned"] &&
+            game.clientHasSuccess(String(offer.client)))
             ? "happy"
             : offer.id === "STORY-pieczywo"
               ? "worried"
               : "neutral",
         round,
         count,
-        bonus: Number("bonus" in offer ? offer.bonus : 0),
+        story: offer.type === "story",
+        bonus: Number("bonus" in offer ? offer.bonus : count * 3 + 25),
         penalty: Number("penalty" in offer ? offer.penalty : 60),
         decision,
         decide: (accept) => {
@@ -1138,11 +1175,18 @@ function renderTruckControls() {
               ) +
               " s",
         reason: ready
-          ? missing > 0
-            ? `Do pełnego kursu: ${missing} palet`
-            : quote
-              ? undefined
-              : "Brak ładunku"
+          ? quote &&
+            game.storyMode &&
+            quote.cost >
+              game.cash +
+                game.cargoFor(truck.bay).length *
+                  cfg.economy.deliveryRewardPerCrate
+            ? "Doładuj palety: brak środków na rozliczenie kursu"
+            : missing > 0
+              ? `Do pełnego kursu: ${missing} palet`
+              : quote
+                ? undefined
+                : "Brak ładunku"
           : undefined,
         run: () => {
           if (ready && game.dispatchBay(truck.bay)) {
@@ -1214,7 +1258,7 @@ function renderPhase() {
       : game.config.name;
   $("totals").replaceChildren();
   if (briefing) renderBriefing(game.round + 1);
-  else if (!shop) {
+  if (!shop) {
     const revenue: [string, number, string?][] = summary.revenue.map(
       ([name, amount]) => [name, amount, " USD"],
     );
@@ -1257,7 +1301,17 @@ function renderPhase() {
       ["Zwroty", summary.returns],
       ["Palety priorytetowe", summary.priority],
     ];
-    $("totals").append(
+    const receipt = document.createElement("div");
+    receipt.className = "receipt-grid";
+    if (briefing) {
+      const details = document.createElement("details");
+      details.className = "round-receipt";
+      const toggle = document.createElement("summary");
+      toggle.textContent = `Rozliczenie rundy ${game.round} · przychody ${summary.totalRevenue} USD · koszty ${summary.totalCosts} USD · saldo ${summary.cash} USD`;
+      details.append(toggle, receipt);
+      $("totals").prepend(details);
+    } else $("totals").append(receipt);
+    receipt.append(
       statGroup("Przychody", revenue),
       statGroup("Koszty", expenses),
       statGroup("Wynik", [

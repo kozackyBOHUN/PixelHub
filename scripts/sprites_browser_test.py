@@ -2,10 +2,11 @@
 import base64,json,os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+from browser_options import browser_options
 BASE=os.environ.get('PIXELHUB_URL','http://127.0.0.1:5173/').rstrip('/')+'/'
 OUT=Path('artifacts/sprites-v1');OUT.mkdir(parents=True,exist_ok=True)
 with sync_playwright() as p:
-    browser=p.chromium.launch(channel=os.environ.get('BROWSER_CHANNEL','chrome'),headless=True)
+    browser=p.chromium.launch(**browser_options())
     page=browser.new_page(viewport={'width':1440,'height':1100})
     errors=[];failed=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
@@ -17,7 +18,7 @@ with sync_playwright() as p:
       await r.assets.installManifest(r.registry);
       await Promise.all(r.registry.all().map(d=>r.assets.ready(d)));
       const resources=r.assets.diagnostics();
-      if(resources.length!==65||resources.some(d=>d.status!=='ready')||r.assets.manifestError)throw Error(JSON.stringify(resources));
+      if(resources.length!==r.registry.all().length||resources.some(d=>d.status!=='ready')||r.assets.manifestError)throw Error(JSON.stringify(resources));
       const snap=()=>JSON.stringify([g.crates,g.ledger,g.pose,g.task,g.cmrs,g.time,g.status]);
       const before=snap();r.draw(g);if(snap()!==before)throw Error('Renderer changed simulation');
       let frames=0;
@@ -25,7 +26,7 @@ with sync_playwright() as p:
       for(const state of ['idle','walk','push','pull'])for(let d=0;d<8;d++)for(let f=0;f<(state==='idle'?2:4);f++){r.preview(preview,'worker/default/'+state,d,f);frames++;}
       g.accept();g.step(1.2);r.camera.zoom=1;r.draw(g);
       window.productionScene=r.surface.toDataURL();r.camera.zoom=.5;r.draw(g);
-      g.selectWorker();if(!g.choose(g.crates[0].id)||!g.order({kind:'floor',x:3,y:5}))throw Error(g.message);
+      const picked=g.crates.find(c=>c.loc.kind==='inbound'&&g.accessible(c.loc));g.selectWorker();if(!g.choose(picked.id)||!g.order({kind:'floor',x:14,y:3}))throw Error(g.message);
       let gap=0,lift=0,arcs=0,samples=0;const states=new Set(),shots={};
       for(let i=0;g.task&&i<10000;i++){
         g.step(.1);r.draw(g);samples++;
@@ -40,7 +41,7 @@ with sync_playwright() as p:
           ctx.drawImage(r.surface,p.x-60,p.y-60,120,120,0,0,480,480);shots[label]=c.toDataURL();
         }
       }
-      if(g.task||g.crates[0].loc.kind!=='floor')throw Error('Physical transport unfinished');
+      if(g.task||picked.loc.kind!=='floor')throw Error('Physical transport unfinished');
       if(gap>1||!arcs||lift<.99)throw Error(JSON.stringify({gap,arcs,lift}));
       g.assertInvariant();window.productionShots=shots;
       return {resources:resources.length,ready:resources.every(d=>d.status==='ready'),workerFrames:frames,states:[...states],samples,loadedArcSamples:arcs,maxHandGapSource:gap,maxLiftSource:lift*3,rendererReadOnly:true};

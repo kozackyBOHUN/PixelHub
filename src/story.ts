@@ -21,7 +21,41 @@ export const clients = {
   },
 } as const;
 
-export type ClientId = keyof typeof clients;
+export const standardClients = {
+  anna: {
+    name: "Anna",
+    company: "Fundacja Anny",
+    business: "Przesyłki pomocowe",
+  },
+  robert: {
+    name: "Robert",
+    company: "Sklepy Roberta",
+    business: "Handel detaliczny",
+  },
+  kasia: {
+    name: "Kasia",
+    company: "Zabawki Kasi",
+    business: "Sklep z zabawkami",
+  },
+  marek: {
+    name: "Marek",
+    company: "Warsztat Marka",
+    business: "Części samochodowe",
+  },
+  wiktor: {
+    name: "Wiktor",
+    company: "Wiktor Trade",
+    business: "Handel hurtowy",
+  },
+} as const;
+export const allClients = { ...clients, ...standardClients };
+export type ClientId = keyof typeof allClients;
+export function standardClient(round: number, index: number) {
+  return (Object.keys(standardClients) as (keyof typeof standardClients)[])[
+    (round + index) % 5
+  ];
+}
+
 export const storyQuests = [
   {
     id: "pieczywo",
@@ -106,7 +140,7 @@ export function storyOffers(round: number, fulfilled: (id: string) => boolean) {
     .filter(
       (q) =>
         (q.round === round ||
-          (round > 30 && (round - 31) % 5 === q.round % 5)) &&
+          (round > 30 && "after" in q && (round - 31) % 5 === q.round % 5)) &&
         (!("after" in q) || fulfilled("STORY-" + q.after)) &&
         (round <= 30 || fulfilled("STORY-" + q.id)),
     )
@@ -125,7 +159,10 @@ export function storyOffers(round: number, fulfilled: (id: string) => boolean) {
         id,
         type: "story",
         client: q.client,
-        line: q.line,
+        line:
+          round > 30
+            ? `Wracamy z kolejnym zamówieniem. Tym razem potrzebujemy obsługi ${q.count} palet. Warunki znajdziesz poniżej.`
+            : q.line,
         bonus: q.bonus,
         penalty: 60,
         recipes: [],

@@ -12,7 +12,13 @@ import { planTransport, pointAt, offset, travel } from "./transport.ts";
 import type { TransportStep, Phase } from "./transport.ts";
 export type Location =
   | { kind: "floor"; x: number; y: number }
-  | { kind: "inbound" | "outbound"; lane: number; depth: number; bay?: number; row?: number }
+  | {
+      kind: "inbound" | "outbound";
+      lane: number;
+      depth: number;
+      bay?: number;
+      row?: number;
+    }
   | { kind: "worker" | "delivery" | "delivered" | "processing" | "consumed" };
 export type Crate = {
   id: string;
@@ -62,7 +68,10 @@ export function locationPoint(l: Location): Point | null {
   return l.kind === "floor"
     ? l
     : "lane" in l
-      ? { ...pointAt(l.kind, l.lane, l.depth), y: (l.row ?? (l.bay ? -4 : 2)) + l.lane }
+      ? {
+          ...pointAt(l.kind, l.lane, l.depth),
+          y: (l.row ?? (l.bay ? -4 : 2)) + l.lane,
+        }
       : null;
 }
 export class Game {
@@ -86,7 +95,14 @@ export class Game {
   highlight: string | null = null;
   accumulator = 0;
   reservations = new Set<string>();
-  ledger: {time:number;amount:number;label:string;priorityDelta?:number;tripId?:string;investment?:boolean}[] = [
+  ledger: {
+    time: number;
+    amount: number;
+    label: string;
+    priorityDelta?: number;
+    tripId?: string;
+    investment?: boolean;
+  }[] = [
     { time: 0, amount: cfg.economy.initialCash, label: "Kapitał początkowy" },
   ];
   get cash() {
@@ -557,7 +573,12 @@ export class Game {
               t.deposited = true;
             }
             if (!t.steps.length) {
-              if (c && t.deposited && c.loc.kind === "floor" && !c.paid) {
+              if (
+                c &&
+                t.deposited &&
+                ["floor", "outbound"].includes(c.loc.kind) &&
+                !c.paid
+              ) {
                 c.paid = true;
                 this.money(cfg.economy.unloadRewardPerCrate, "Rozładunek");
               }

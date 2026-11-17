@@ -115,7 +115,7 @@ export type AssetCommand = {
   space?: "world" | "screen";
 };
 export type ShapeCommand = {
-  kind: "line" | "text" | "outline" | "badge" | "room" | "fill";
+  kind: "line" | "text" | "outline" | "badge" | "room" | "fill" | "clutter";
   id: string;
   point: Point;
   end?: Point;
@@ -268,7 +268,45 @@ export class AssetPainter {
       ctx.strokeStyle = command.color;
       ctx.fillStyle = command.color;
       ctx.lineWidth = 1;
-      if (command.kind === "fill") {
+      if (command.kind === "clutter") {
+        const scale = this.camera.scale;
+        ctx.translate(Math.round(p.x), Math.round(p.y));
+        ctx.scale(scale, scale);
+        const rect = (
+          x: number,
+          y: number,
+          w: number,
+          h: number,
+          color: string,
+        ) => {
+          ctx.fillStyle = color;
+          ctx.fillRect(x, y, w, h);
+        };
+        if (command.text === "tires") {
+          for (const y of [10, 15]) {
+            rect(4, y, 16, 7, "#465965");
+            rect(7, y + 1, 10, 4, "#789094");
+            rect(9, y + 2, 6, 2, "#b8c5bc");
+          }
+        } else if (command.text === "broken-pallet") {
+          rect(3, 15, 18, 6, "#795f50");
+          for (const x of [4, 10, 17]) rect(x, 8 + (x % 3), 3, 12, "#bd9874");
+          rect(5, 13, 11, 2, "#d6b48c");
+          rect(13, 9, 8, 2, "#d6b48c");
+        } else if (command.text === "equipment") {
+          rect(4, 6, 15, 15, "#647e85");
+          rect(6, 8, 11, 9, "#a2b9b5");
+          rect(8, 10, 7, 5, "#526c7b");
+          rect(13, 18, 7, 3, "#baa179");
+        } else {
+          rect(2, 12, 12, 10, "#94765c");
+          rect(3, 11, 10, 8, "#ccaf86");
+          rect(11, 6, 10, 13, "#a28768");
+          rect(12, 5, 8, 10, "#d7be97");
+          rect(16, 5, 2, 10, "#ad8b60");
+          rect(7, 12, 2, 8, "#ad8b60");
+        }
+      } else if (command.kind === "fill") {
         const tile = this.camera.tile;
         const x = Math.round(p.x),
           y = Math.round(p.y);

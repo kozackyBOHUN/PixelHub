@@ -8,6 +8,7 @@ import {
 import { priorityMultiplier } from "../campaign.ts";
 import { CampaignGame, station, sorterPorts } from "../campaign-game.ts";
 import cfg, { dock } from "../config.ts";
+import { same } from "../config.ts";
 import type { Point } from "../config.ts";
 import { locationPoint } from "../simulation.ts";
 import type { Game, Crate } from "../simulation.ts";
@@ -257,8 +258,36 @@ export class SceneBuilder {
       cols = cfg.map.columns,
       rows = hub ? 4 : cfg.map.rows;
     const bounds = this.bounds(g);
-    for (const cell of hub?.clutter ?? [])
-      this.asset(`clutter/${cell.x}/${cell.y}`, "rack/standard/segment", cell);
+    for (const cell of hub?.clutter ?? []) {
+      q.add({
+        kind: "clutter",
+        id: `clutter/${cell.x}/${cell.y}`,
+        point: cell,
+        floorY: cell.y + 1,
+        layer: LAYERS.objects,
+        order: 0,
+        color: "#bd9874",
+        text: ["cartons", "broken-pallet", "tires", "equipment"][
+          (Math.abs(cell.x) + Math.abs(cell.y)) % 4
+        ],
+      });
+      const pending = hub?.cleaning;
+      if (pending && same(pending.target, cell)) {
+        q.add({
+          kind: "badge",
+          id: "cleaning-progress",
+          point: { x: cell.x + 0.5, y: cell.y },
+          floorY: cell.y,
+          layer: LAYERS.ui,
+          order: 0,
+          color: "#e7cb8b",
+          text:
+            pending.startedAt === undefined
+              ? "Sprzątnij - 5 USD · dojście"
+              : `Sprzątanie ${Math.min(100, Math.floor((hub!.time - pending.startedAt) * 50))}%`,
+        });
+      }
+    }
     this.asset(
       "exterior",
       "exterior/base",

@@ -2,15 +2,11 @@
 import json,base64,os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+from browser_options import browser_options
 OUT=Path('artifacts/readability');OUT.mkdir(parents=True,exist_ok=True)
 BASE=os.environ.get('PIXELHUB_URL','http://127.0.0.1:5173/').rstrip('/')+'/'
 with sync_playwright() as p:
-    launch={'headless':True}
-    if os.environ.get('CHROMIUM_PATH'):
-        launch['executable_path']=os.environ['CHROMIUM_PATH']
-    else:
-        launch['channel']=os.environ.get('BROWSER_CHANNEL','chrome')
-    browser=p.chromium.launch(**launch)
+    browser=p.chromium.launch(**browser_options())
     page=browser.new_page(viewport={'width':1600,'height':1100},device_scale_factor=1)
     errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(BASE+'?test=1&graphics=1')
@@ -36,7 +32,7 @@ with sync_playwright() as p:
       assert(boxes.every(c=>!c.angle),'tilted box');
       assert(boxes.filter(c=>c.assetId==='cargo/box/gray').length===23,'retained cargo must be gray');
       const due=commands.filter(c=>c.kind==='badge');assert(due.length>=20,'missing round badges');
-      const roomPanels=commands.filter(c=>c.kind==='room');assert(roomPanels.length===4,'missing room partitions');
+      const roomPanels=commands.filter(c=>c.kind==='room');assert(g.contains({x:2,y:0})&&g.contains({x:8,y:0})&&g.contains({x:17,y:0}),'missing independent zones');
       assert(!commands.some(c=>c.kind==='asset'&&c.assetId.startsWith('wall/')),'tall wall over usable tiles');
       assert(JSON.stringify([g.crates,g.pose,g.time,g.ledger])===snapshot,'render mutates simulation');
       // Count destination colour pixels and verify the high contrast badge on a real loaded frame.

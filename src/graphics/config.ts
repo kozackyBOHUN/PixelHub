@@ -113,6 +113,23 @@ export class Camera {
       y: pivot.y - this.origin.y - (point.y - this.bounds.minY) * this.tile,
     };
   }
+  fit() {
+    this.pan = { x: 0, y: 0 };
+    if (!this.viewport) {
+      this.zoom = 1;
+      return;
+    }
+    const width = (this.bounds.maxX - this.bounds.minX) * GRAPHICS.baseTile;
+    const height = (this.bounds.maxY - this.bounds.minY) * GRAPHICS.baseTile;
+    this.zoom = Math.max(
+      0.25,
+      Math.min(
+        1,
+        (this.viewport.x - 16) / width,
+        (this.viewport.y - 16) / height,
+      ),
+    );
+  }
   reset() {
     this.zoom = 1;
     this.pan = { x: 0, y: 0 };

@@ -21,6 +21,7 @@ export function clientDialog(options: {
   expression: PortraitExpression;
   round: number;
   count: number;
+  story?: boolean;
   bonus: number;
   penalty: number;
   decision?: string;
@@ -31,7 +32,8 @@ export function clientDialog(options: {
   const summary = document.createElement("summary");
   summary.append(
     clientImage(options.client, options.name, "avatar", "neutral"),
-    "Zlecenie fabularne · " + options.name,
+    (options.story === false ? "Zlecenie · " : "Zlecenie fabularne · ") +
+      options.name,
   );
   const surface = skin(document.createElement("div"), "dialog_panel_9slice");
   surface.classList.add("client-dialog-body");

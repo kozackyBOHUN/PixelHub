@@ -1,31 +1,19 @@
 # Stan projektu
 
-Aktualizacja 2026-11-16. Wersja 0.3.0. GitHub Pages pokazuje pełny SHA w nagłówku. Zmiany i ich commit są dostępne w historii tego pliku.
+Aktualizacja 2026-11-17. PixelHub 0.3 — Ostatni magazyn.
 
-## Wdrożone
+## Zakres wydania
 
-Moduły trzech stref i wielokrotne rampy, flota własna, graficzne inwestycje, aktualne sprite’y, kamera, kompaktowe CMR przyjazdowe, kampania 30 rund, kontrakty dodatkowe, kolejki pracowników, MIX, chłodnia, mroźnia, serwis, Piesek oraz zapis kampanii v9. Build Sites z 2026-11-14 ma osobny identyfikator źródła publikacji 1fc5a38a85260f37fd14e0dc3cf6398a6e1283e5.
+Trzy niezależne strefy modułowe, rampy i własna flota, fizyczny transport, kolejki pracowników, MIX, chłodnia, mroźnia, serwis, Piesek, sezon 30 rund i dalsza gra pozostają aktywne. Zachowano aktualne atlasy i portrety grafika.
 
-## W trakcie
+Poprawiono przygotowanie animacji przed startem, kierunek postaci przy podnoszeniu i odkładaniu, rozładunek bezpośrednio do auta, koszty ramp, sprzątanie z postępem, kamerę, raport finansowy, jawne wczytywanie starszej kampanii i utrwalanie odpraw po sezonie. Usunięto premię 520 USD. Standardowi klienci mają stałą tożsamość; Maja i Lena używają własnych portretów. Przyjęcie kontraktu nie oznacza sukcesu.
 
-Synchronizacja źródeł i dokumentacji z publicznym GitHubem. Status wdrożenia Pages należy potwierdzić w historii Actions i przez porównanie SHA wyświetlanego w grze.
+## Weryfikacja i przekazanie
 
-## Planowane
+[Audyt, rzeczywista ekonomia i zrzuty](docs/STABILITY-AUDIT.md). Testy przeglądarkowe uruchamia `npm run test:browser`, testy mechaniki `npm test`. Fizyczną kampanię z kontraktami i rundami 31–35 sprawdza `node --experimental-strip-types scripts/campaign-playthrough.ts --story`. Parametr `--fixtures` odtwarza zapisane scenariusze; nie podmieniać ich danymi starej kampanii.
 
-Brak zatwierdzonych nowych mechanik w zleceniu synchronizacji.
+[Gra na GitHub Pages](https://kozackybohun.github.io/PixelHub/). Publikacja z `main` następuje po testach; pełny SHA w nagłówku należy porównać z zakończonym wdrożeniem Actions.
 
-## Propozycje
+## Uwagi dla kolejnych agentów
 
-Brak propozycji przyjętych w ramach tej aktualizacji.
-
-## Ograniczenia
-
-Zapisy sprzed kampanii balansowej mogą opisywać inne manifesty. Zwykła kampania, tryb deweloperski i różne hosty korzystają z odrębnych zapisów w przeglądarce. Gęste układy mogą wymagać przełożenia palet. Wczesny zakup LV4 może zablokować zakup obowiązkowego wyposażenia. Pełny przebieg symulacji może zająć kilkanaście minut.
-
-## Kandydat do odbioru
-
-Gałąź feature/ostatni-magazyn zawiera [Ostatni magazyn](docs/OSTATNI-MAGAZYN.md). Produkcyjny build i bieżąca dokumentacja publicznego wydania odpowiadają gałęzi main.
-
-## Portrety i dialogi klientów
-
-**INTEGRATED - ART DRAFT.** Henryk ma oprawę w realnej kampanii. Anna, Robert, Kasia, Marek i Wiktor są dostępni w podglądzie deweloperskim; ich kontrakty i powroty wymagają przyszłych decyzji fabularnych. [Specyfikacja i zrzuty](GRAPHICS_SPEC.md#klienci--roboczy-art-v01).
+Portrety: `public/assets/characters/clients/<id>/`, rejestr `src/portraits.ts`. Materiały pozostają oznaczone **INTEGRATED — ART DRAFT**. Nie zastępować ich historycznymi grafikami. Stawki i ceny są w [ECONOMY_SPEC.md](ECONOMY_SPEC.md), bez dodatkowego dofinansowania pierwszej rundy. Zapis fabularny, wcześniejsza kampania i tryb deweloperski mają osobne klucze. Starszy zapis jest dostępny dopiero po świadomym wybraniu wczytania. Gęsty magazyn nadal wymaga planowania miejsca i przekładania palet; zakup wszystkich ulepszeń natychmiast nie jest gwarantowany.

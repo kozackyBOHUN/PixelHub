@@ -1,5 +1,7 @@
 export const portraitClients = {
   henryk: "Henryk",
+  maja: "Maja",
+  lena: "Lena",
   anna: "Anna",
   robert: "Robert",
   kasia: "Kasia",

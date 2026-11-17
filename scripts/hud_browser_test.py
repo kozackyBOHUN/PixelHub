@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from playwright.sync_api import expect, sync_playwright
+from browser_options import browser_options
 
 base = os.environ.get("PIXELHUB_URL", "http://127.0.0.1:5173/").rstrip("/")
 out = Path("artifacts/window-phases")
@@ -12,11 +13,11 @@ out.mkdir(parents=True, exist_ok=True)
 sizes = [(1280, 720), (1366, 768), (1536, 864), (1920, 1080), (2560, 1440)]
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(channel=os.environ.get("BROWSER_CHANNEL", "chrome"), headless=True)
+    browser = p.chromium.launch(**browser_options())
     result = []
     for zoom in [1, 1.25]:
         profile = TemporaryDirectory(prefix="pixelhub-zoom-")
-        context = p.chromium.launch_persistent_context(profile.name, channel=os.environ.get("BROWSER_CHANNEL", "chrome"), headless=True)
+        context = p.chromium.launch_persistent_context(profile.name, **browser_options())
         settings = context.pages[0]
         settings.goto("chrome://settings/appearance")
         settings.evaluate("zoom => chrome.settingsPrivate.setDefaultZoom(zoom)", zoom)
@@ -27,7 +28,7 @@ with sync_playwright() as p:
         card.click()
         expect(card).to_contain_text("zlecono podstawienie")
         card.click()
-        assert page.evaluate("() => window.pixelhub.game.crates.length") == 4
+        assert page.evaluate("() => window.pixelhub.game.crates.length") == 8
         page.evaluate("() => window.pixelhub.game.advance(1.2)")
         for width, height in sizes:
             css = {"width": math.floor(width / zoom), "height": math.floor(height / zoom)}
@@ -52,7 +53,7 @@ with sync_playwright() as p:
             assert layout["scroll"] <= css["height"] + 1, layout
             assert layout["canvas"]["height"] >= 160 and layout["tile"] >= 18, layout
             page.mouse.click(layout["click"]["x"],layout["click"]["y"])
-            expect(page.locator("#inspect")).to_contain_text("R01-P001")
+            expect(page.locator("#inspect")).to_contain_text("TUTORIAL-")
             result.append({"width":width,"height":height,"zoom":zoom,"tile":layout["tile"]})
         context.close()
         profile.cleanup()
@@ -69,18 +70,19 @@ with sync_playwright() as p:
     assert page.evaluate("() => window.pixelhub.game.buy('worker')") is False
     assert not page.locator("#upgrades").is_visible()
     page.click("#dev-finish")
-    expect(page.locator("#end-title")).to_have_text("Bilans rundy 5",timeout=120000)
+    expect(page.locator("#end-title")).to_have_text("Odprawa · runda 6",timeout=120000)
+    page.locator(".round-receipt > summary").click()
     expect(page.locator("#totals")).to_contain_text("Pracownicy")
     assert page.evaluate("() => window.pixelhub.game.settlement.wages") == 20
     page.screenshot(path=str(out/"summary.png"))
     page.click("#development")
     expect(page.locator("#end-title")).to_have_text("Inwestycje magazynu")
-    hire=page.locator('[data-action="worker"]')
+    hire=page.locator('[data-investment="workers"] button')
     cash=page.evaluate("()=>window.pixelhub.game.cash")
     hire.dblclick()
     assert page.evaluate("()=>window.pixelhub.game.pendingWorkers.length")==1
     assert page.evaluate("()=>window.pixelhub.game.workers.length")==1
-    assert page.evaluate("()=>window.pixelhub.game.cash")==cash-120
+    assert page.evaluate("()=>window.pixelhub.game.cash")==cash-180
     page.click("#phase-save")
     page.reload()
     expect(page.locator("#end-title")).to_have_text("Inwestycje magazynu")

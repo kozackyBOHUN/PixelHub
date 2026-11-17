@@ -46,6 +46,7 @@ export class Renderer {
   painter: AssetPainter;
   scene: SceneBuilder;
   lastCommands: DrawCommand[] = [];
+  readonly ready: Promise<void>;
   constructor(
     canvas: HTMLCanvasElement,
     options: {
@@ -66,8 +67,17 @@ export class Renderer {
     this.surface.width = this.camera.width;
     this.surface.height = this.camera.height;
     this.ctx.imageSmoothingEnabled = false;
-    if (options.loadManifest !== false)
-      void this.assets.installManifest(this.registry);
+    const { assets, registry } = this;
+    this.ready = (async () => {
+      if (options.loadManifest !== false)
+        await assets.installManifest(registry);
+      await Promise.all(
+        registry
+          .all()
+          .filter((def) => def.id.startsWith("worker/"))
+          .map((def) => assets.ready(def)),
+      );
+    })();
   }
   point(event: { clientX: number; clientY: number }) {
     return clientToCanvas(

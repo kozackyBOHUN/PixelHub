@@ -42,9 +42,10 @@ test("one physical delivery of eight pallets, two monochrome truck trips, automa
     game.ledger.filter(
       (entry) => entry.label === "Rozliczenie pierwszego zlecenia",
     ).length,
-    1,
+    0,
   );
-  assert.ok(game.cash > 0);
+  assert.equal(game.cash, 52);
+  assert.equal(game.roundReport().ramps, 20);
 });
 
 test("worker travels to clear a blocked tile and the clearing survives save and load", async () => {
@@ -58,7 +59,7 @@ test("worker travels to clear a blocked tile and the clearing survives save and 
   assert.ok(game.task);
   const restored = restore(serialize(game));
   drain(restored);
-  restored.step(0.05);
+  restored.advance(2.1);
   assert.equal(restored.cash, cash - 5);
   assert.equal(restored.isClutter(target), false);
   assert.equal(restored.free()(target), true);
@@ -174,6 +175,7 @@ test("two physically loaded mixed trips cost 90 USD in total", () => {
   }
   assert.equal(game.status, "summary");
   assert.equal(game.shipped.length, 8);
+  assert.equal(game.cash, 22);
   assert.deepEqual(
     game.tripHistory.map((trip) => [trip.seconds, trip.cost]),
     [

@@ -29,12 +29,8 @@ import {
   requiredUpgrades,
 } from "./campaign.ts";
 import type { Upgrade, Manifest, PalletSpec } from "./campaign.ts";
-import {
-  cleaningCost,
-  openingServiceFee,
-  storyCampaign,
-} from "./story-campaign.ts";
-import { storyEvents, storyOffers } from "./story.ts";
+import { cleaningCost, storyCampaign } from "./story-campaign.ts";
+import { standardClient, storyEvents, storyOffers } from "./story.ts";
 import { freeRound } from "./free-campaign.ts";
 type Vehicle = {
   id: string;
@@ -245,15 +241,24 @@ export class CampaignGame extends Game {
   dev = false;
   storyMode: boolean;
   storyHistory: Record<string, number> = {};
+  clientHasSuccess(client: string) {
+    return Object.values(this.contractLoads).some(
+      (offer) =>
+        offer.client === client && this.contracts[offer.id] === "fulfilled",
+    );
+  }
+  override cancel() {
+    this.cancelCleaning(0);
+    super.cancel();
+  }
   noteStory(id: string, round = this.round) {
     if (this.storyMode) this.storyHistory[id] ??= round;
   }
-  private freePlan: ReturnType<typeof freeRound> | undefined;
+  freePlans: Record<number, ReturnType<typeof freeRound>> = {};
   plan(round: number) {
     if (round <= 30 || !this.storyMode)
       return (this.storyMode ? storyCampaign : campaign)[round - 1];
-    if (round === this.round && this.freePlan?.number === round)
-      return this.freePlan;
+    if (this.freePlans[round]) return this.freePlans[round];
     const fleet = this.plannedFleet.reduce(
       (sum, capacity) => sum + capacity,
       0,
@@ -263,12 +268,20 @@ export class CampaignGame extends Game {
       this.workers.length,
       this.levels.storage - 1,
     );
-    const plan = freeRound(round, capacity);
-    if (round === this.round) this.freePlan = plan;
+    const plan = freeRound(round, capacity, this.purchased.includes("service"));
+    this.freePlans[round] = plan;
     return plan;
   }
   clutter: Point[] = [];
-  cleaning: { worker: number; target: Point; approach: Point } | null = null;
+  cleaning: {
+    worker: number;
+    target: Point;
+    approach: Point;
+    startedAt?: number;
+  } | null = null;
+  cancelCleaning(worker: number) {
+    if (this.cleaning?.worker === worker) this.cleaning = null;
+  }
   constructor(storyMode = false) {
     super();
     this.storyMode = storyMode;
@@ -310,10 +323,7 @@ export class CampaignGame extends Game {
   }
   get rampCount() {
     return (
-      this.inboundBayCount +
-      (this.round >= cfg.vehicles.freeFirstOwnedVehicleAtRound
-        ? this.bayCount
-        : 0)
+      this.inboundBayCount + (this.ownedVehicleCount > 0 ? this.bayCount : 0)
     );
   }
   get rampUpgradeCost() {
@@ -658,7 +668,11 @@ export class CampaignGame extends Game {
       { x: p.x, y: p.y - 1 },
       { x: p.x, y: p.y + 1 },
     ].find((cell) => worker.moveTo(cell));
-    if (!approach) return false;
+    if (!approach) {
+      this.message =
+        "Brak bezpiecznego dojścia do sąsiedniego pola przeszkody.";
+      return false;
+    }
     this.cleaning = { worker: this.workerIndex, target: { ...p }, approach };
     return true;
   }
@@ -667,9 +681,13 @@ export class CampaignGame extends Game {
     if (!pending) return;
     const worker = this.workers[pending.worker];
     if (worker.task) return;
-    this.cleaning = null;
-    if (!same(worker.pose, pending.approach) || this.cash < cleaningCost)
+    if (!same(worker.pose, pending.approach) || this.cash < cleaningCost) {
+      this.cleaning = null;
       return;
+    }
+    pending.startedAt ??= this.time;
+    if (this.time - pending.startedAt < 2) return;
+    this.cleaning = null;
     this.clutter = this.clutter.filter((cell) => !same(cell, pending.target));
     this.money(-cleaningCost, "Sprzątanie magazynu");
   }
@@ -694,7 +712,8 @@ export class CampaignGame extends Game {
   contracts: Record<string, "accepted" | "rejected" | "fulfilled" | "failed"> =
     {};
   offers(round: number) {
-    if (round < 4 || (round > 30 && !this.storyMode)) return [];
+    if (round < (this.storyMode ? 2 : 4) || (round > 30 && !this.storyMode))
+      return [];
     const narrative = this.storyMode
       ? storyOffers(round, (id) => this.contracts[id] === "fulfilled")
       : [];
@@ -765,6 +784,10 @@ export class CampaignGame extends Game {
           return {
             id,
             type,
+            client: standardClient(round, index),
+            line: "Proszę o obsługę kolejnego zamówienia zgodnie z poniższym manifestem.",
+            bonus: 3 * count + 25,
+            penalty: 60,
             recipes,
             pallets,
             vehicle: "SPEC-" + (index + 1),
@@ -870,10 +893,8 @@ export class CampaignGame extends Game {
       this.contracts[offer.id] = "fulfilled";
       this.noteStory(offer.id + ":fulfilled");
       this.money(
-        "bonus" in offer && typeof offer.bonus === "number"
-          ? offer.bonus
-          : 3 * offer.pallets.length + 25,
-        "client" in offer ? "Zlecenie fabularne" : "Kontrakt specjalny",
+        offer.bonus,
+        offer.type === "story" ? "Zlecenie fabularne" : "Kontrakt specjalny",
       );
     }
   }
@@ -892,6 +913,7 @@ export class CampaignGame extends Game {
     const queue = this.queues[index] ?? (this.queues[index] = []);
     if (
       !worker ||
+      this.cleaning?.worker === index ||
       !c ||
       !locationPoint(c.loc) ||
       c.owner !== undefined ||
@@ -920,7 +942,7 @@ export class CampaignGame extends Game {
     for (const [i, w] of this.workers.entries()) {
       const queue = this.queue(i);
       const job = queue[0];
-      if (!job || w.task || w.carried) continue;
+      if (!job || w.task || w.carried || this.cleaning?.worker === i) continue;
       queue.shift();
       const previous = w.selected;
       w.selectWorker();
@@ -1315,6 +1337,15 @@ export class CampaignGame extends Game {
     const truck = this.shippingAt(bay);
     const cargo = this.cargoFor(bay);
     const quote = quoteDelivery(cargo);
+    if (
+      this.storyMode &&
+      quote &&
+      quote.cost > this.cash + cargo.length * cfg.economy.deliveryRewardPerCrate
+    ) {
+      this.message =
+        "Brak środków na rozliczenie kursu. Doładuj więcej palet lub zmień skład ładunku.";
+      return false;
+    }
     if (
       this.status !== "playing" ||
       truck?.state !== "docked" ||
@@ -1744,6 +1775,7 @@ export class CampaignGame extends Game {
     return (
       this.status === "playing" &&
       !this.settled.includes(this.round) &&
+      !this.cleaning &&
       this.queues.every((queue) => !queue?.length) &&
       this.workers.every(
         (w) => !w.carried && (!w.task || w.task.crate === null),
@@ -1775,7 +1807,16 @@ export class CampaignGame extends Game {
       .filter((entry) => !entry.investment);
     const sum = (filter: (e: (typeof entries)[number]) => boolean) =>
       entries.filter(filter).reduce((n, e) => n + e.amount, 0);
-    const received = this.config.pallets.filter((p) =>
+    const received = [
+      ...this.config.pallets,
+      ...Object.values(this.contractLoads)
+        .filter(
+          (offer) =>
+            offer.pallets[0]?.dispatchRound === this.round &&
+            this.contracts[offer.id] !== "rejected",
+        )
+        .flatMap((offer) => offer.pallets),
+    ].filter((p) =>
       this.crates.some((c) => c.id === p.id && c.loc.kind !== "inbound"),
     );
     const currentBonus = entries.reduce(
@@ -1858,8 +1899,6 @@ export class CampaignGame extends Game {
       this.stock.length * cfg.economy.storageRewardPerCratePerCompletedRound,
       "Przechowanie",
     );
-    if (this.storyMode && this.round === 1)
-      this.money(openingServiceFee, "Rozliczenie pierwszego zlecenia");
     this.money(
       -cfg.economy.workerWagePerRound * this.workers.length,
       `Pensja — runda ${this.round}`,
@@ -2097,6 +2136,10 @@ class WarehouseWorker extends Game {
     super();
     this.hub = hub;
     this.crates = hub.crates;
+  }
+  override cancel() {
+    this.hub.cancelCleaning(this.hub.workers.indexOf(this));
+    super.cancel();
   }
   override free(ignore?: string, extra?: Point) {
     return this.hub.freeFor(this, ignore, extra);

@@ -12,6 +12,13 @@ Pakiet z handoff/pixelhub-0.3-clients zawiera 24 pliki PNG RGBA postaci (18 port
 
 Portret w otwartym dialogu ma 144 × 144 CSS px, na małym ekranie 72 × 72. Zwarty awatar używa ×1, a laboratorium pokazuje obie skale dla wszystkich postaci. Skalowanie pixelated, panele 9-slice z marginesem źródłowym 8 px, przyciski z marginesem 6 px. Tekst i statystyki pozostają HTML. W razie błędu odczytu portretu gra próbuje wariantu neutralnego, potem placeholdera.
 
-Rzeczywista oferta Henryka używa roboczego portretu zmartwionego, a akceptacja i powrót pokazują wariant radosny. Neutralny oraz wszystkie inne emocje można obejrzeć w laboratorium. Pozostałe pięć postaci z pakietu nie ma przypisanych zdarzeń w obecnej kampanii. Maja i Lena zachowują własne teksty, zlecenia i dotychczasowy placeholder. Mimika i kontury artu v0.1 czekają na przegląd artystyczny.
+Rzeczywista oferta Henryka używa roboczego portretu zmartwionego, a udana realizacja i powrót zadowolonego klienta pokazują wariant radosny. Akceptacja zachowuje emocję oferty. Neutralny oraz wszystkie inne emocje można obejrzeć w laboratorium. Anna, Robert, Kasia, Marek i Wiktor reprezentują stałych zleceniodawców standardowych kontraktów. Maja i Lena używają własnych portretów z dodanej paczki, z zachowaniem swoich tekstów i historii. Mimika i kontury artu v0.1 czekają na przegląd artystyczny.
 
-[Dialog Henryka](docs/screenshots/clients/henryk-dialog.png) · [Telefon](docs/screenshots/clients/henryk-dialog-mobile.png) · [Sześć postaci ×1](docs/screenshots/clients/szesc-postaci-x1.png) · [Sześć postaci ×2](docs/screenshots/clients/szesc-postaci-x2.png)
+[Dialog Henryka](docs/screenshots/clients/henryk-dialog.png) · [Telefon](docs/screenshots/clients/henryk-dialog-mobile.png) · [Osiem postaci ×1](docs/screenshots/clients/osiem-postaci-x1.png) · [Osiem postaci ×2](docs/screenshots/clients/osiem-postaci-x2.png)
+
+## Pracownik i przeszkody · audyt stabilności
+
+Wszystkie cztery atlasy pracownika są wczytywane i walidowane przed obsługą gry. Błędny lub brakujący PNG trafia do diagnostyki zasobów z powodem i kontrolowanym placeholderem. Standardowe przejścia animacji korzystają z gotowych atlasów. Porównano 112 klatek w ośmiu kierunkach oraz fizyczny transport. Twarz, nakrycie głowy, kolory ubrań i proporcje są spójne. Wcześniej asynchroniczne ładowanie przy pierwszym użyciu animacji pozwalało przez chwilę zobaczyć programowy placeholder.
+
+Przeszkody mają odrębne rysunki pikselowe kartonów, połamanych palet, opon i sprzętu. Kod renderuje je bez wygładzania w src/graphics/engine.ts. Pasek nad sprzątanym polem pokazuje dojście i postęp pracy. [Klatki i rzeczywiste stany pracownika](docs/screenshots/stability/).
+Przy podnoszeniu i odkładaniu zachowujemy klatkę i kierunek push/pull. Nie wolno wybierać idle skierowanego przeciwnie do kończącego się transportu. Regresję sprawdza tests/stability.test.ts.

@@ -2,13 +2,14 @@
 import os
 from pathlib import Path
 from playwright.sync_api import expect, sync_playwright
+from browser_options import browser_options
 
 base=os.environ.get("PIXELHUB_URL","http://127.0.0.1:5173/").rstrip("/")
 out=Path("artifacts/sorter-update")
 out.mkdir(parents=True,exist_ok=True)
 
 with sync_playwright() as p:
-    browser=p.chromium.launch(channel=os.environ.get("BROWSER_CHANNEL","chrome"),headless=True)
+    browser=p.chromium.launch(**browser_options())
     page=browser.new_page(viewport={"width":1536,"height":864})
     errors=[]
     page.on("pageerror",lambda error:errors.append(str(error)))
@@ -19,10 +20,10 @@ with sync_playwright() as p:
     page.click("#dev-jump")
     expect(page.locator("#round")).to_have_text("Runda 7/30")
     page.click("#dev-finish")
-    expect(page.locator("#end-title")).to_have_text("Bilans rundy 7",timeout=90000)
+    expect(page.locator("#end-title")).to_have_text("Odprawa · runda 8",timeout=90000)
     page.click("#development")
     cash=page.evaluate("()=>window.pixelhub.game.cash")
-    page.locator('[data-action="sorter"]').click()
+    page.locator('[data-investment="mix"] button').first.click()
     expect(page.locator("#sorter-placement")).to_be_visible()
     page.locator("#lab").evaluate("(d)=>d.open=false")
 
@@ -33,27 +34,28 @@ with sync_playwright() as p:
           return {x:b.left+p.x*b.width/r.canvas.width,y:b.top+p.y*b.height/r.canvas.height};
         }""",[x,y])
 
-    page.click("#sorter-rotate")
-    page.wait_for_function("()=>window.pixelhub.renderer.scene.sorterPreview?.d===2")
+    assert page.locator("#sorter-rotate").is_disabled()
     for _ in range(3):
         page.keyboard.press("r")
     page.wait_for_function("()=>window.pixelhub.renderer.scene.sorterPreview?.d===0")
     invalid=screen(1,-6)
     page.mouse.click(invalid["x"],invalid["y"])
     expect(page.locator("#message")).to_contain_text("wolnych pól")
-    assert page.evaluate("()=>window.pixelhub.game.cash")==cash
+    assert page.evaluate("()=>window.pixelhub.game.cash")==cash-300
     assert page.evaluate("()=>window.pixelhub.game.sorter") is None
-    target=screen(5,-5)
+    site=page.evaluate("()=>window.pixelhub.game.findSorterSite()")
+    assert site
+    target=screen(site["x"],site["y"])
     page.mouse.move(target["x"],target["y"])
-    page.wait_for_function("()=>window.pixelhub.renderer.scene.sorterPreview?.x===5")
+    page.wait_for_function("(x)=>window.pixelhub.renderer.scene.sorterPreview?.x===x", arg=site["x"])
     page.screenshot(path=str(out/"placement.png"))
     page.mouse.click(target["x"],target["y"])
     expect(page.locator("#shop-message")).to_contain_text("Sorter ustawiony")
-    assert page.evaluate("()=>window.pixelhub.game.cash")==cash-160
+    assert page.evaluate("()=>window.pixelhub.game.cash")==cash-300
     page.click("#phase-save")
     page.reload()
     expect(page.locator("#end-title")).to_have_text("Inwestycje magazynu")
-    assert page.evaluate("()=>window.pixelhub.game.sorter")=={"x":5,"y":-5,"d":0}
+    assert page.evaluate("()=>window.pixelhub.game.sorter")==site
     page.click("#continue")
     expect(page.locator("#round")).to_have_text("Runda 8/30")
     card=page.locator(".cmr-card").filter(has=page.locator(".mix-tile")).first
@@ -77,7 +79,7 @@ with sync_playwright() as p:
       const hit=r.hitCargo(r.gridToScreen({x:q.point.x+q.width/2,y:q.point.y+q.height/2}));
       return {hit,id:m.id,location:m.loc,actual,cartons:m.mix.reduce((n,p)=>n+p.cartons,0),colors:m.mix.length,
         label:rgb,expected,box:box.assetId,passable:g.free()(g.sorter),
-        arrows:r.lastCommands.filter(c=>/^sorter\/(input|output)\/arrow$/.test(c.id)).length};
+        arrows:r.lastCommands.filter(c=>/^sorter\/0\/(input|output)\/arrow$/.test(c.id)).length};
     }""")
     assert len(result["actual"])==result["cartons"] and len(set(result["actual"]))==result["colors"],result
     assert result["label"]==result["expected"] and result["box"]=="cargo/box/gray",result
@@ -88,8 +90,8 @@ with sync_playwright() as p:
     page.screenshot(path=str(out/"mix-and-sorter.png"))
     page.locator("#lab").evaluate("(d)=>d.open=true")
     page.click("#dev-finish")
-    expect(page.locator("#end-title")).to_have_text("Bilans rundy 8",timeout=90000)
+    expect(page.locator("#end-title")).to_have_text("Odprawa · runda 9",timeout=90000)
     assert page.evaluate("()=>window.pixelhub.game.completedRecipes.length")>=1
     assert not errors,errors
     browser.close()
-print("Chrome: placement, invalid placement, rotation, reload, RGB label, MIX CMR and physical round 8 passed.")
+print("Chrome: placement, invalid placement, fixed orientation, reload, RGB label, MIX CMR and physical round 8 passed.")

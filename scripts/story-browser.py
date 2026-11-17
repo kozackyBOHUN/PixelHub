@@ -4,10 +4,11 @@ import json
 from pathlib import Path
 import threading
 import sys
+import os
 
 from playwright.sync_api import sync_playwright
 
-out = Path("docs/screenshots/story")
+out = Path(os.environ.get("PIXELHUB_SCREENSHOTS", "docs/screenshots/story"))
 out.mkdir(parents=True, exist_ok=True)
 server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(http.server.SimpleHTTPRequestHandler, directory="dist"))
 threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -41,6 +42,7 @@ with sync_playwright() as p:
         )
 
     def advance():
+        page.evaluate("() => {const g=window.pixelhub.game;for(const offer of g.offers(g.round+1).filter(o=>o.type!=='story'))g.decideContract(offer.id,true)}")
         page.locator("#development").click()
         upcoming = page.evaluate("window.pixelhub.game.developmentRound")
         if upcoming in (5, 7):
@@ -77,9 +79,9 @@ with sync_playwright() as p:
     page = restore_checkpoint(Path("artifacts/checkpoints/round-3.json"))
     solve(3)
     page.get_by_text("Zlecenie fabularne · Henryk", exact=True).click()
-    page.locator(".client-portrait").wait_for(state="visible")
-    page.wait_for_function("document.querySelector('.client-portrait').naturalWidth === 72")
-    assert page.locator(".client-portrait").bounding_box()["width"] == 144
+    page.locator("#STORY-pieczywo .client-portrait").wait_for(state="visible")
+    page.wait_for_function("document.querySelector('#STORY-pieczywo .client-portrait').naturalWidth === 72")
+    assert page.locator("#STORY-pieczywo .client-portrait").bounding_box()["width"] == 144
     page.screenshot(path=out / "03-henryk.png")
     page.locator("#STORY-pieczywo").get_by_role("button", name="Przyjmij").click()
     advance()

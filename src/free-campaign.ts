@@ -1,6 +1,10 @@
 import type { PalletSpec, RoundConfig } from "./campaign.ts";
 
-export function freeRound(round: number, plannedLoads: number): RoundConfig {
+export function freeRound(
+  round: number,
+  plannedLoads: number,
+  service = false,
+): RoundConfig {
   const seed = Math.imul(round, 1597334677) >>> 0;
   const colors = [
     "red",
@@ -14,7 +18,11 @@ export function freeRound(round: number, plannedLoads: number): RoundConfig {
   const pallets: PalletSpec[] = Array.from(
     { length: 4 * loads },
     (_, index) => {
-      const color = colors[(seed + Math.floor(index / 4)) % colors.length];
+      const color =
+        colors[
+          (seed + Math.floor(index / 4) + (index % 4 === 3 ? 1 : 0)) %
+            colors.length
+        ];
       return {
         id: `FREE-${round}-P${index + 1}`,
         color,
@@ -22,7 +30,13 @@ export function freeRound(round: number, plannedLoads: number): RoundConfig {
         dispatchRound: round,
         dueRound: round,
         temperature: "standard",
-        condition: "standard",
+        condition:
+          service && index === 0
+            ? seed % 2
+              ? "damaged"
+              : "return"
+            : "standard",
+        ...(index === 1 && seed % 3 === 0 ? { prioritySeconds: 1200 } : {}),
       };
     },
   );
