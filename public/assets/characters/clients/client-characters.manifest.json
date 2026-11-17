@@ -72,6 +72,26 @@
         "worried": "assets/characters/clients/wiktor/wiktor_portrait_worried.png"
       },
       "avatar": "assets/characters/clients/wiktor/wiktor_avatar.png"
+    },
+    "maja": {
+      "display_name": "Maja",
+      "organization": "Fundacja Dobre Jutro",
+      "portrait": {
+        "neutral": "assets/characters/clients/maja/maja_portrait_neutral.png",
+        "happy": "assets/characters/clients/maja/maja_portrait_happy.png",
+        "worried": "assets/characters/clients/maja/maja_portrait_worried.png"
+      },
+      "avatar": "assets/characters/clients/maja/maja_avatar.png"
+    },
+    "lena": {
+      "display_name": "Lena",
+      "organization": "Most Pomocy",
+      "portrait": {
+        "neutral": "assets/characters/clients/lena/lena_portrait_neutral.png",
+        "happy": "assets/characters/clients/lena/lena_portrait_happy.png",
+        "worried": "assets/characters/clients/lena/lena_portrait_worried.png"
+      },
+      "avatar": "assets/characters/clients/lena/lena_avatar.png"
     }
   },
   "ui": {
